@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metronome</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+  }
+  .container {
+    background: #16213e;
+    border-radius: 16px;
+    padding: 40px;
+    width: 400px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  h1 { text-align: center; margin-bottom: 24px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; }
+  .beat-display {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .beat-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #2a2a4a;
+    transition: background 0.05s;
+  }
+  .beat-dot.active { background: #e94560; box-shadow: 0 0 16px #e94560; }
+  .beat-dot.accent { background: #f5c518; box-shadow: 0 0 16px #f5c518; }
+  .bpm-section { text-align: center; margin-bottom: 24px; }
+  .bpm-value {
+    font-size: 64px; font-weight: 200;
+    cursor: text;
+  }
+  .bpm-value input {
+    width: 140px; font-size: 64px; font-weight: 200;
+    background: transparent; border: none; border-bottom: 2px solid #e94560;
+    color: #e0e0e0; text-align: center; outline: none;
+    -moz-appearance: textfield;
+  }
+  .bpm-value input::-webkit-outer-spin-button,
+  .bpm-value input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .bpm-label { font-size: 14px; color: #888; letter-spacing: 2px; }
+  input[type="range"] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: #2a2a4a; border-radius: 2px; outline: none; margin: 16px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px;
+    background: #e94560; border-radius: 50%; cursor: pointer;
+  }
+  .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+  button {
+    flex: 1; padding: 12px; border: none; border-radius: 8px;
+    font-size: 15px; cursor: pointer; transition: background 0.2s;
+    font-family: inherit;
+  }
+  .btn-start { background: #e94560; color: white; }
+  .btn-start:hover { background: #c73650; }
+  .btn-start.running { background: #4a9e4a; }
+  .btn-start.running:hover { background: #3d833d; }
+  .btn-tap { background: #2a2a4a; color: #e0e0e0; }
+  .btn-tap:hover { background: #3a3a5a; }
+  .row { display: flex; gap: 10px; margin-bottom: 16px; align-items: center; }
+  .row label { font-size: 13px; color: #888; min-width: 80px; }
+  select {
+    flex: 1; padding: 8px 12px; border-radius: 6px; border: none;
+    background: #2a2a4a; color: #e0e0e0; font-size: 14px;
+    font-family: inherit; cursor: pointer; outline: none;
+  }
+  .presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .preset-btn {
+    flex: 0; padding: 6px 10px; font-size: 12px;
+    background: #2a2a4a; color: #aaa; border-radius: 6px;
+  }
+  .preset-btn:hover { background: #3a3a5a; color: #e0e0e0; }
+  .hint { text-align: center; font-size: 12px; color: #555; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Metronome</h1>
+  <div class="beat-display" id="beatDisplay"></div>
+  <div class="bpm-section">
+    <div class="bpm-value"><input type="number" id="bpmInput" value="120" min="20" max="300"></div>
+    <div class="bpm-label">BPM</div>
+  </div>
+  <input type="range" id="bpmSlider" min="20" max="300" value="120">
+  <div class="controls">
+    <button class="btn-start" id="startBtn">Start</button>
+    <button class="btn-tap" id="tapBtn">Tap Tempo</button>
+  </div>
+  <div class="row">
+    <label>Time Sig</label>
+    <select id="timeSig">
+      <option value="4">4/4</option>
+      <option value="3">3/4</option>
+      <option value="6">6/8</option>
+      <option value="2">2/4</option>
+      <option value="5">5/4</option>
+      <option value="7">7/8</option>
+    </select>
+  </div>
+  <div class="row">
+    <label>Preset</label>
+    <select id="presetSelect">
+      <option value="">— Select —</option>
+      <option value="50">Largo (50)</option>
+      <option value="72">Adagio (72)</option>
+      <option value="92">Andante (92)</option>
+      <option value="112">Moderato (112)</option>
+      <option value="132">Allegro (132)</option>
+      <option value="160">Vivace (160)</option>
+      <option value="184">Presto (184)</option>
+    </select>
+  </div>
+  <p class="hint">Space to start/stop</p>
+</div>
+
+<script>
+  let audioCtx = null;
+  let bpm = 120;
+  let beatsPerMeasure = 4;
+  let isRunning = false;
+  let currentBeat = 0;
+  let nextNoteTime = 0;
+  let timerID = null;
+  const scheduleAheadTime = 0.1;
+  const lookahead = 25;
+
+  const bpmInput = document.getElementById('bpmInput');
+  const bpmSlider = document.getElementById('bpmSlider');
+  const startBtn = document.getElementById('startBtn');
+  const tapBtn = document.getElementById('tapBtn');
+  const timeSig = document.getElementById('timeSig');
+  const presetSelect = document.getElementById('presetSelect');
+  const beatDisplay = document.getElementById('beatDisplay');
+
+  function buildDots() {
+    beatDisplay.innerHTML = '';
+    for (let i = 0; i < beatsPerMeasure; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'beat-dot';
+      beatDisplay.appendChild(dot);
+    }
+  }
+  buildDots();
+
+  function setBpm(v) {
+    bpm = Math.min(300, Math.max(20, Math.round(v)));
+    bpmInput.value = bpm;
+    bpmSlider.value = bpm;
+  }
+
+  bpmInput.addEventListener('change', () => setBpm(Number(bpmInput.value)));
+  bpmSlider.addEventListener('input', () => setBpm(Number(bpmSlider.value)));
+
+  timeSig.addEventListener('change', () => {
+    beatsPerMeasure = Number(timeSig.value);
+    currentBeat = 0;
+    buildDots();
+  });
+
+  presetSelect.addEventListener('change', () => {
+    if (presetSelect.value) setBpm(Number(presetSelect.value));
+    presetSelect.value = '';
+  });
+
+  function playClick(time, accent) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = accent ? 1500 : 1000;
+    gain.gain.setValueAtTime(accent ? 1 : 0.5, time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.05);
+    osc.start(time);
+    osc.stop(time + 0.05);
+  }
+
+  function flashBeat(beat, time) {
+    const delay = (time - audioCtx.currentTime) * 1000;
+    setTimeout(() => {
+      const dots = beatDisplay.querySelectorAll('.beat-dot');
+      dots.forEach(d => d.classList.remove('active', 'accent'));
+      if (dots[beat]) {
+        dots[beat].classList.add(beat === 0 ? 'accent' : 'active');
+        setTimeout(() => dots[beat]?.classList.remove('active', 'accent'), 100);
+      }
+    }, Math.max(0, delay));
+  }
+
+  function scheduler() {
+    while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+      const accent = currentBeat === 0;
+      playClick(nextNoteTime, accent);
+      flashBeat(currentBeat, nextNoteTime);
+      nextNoteTime += 60.0 / bpm;
+      currentBeat = (currentBeat + 1) % beatsPerMeasure;
+    }
+  }
+
+  function start() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isRunning = true;
+    currentBeat = 0;
+    nextNoteTime = audioCtx.currentTime;
+    timerID = setInterval(scheduler, lookahead);
+    startBtn.textContent = 'Stop';
+    startBtn.classList.add('running');
+  }
+
+  function stop() {
+    isRunning = false;
+    clearInterval(timerID);
+    startBtn.textContent = 'Start';
+    startBtn.classList.remove('running');
+    beatDisplay.querySelectorAll('.beat-dot').forEach(d => d.classList.remove('active', 'accent'));
+  }
+
+  startBtn.addEventListener('click', () => isRunning ? stop() : start());
+
+  // Tap tempo
+  let tapTimes = [];
+  tapBtn.addEventListener('click', () => {
+    const now = performance.now();
+    tapTimes.push(now);
+    tapTimes = tapTimes.filter(t => now - t < 3000);
+    if (tapTimes.length > 1) {
+      const intervals = [];
+      for (let i = 1; i < tapTimes.length; i++) intervals.push(tapTimes[i] - tapTimes[i - 1]);
+      const avg = intervals.reduce((a, b) => a + b) / intervals.length;
+      setBpm(60000 / avg);
+    }
+  });
+
+  // Spacebar
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+      e.preventDefault();
+      isRunning ? stop() : start();
+    }
+  });
+</script>
+</body>
+</html>
