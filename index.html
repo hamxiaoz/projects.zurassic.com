@@ -66,7 +66,7 @@
     margin-bottom: 2px;
   }
   #status.sitting { color: #4caf50; }
-  #status.away { color: #888; }
+  #status.away { color: #ff6b6b; }
   #status.warn { color: #ff1744; font-weight: bold; }
   #status.stopped { color: #666; }
   #timer {
@@ -75,7 +75,12 @@
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.05em;
     line-height: 1;
+    transition: color 0.3s;
   }
+  #timer.away { color: #ff6b6b; }
+  #timer.warn { color: #ff1744; }
+  #timer.sitting { color: #e0e0e0; }
+  #timer.stopped { color: #666; }
   #threshold-display {
     font-size: 0.75rem;
     color: #555;
@@ -258,7 +263,7 @@
     <canvas id="breath-canvas" width="600" height="600"></canvas>
     <div id="breath-label"></div>
   </div>
-  <div id="breath-placeholder">Click 🫁 Breathe to choose an animation</div>
+  <div id="breath-placeholder">Click Breathe to choose an animation</div>
 </div>
 
 <div id="breath-modal">
@@ -366,6 +371,7 @@
     statusEl.textContent = 'Stopped';
     statusEl.className = 'stopped';
     timerEl.textContent = '00:00';
+    timerEl.className = 'stopped';
   }
 
   // Audio
@@ -1000,9 +1006,11 @@
       if (isWarning) {
         statusEl.textContent = 'WARNING — Stand up!';
         statusEl.className = 'warn';
+        timerEl.className = 'warn';
       } else {
         statusEl.textContent = 'Sitting';
         statusEl.className = 'sitting';
+        timerEl.className = 'sitting';
       }
     } else {
       if (isWarning) {
@@ -1013,6 +1021,7 @@
       }
       statusEl.textContent = 'Away';
       statusEl.className = 'away';
+      timerEl.className = 'away';
     }
     const m = String(Math.floor(sittingSec / 60)).padStart(2, '0');
     const s = String(sittingSec % 60).padStart(2, '0');
