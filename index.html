@@ -46,6 +46,7 @@
     font-size: 0.85rem;
     cursor: pointer;
   }
+  #controls button svg, #settings-btn svg { width: 16px; height: 16px; vertical-align: -2px; }
   #controls button:hover, #settings-btn:hover { background: #1a2744; border-color: #555; }
   #controls button.active { border-color: #4caf50; color: #4caf50; }
   #mute-btn.muted { border-color: #ff9800; color: #ff9800; }
@@ -227,10 +228,11 @@
 
 <div id="top-bar">
   <div id="controls">
-    <button id="settings-btn">⚙</button>
-    <button id="start-btn">Start</button>
-    <button id="mute-btn">🔊 Sound On</button>
-    <button id="breath-btn">🫁 Breathe</button>
+    <button id="settings-btn"><i data-lucide="settings"></i></button>
+    <button id="start-btn"><i data-lucide="play"></i> Start</button>
+    <button id="mute-btn"><i data-lucide="volume-2"></i> Sound On</button>
+    <button id="breath-btn"><i data-lucide="wind"></i> Breathe</button>
+    <button id="camera-btn"><i data-lucide="video"></i> Camera Off</button>
   </div>
   <div id="timer-section">
     <div id="status" class="stopped">Stopped</div>
@@ -271,6 +273,7 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 <script>
@@ -318,7 +321,8 @@
   // Mute
   muteBtn.addEventListener('click', () => {
     muted = !muted;
-    muteBtn.textContent = muted ? '🔇 Muted' : '🔊 Sound On';
+    muteBtn.innerHTML = muted ? '<i data-lucide="volume-x"></i> Muted' : '<i data-lucide="volume-2"></i> Sound On';
+    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
     muteBtn.classList.toggle('muted', muted);
     if (muted && warnInterval) {
       clearInterval(warnInterval);
@@ -334,7 +338,8 @@
   startBtn.addEventListener('click', () => {
     if (!running) {
       running = true;
-      startBtn.textContent = 'Stop';
+      startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
+      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
       startBtn.classList.add('active');
       sittingSec = 0;
       isWarning = false;
@@ -348,7 +353,8 @@
 
   function stop() {
     running = false;
-    startBtn.textContent = 'Start';
+    startBtn.innerHTML = '<i data-lucide="play"></i> Start';
+    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
     startBtn.classList.remove('active');
     personPresent = false;
     isWarning = false;
@@ -378,12 +384,33 @@
   }
 
   // Camera
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
+  let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
   video.srcObject = stream;
+  let cameraOn = true;
+
+  const cameraBtn = document.getElementById('camera-btn');
+  cameraBtn.addEventListener('click', async () => {
+    if (cameraOn) {
+      stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+      cameraOn = false;
+      cameraBtn.innerHTML = '<i data-lucide="video-off"></i> Camera On';
+      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+      video.style.opacity = '0.3';
+    } else {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
+      video.srcObject = stream;
+      cameraOn = true;
+      cameraBtn.innerHTML = '<i data-lucide="video"></i> Camera Off';
+      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+      video.style.opacity = '1';
+    }
+  });
 
   // Model
   const model = await cocoSsd.load();
   loadingEl.style.display = 'none';
+  lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
 
   // Detection loop
   async function detect() {
