@@ -13,8 +13,6 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     overflow: hidden;
   }
   body.warning { animation: flash 0.5s ease-in-out infinite alternate; }
@@ -22,74 +20,83 @@
     from { background: #1a1a2e; }
     to { background: #8b0000; }
   }
-  #camera-preview {
-    position: fixed;
-    top: 12px;
-    right: 12px;
-    width: 160px;
-    height: 120px;
-    border-radius: 8px;
-    border: 2px solid #333;
-    object-fit: cover;
+
+  /* Top bar: controls left, timer center, camera right */
+  #top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    position: relative;
     z-index: 10;
-    background: #000;
+  }
+  #controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  #controls button, #settings-btn {
+    background: #16213e;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #controls button:hover, #settings-btn:hover { background: #1a2744; border-color: #555; }
+  #controls button.active { border-color: #4caf50; color: #4caf50; }
+  #mute-btn.muted { border-color: #ff9800; color: #ff9800; }
+  #settings-btn { font-size: 1.1rem; padding: 6px 10px; }
+
+  #timer-section {
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
   }
   #status {
-    font-size: 1.2rem;
+    font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    margin-bottom: 12px;
+    margin-bottom: 2px;
   }
   #status.sitting { color: #4caf50; }
   #status.away { color: #888; }
   #status.warn { color: #ff1744; font-weight: bold; }
   #status.stopped { color: #666; }
   #timer {
-    font-size: 6rem;
+    font-size: 2.8rem;
     font-weight: 200;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.05em;
+    line-height: 1;
   }
   #threshold-display {
-    margin-top: 8px;
-    font-size: 0.95rem;
-    color: #666;
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 2px;
   }
-  #controls {
-    margin-top: 24px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
+
+  #camera-preview {
+    width: 140px;
+    height: 105px;
+    border-radius: 8px;
+    border: 2px solid #333;
+    object-fit: cover;
+    background: #000;
+    flex-shrink: 0;
   }
-  #controls button {
-    background: #16213e;
-    border: 1px solid #333;
-    color: #e0e0e0;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-size: 0.95rem;
-    cursor: pointer;
-  }
-  #controls button:hover { background: #1a2744; border-color: #555; }
-  #controls button.active { border-color: #4caf50; color: #4caf50; }
-  #mute-btn.muted { border-color: #ff9800; color: #ff9800; }
-  #settings-btn {
-    position: fixed;
-    top: 12px;
-    left: 12px;
-    background: none;
-    border: none;
-    color: #888;
-    font-size: 1.5rem;
-    cursor: pointer;
-    z-index: 10;
-  }
-  #settings-btn:hover { color: #e0e0e0; }
+
+  /* Settings panel */
   #settings-panel {
     display: none;
     position: fixed;
-    top: 50px;
-    left: 12px;
+    top: 52px;
+    left: 16px;
     background: #16213e;
     border: 1px solid #333;
     border-radius: 8px;
@@ -114,6 +121,94 @@
   }
   .quick-presets button:hover { border-color: #555; color: #e0e0e0; }
   .quick-presets button.selected { border-color: #4caf50; color: #4caf50; }
+
+  /* Breath section — centered in remaining space */
+  #breath-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #breath-overlay canvas { display: block; width: min(60vw, 60vh); height: min(60vw, 60vh); }
+  #breath-label {
+    text-align: center;
+    font-size: 1rem;
+    color: #556;
+    margin-top: 8px;
+    line-height: 1.8;
+  }
+  #breath-placeholder {
+    color: #333;
+    font-size: 0.9rem;
+  }
+
+  /* Breath picker modal */
+  #breath-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #breath-modal.open { display: flex; }
+  #breath-modal-inner {
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    width: 96vw;
+    max-width: 96vw;
+    height: 94vh;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+  #breath-modal-inner h2 { margin-bottom: 4px; font-weight: 500; font-size: 1.2rem; }
+  #breath-modal-inner p { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  .breath-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .breath-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .breath-card:hover { border-color: #555; }
+  .breath-card.selected { border-color: #4caf50; }
+  .breath-card canvas { display: block; margin: 0 auto 6px; border-radius: 4px; }
+  .breath-card .label { font-size: 0.75rem; color: #aaa; }
+  #breath-close {
+    margin-top: 16px;
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #breath-close:hover { border-color: #555; }
+  #breath-none {
+    margin-top: 16px;
+    margin-right: 8px;
+    background: none;
+    border: 1px solid #555;
+    color: #888;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #breath-none:hover { color: #e0e0e0; }
+
   #loading {
     position: fixed;
     inset: 0;
@@ -129,8 +224,22 @@
 </head>
 <body>
 <div id="loading">Loading model…</div>
-<video id="camera-preview" autoplay playsinline muted></video>
-<button id="settings-btn">⚙</button>
+
+<div id="top-bar">
+  <div id="controls">
+    <button id="settings-btn">⚙</button>
+    <button id="start-btn">Start</button>
+    <button id="mute-btn">🔊 Sound On</button>
+    <button id="breath-btn">🫁 Breathe</button>
+  </div>
+  <div id="timer-section">
+    <div id="status" class="stopped">Stopped</div>
+    <div id="timer">00:00</div>
+    <div id="threshold-display">Threshold: 20 min</div>
+  </div>
+  <video id="camera-preview" autoplay playsinline muted></video>
+</div>
+
 <div id="settings-panel">
   <label>Sitting threshold: <span id="threshold-val">20</span> min</label>
   <input type="range" id="threshold-range" min="1" max="60" value="20">
@@ -141,12 +250,25 @@
     <button data-min="30">30m</button>
   </div>
 </div>
-<div id="status" class="stopped">Stopped</div>
-<div id="timer">00:00</div>
-<div id="threshold-display">Threshold: 20 min</div>
-<div id="controls">
-  <button id="start-btn">Start</button>
-  <button id="mute-btn">🔊 Sound On</button>
+
+<div id="breath-section">
+  <div id="breath-overlay">
+    <canvas id="breath-canvas" width="600" height="600"></canvas>
+    <div id="breath-label"></div>
+  </div>
+  <div id="breath-placeholder">Click 🫁 Breathe to choose an animation</div>
+</div>
+
+<div id="breath-modal">
+  <div id="breath-modal-inner">
+    <h2>Choose a Breath Animation</h2>
+    <p>Select one to display while sitting as a breathing reminder</p>
+    <div class="breath-grid" id="breath-grid"></div>
+    <div style="display:flex;justify-content:flex-end">
+      <button id="breath-none">None</button>
+      <button id="breath-close">Select</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -165,6 +287,7 @@
   const startBtn = document.getElementById('start-btn');
   const muteBtn = document.getElementById('mute-btn');
   const presetBtns = document.querySelectorAll('.quick-presets button');
+  const breathPlaceholder = document.getElementById('breath-placeholder');
 
   let thresholdSec = 20 * 60;
   let sittingSec = 0;
@@ -277,6 +400,564 @@
     } catch(e) { /* skip frame */ }
     detectTimeout = setTimeout(detect, 1000);
   }
+
+  // Breath animations
+  const breathBtn = document.getElementById('breath-btn');
+  const breathModal = document.getElementById('breath-modal');
+  const breathGrid = document.getElementById('breath-grid');
+  const breathClose = document.getElementById('breath-close');
+  const breathNone = document.getElementById('breath-none');
+  const breathCanvas = document.getElementById('breath-canvas');
+  const breathCtx = breathCanvas.getContext('2d');
+  const breathLabel = document.getElementById('breath-label');
+  const breathOverlay = document.getElementById('breath-overlay');
+
+  let activeBreath = -1;
+  let breathRAF = null;
+
+  // breathe cycle: 4s in, 4s out = 8s total
+  function breathPhase(t) {
+    const cycle = (t % 8000) / 8000;
+    if (cycle < 0.5) return cycle * 2;
+    return 1 - (cycle - 0.5) * 2;
+  }
+  function breathText(t) {
+    const cycle = (t % 8000) / 8000;
+    let label, sec;
+    if (cycle < 0.5) {
+      label = 'Breathe in';
+      sec = Math.floor(cycle * 8) + 1;
+    } else {
+      label = 'Breathe out';
+      sec = Math.floor((cycle - 0.5) * 8) + 1;
+    }
+    const dots = Array.from({length: 4}, (_, i) => i < sec ? '●' : '○').join('  ');
+    return `${label}\n${dots}`;
+  }
+
+  const BW = 600, BH = 600;
+
+  const BREATH_THEMES = [
+    { name: 'Pulse Circle', draw(ctx, w, h, p) {
+      const u = w/120;
+      const r = 8*u + p * (w/2 - 12*u);
+      ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(100,200,255,${0.15 + p*0.25})`; ctx.fill();
+      ctx.strokeStyle = `rgba(100,200,255,${0.5 + p*0.4})`; ctx.lineWidth = 2*u; ctx.stroke();
+    }},
+    { name: 'Glow Ring', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 3; i >= 0; i--) {
+        const r = 8*u + p * (w/2 - 15*u) + i * 4*u;
+        ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(150,100,255,${0.15 - i*0.03})`; ctx.lineWidth = 3*u; ctx.stroke();
+      }
+    }},
+    { name: 'Box Trace', draw(ctx, w, h, p) {
+      const u = w/120;
+      const m = 12*u, s = w - m*2;
+      ctx.strokeStyle = '#444'; ctx.lineWidth = 1*u;
+      ctx.strokeRect(m, m, s, s);
+      const perim = s * 4; const d = p * perim;
+      let x, y;
+      if (d < s) { x = m + d; y = m; }
+      else if (d < s*2) { x = m + s; y = m + (d - s); }
+      else if (d < s*3) { x = m + s - (d - s*2); y = m + s; }
+      else { x = m; y = m + s - (d - s*3); }
+      ctx.beginPath(); ctx.arc(x, y, 5*u, 0, Math.PI*2);
+      ctx.fillStyle = '#4caf50'; ctx.fill();
+    }},
+    { name: 'Ripple', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 0; i < 3; i++) {
+        const rp = (p + i * 0.33) % 1;
+        const r = rp * (w/2 - 4*u);
+        ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(0,200,150,${0.6 - rp*0.55})`; ctx.lineWidth = 2*u; ctx.stroke();
+      }
+    }},
+    { name: 'Wave', draw(ctx, w, h, p) {
+      const u = w/120;
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        const amp = 8*u + p * 20*u;
+        const y = h/2 + Math.sin(x * 0.08 / u + p * Math.PI * 2) * amp;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(80,180,255,${0.4 + p*0.4})`; ctx.lineWidth = 2.5*u; ctx.stroke();
+    }},
+    { name: 'Flower', draw(ctx, w, h, p) {
+      const u = w/120;
+      const petals = 6, r = 10*u + p * 25*u;
+      for (let i = 0; i < petals; i++) {
+        const a = (Math.PI * 2 / petals) * i;
+        const px = w/2 + Math.cos(a) * r * 0.6;
+        const py = h/2 + Math.sin(a) * r * 0.6;
+        ctx.beginPath(); ctx.arc(px, py, r * 0.45, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,120,180,${0.15 + p*0.15})`; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(w/2, h/2, 5*u + p*4*u, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,200,100,${0.5 + p*0.3})`; ctx.fill();
+    }},
+    { name: 'Orbits', draw(ctx, w, h, p) {
+      const u = w/120;
+      const count = 5;
+      for (let i = 0; i < count; i++) {
+        const a = (Math.PI * 2 / count) * i + p * Math.PI * 2;
+        const dist = 12*u + p * 25*u;
+        const x = w/2 + Math.cos(a) * dist;
+        const y = h/2 + Math.sin(a) * dist;
+        ctx.beginPath(); ctx.arc(x, y, 4*u + p*3*u, 0, Math.PI*2);
+        ctx.fillStyle = `hsla(${i*72}, 70%, 65%, ${0.4 + p*0.4})`; ctx.fill();
+      }
+    }},
+    { name: 'Diamond', draw(ctx, w, h, p) {
+      const u = w/120;
+      const s = 8*u + p * 35*u;
+      ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(Math.PI/4);
+      ctx.fillStyle = `rgba(100,220,200,${0.1 + p*0.2})`;
+      ctx.fillRect(-s, -s, s*2, s*2);
+      ctx.strokeStyle = `rgba(100,220,200,${0.5 + p*0.4})`; ctx.lineWidth = 2*u;
+      ctx.strokeRect(-s, -s, s*2, s*2);
+      ctx.restore();
+    }},
+    { name: 'Gradient Shift', draw(ctx, w, h, p) {
+      const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w/2);
+      g.addColorStop(0, `rgba(${Math.round(80+p*100)},100,${Math.round(255-p*100)},${0.3+p*0.3})`);
+      g.addColorStop(1, 'rgba(26,26,46,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+    }},
+    { name: 'Lungs', draw(ctx, w, h, p) {
+      const u = w/120;
+      const s = 0.6 + p * 0.4;
+      ctx.save(); ctx.translate(w/2, h/2); ctx.scale(s, s);
+      ctx.beginPath(); ctx.ellipse(-14*u, 0, 16*u, 28*u, -0.15, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(100,180,255,${0.15+p*0.2})`; ctx.fill();
+      ctx.strokeStyle = `rgba(100,180,255,${0.5+p*0.3})`; ctx.lineWidth = 1.5*u/s; ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(14*u, 0, 16*u, 28*u, 0.15, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -32*u); ctx.lineTo(0, -10*u);
+      ctx.lineWidth = 2*u/s; ctx.stroke();
+      ctx.restore();
+    }},
+    { name: 'Heartbeat', draw(ctx, w, h, p) {
+      const u = w/120;
+      const beat = Math.sin(p * Math.PI);
+      const r = 15*u + beat * 20*u;
+      ctx.beginPath();
+      const cx = w/2, cy = h/2;
+      ctx.moveTo(cx, cy + r*0.8);
+      ctx.bezierCurveTo(cx - r*1.2, cy - r*0.2, cx - r*0.6, cy - r, cx, cy - r*0.4);
+      ctx.bezierCurveTo(cx + r*0.6, cy - r, cx + r*1.2, cy - r*0.2, cx, cy + r*0.8);
+      ctx.fillStyle = `rgba(255,80,80,${0.2 + beat*0.3})`; ctx.fill();
+      ctx.strokeStyle = `rgba(255,80,80,${0.5 + beat*0.4})`; ctx.lineWidth = 2*u; ctx.stroke();
+    }},
+    { name: 'Spiral', draw(ctx, w, h, p) {
+      const u = w/120;
+      ctx.beginPath();
+      for (let i = 0; i < 200; i++) {
+        const t = i / 200 * Math.PI * 6;
+        const r = (5*u + t * 3*u * p);
+        const x = w/2 + Math.cos(t) * r;
+        const y = h/2 + Math.sin(t) * r;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = `rgba(200,150,255,${0.3 + p*0.4})`; ctx.lineWidth = 2*u; ctx.stroke();
+    }},
+    { name: 'Pendulum', draw(ctx, w, h, p) {
+      const u = w/120;
+      const angle = (p - 0.5) * Math.PI * 0.6;
+      const len = 40*u;
+      const px = w/2 + Math.sin(angle) * len;
+      const py = 15*u + Math.cos(angle) * len;
+      ctx.beginPath(); ctx.moveTo(w/2, 15*u); ctx.lineTo(px, py);
+      ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5*u; ctx.stroke();
+      ctx.beginPath(); ctx.arc(px, py, 8*u, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,200,100,${0.4 + p*0.4})`; ctx.fill();
+      ctx.strokeStyle = `rgba(255,200,100,0.6)`; ctx.lineWidth = 1.5*u; ctx.stroke();
+    }},
+    { name: 'Rings', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 0; i < 5; i++) {
+        const phase = (p + i * 0.2) % 1;
+        const r = 5*u + phase * 40*u;
+        ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+        ctx.strokeStyle = `hsla(${180 + i*30}, 70%, 60%, ${0.5 - phase*0.45})`;
+        ctx.lineWidth = 2.5*u; ctx.stroke();
+      }
+    }},
+    { name: 'Jellyfish', draw(ctx, w, h, p) {
+      const u = w/120;
+      const squeeze = 0.7 + p * 0.3;
+      ctx.save(); ctx.translate(w/2, h/2 - 5*u);
+      // bell
+      ctx.beginPath(); ctx.ellipse(0, 0, 22*u * squeeze, 18*u / squeeze, 0, Math.PI, 0);
+      ctx.fillStyle = `rgba(150,100,255,${0.15 + p*0.2})`; ctx.fill();
+      ctx.strokeStyle = `rgba(150,100,255,${0.4 + p*0.3})`; ctx.lineWidth = 1.5*u; ctx.stroke();
+      // tentacles
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath(); ctx.moveTo(i * 8*u, 0);
+        const sway = Math.sin(p * Math.PI + i) * 5*u;
+        ctx.quadraticCurveTo(i * 8*u + sway, 18*u, i * 8*u + sway*1.5, 32*u * (1 + p*0.3));
+        ctx.strokeStyle = `rgba(150,100,255,${0.25 + p*0.15})`; ctx.lineWidth = 1.5*u; ctx.stroke();
+      }
+      ctx.restore();
+    }},
+    { name: 'Sun Rays', draw(ctx, w, h, p) {
+      const u = w/120;
+      const rays = 12;
+      const innerR = 10*u + p * 5*u;
+      const outerR = 20*u + p * 25*u;
+      for (let i = 0; i < rays; i++) {
+        const a = (Math.PI * 2 / rays) * i;
+        ctx.beginPath();
+        ctx.moveTo(w/2 + Math.cos(a) * innerR, h/2 + Math.sin(a) * innerR);
+        ctx.lineTo(w/2 + Math.cos(a) * outerR, h/2 + Math.sin(a) * outerR);
+        ctx.strokeStyle = `rgba(255,200,50,${0.3 + p*0.4})`; ctx.lineWidth = 2.5*u; ctx.lineCap = 'round'; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(w/2, h/2, innerR, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,220,80,${0.3 + p*0.3})`; ctx.fill();
+    }},
+    { name: 'DNA Helix', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 0; i < 20; i++) {
+        const t = i / 20;
+        const y = h * 0.1 + t * h * 0.8;
+        const x1 = w/2 + Math.sin(t * Math.PI * 4 + p * Math.PI * 2) * 20*u;
+        const x2 = w/2 - Math.sin(t * Math.PI * 4 + p * Math.PI * 2) * 20*u;
+        const z = Math.cos(t * Math.PI * 4 + p * Math.PI * 2);
+        ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2, y);
+        ctx.strokeStyle = `rgba(100,200,200,${0.1 + Math.abs(z)*0.15})`; ctx.lineWidth = 1*u; ctx.stroke();
+        const r = 3*u;
+        ctx.beginPath(); ctx.arc(x1, y, r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(100,220,255,${0.3 + z*0.3})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(x2, y, r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,140,200,${0.3 - z*0.3})`; ctx.fill();
+      }
+    }},
+    { name: 'Hourglass', draw(ctx, w, h, p) {
+      const u = w/120;
+      ctx.save(); ctx.translate(w/2, h/2);
+      ctx.strokeStyle = `rgba(200,180,140,${0.4 + p*0.3})`; ctx.lineWidth = 2*u;
+      ctx.beginPath(); ctx.moveTo(-20*u, -30*u); ctx.lineTo(20*u, -30*u);
+      ctx.lineTo(3*u, -2*u); ctx.lineTo(20*u, 30*u); ctx.lineTo(-20*u, 30*u);
+      ctx.lineTo(-3*u, -2*u); ctx.closePath(); ctx.stroke();
+      // sand top
+      const topH = (1 - p) * 22*u;
+      if (topH > 0) {
+        ctx.fillStyle = `rgba(220,190,120,0.4)`;
+        ctx.fillRect(-15*u, -28*u, 30*u, topH);
+      }
+      // sand bottom
+      const botH = p * 22*u;
+      if (botH > 0) {
+        ctx.fillStyle = `rgba(220,190,120,0.4)`;
+        ctx.fillRect(-15*u, 28*u - botH, 30*u, botH);
+      }
+      ctx.restore();
+    }},
+    { name: 'Bubbles', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 0; i < 8; i++) {
+        const seed = i * 137.5;
+        const bx = w * 0.2 + (seed % 70) / 70 * w * 0.6;
+        const by = h - (p + i * 0.12) % 1 * h * 0.9;
+        const r = 4*u + (seed % 5) * 1.5*u;
+        ctx.beginPath(); ctx.arc(bx, by, r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(120,200,255,${0.1 + ((seed % 3)/3)*0.15})`;
+        ctx.fill();
+        ctx.strokeStyle = `rgba(120,200,255,${0.3 + ((seed % 3)/3)*0.2})`;
+        ctx.lineWidth = 1*u; ctx.stroke();
+      }
+    }},
+    { name: 'Lotus', draw(ctx, w, h, p) {
+      const u = w/120;
+      const layers = 3;
+      for (let l = layers; l >= 1; l--) {
+        const petals = 4 + l * 2;
+        const spread = p * 0.8 + 0.2;
+        const r = (8 + l * 8) * u * spread;
+        for (let i = 0; i < petals; i++) {
+          const a = (Math.PI * 2 / petals) * i + l * 0.15;
+          ctx.save(); ctx.translate(w/2, h/2); ctx.rotate(a);
+          ctx.beginPath(); ctx.ellipse(r * 0.5, 0, r * 0.5, r * 0.22, 0, 0, Math.PI * 2);
+          const hue = 320 + l * 15;
+          ctx.fillStyle = `hsla(${hue},60%,70%,${0.1 + p * 0.12})`; ctx.fill();
+          ctx.strokeStyle = `hsla(${hue},60%,70%,${0.3 + p * 0.2})`; ctx.lineWidth = 1*u; ctx.stroke();
+          ctx.restore();
+        }
+      }
+      ctx.beginPath(); ctx.arc(w/2, h/2, 4*u + p*2*u, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,230,100,${0.4 + p*0.3})`; ctx.fill();
+    }},
+    { name: 'Galaxy', draw(ctx, w, h, p) {
+      const u = w/120;
+      const arms = 3;
+      for (let a = 0; a < arms; a++) {
+        const offset = (Math.PI*2/arms)*a;
+        for (let i = 0; i < 40; i++) {
+          const t = i/40;
+          const angle = offset + t * Math.PI * 3 + p * Math.PI * 2;
+          const dist = t * 42*u;
+          const x = w/2 + Math.cos(angle) * dist;
+          const y = h/2 + Math.sin(angle) * dist;
+          const r = (1 + (1-t)*2.5)*u;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+          ctx.fillStyle = `hsla(${220+a*40+t*60},70%,70%,${0.15+(1-t)*0.4})`; ctx.fill();
+        }
+      }
+      ctx.beginPath(); ctx.arc(w/2, h/2, 4*u+p*2*u, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,220,${0.5+p*0.3})`; ctx.fill();
+    }},
+    { name: 'Tree', draw(ctx, w, h, p) {
+      const u = w/120;
+      function branch(x, y, len, angle, depth) {
+        if (depth <= 0 || len < 2*u) return;
+        const ex = x + Math.cos(angle) * len;
+        const ey = y + Math.sin(angle) * len;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey);
+        ctx.strokeStyle = `rgba(100,180,100,${0.2+depth*0.08})`; ctx.lineWidth = depth*0.8*u; ctx.stroke();
+        const spread = 0.4 + p * 0.4;
+        branch(ex, ey, len*0.7, angle-spread, depth-1);
+        branch(ex, ey, len*0.7, angle+spread, depth-1);
+      }
+      branch(w/2, h*0.85, 25*u, -Math.PI/2, 7);
+    }},
+    { name: 'Aurora', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let band = 0; band < 5; band++) {
+        ctx.beginPath();
+        const yBase = h*0.2 + band*10*u;
+        for (let x = 0; x < w; x++) {
+          const wave = Math.sin(x*0.03/u + band + p*Math.PI*2) * 15*u * (0.5+p*0.5);
+          const y = yBase + wave;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        for (let x = w; x >= 0; x--) {
+          const wave = Math.sin(x*0.03/u + band + p*Math.PI*2) * 15*u * (0.5+p*0.5);
+          ctx.lineTo(x, yBase + wave + 8*u);
+        }
+        ctx.closePath();
+        ctx.fillStyle = `hsla(${140+band*30},70%,55%,${0.06+p*0.06})`; ctx.fill();
+      }
+    }},
+    { name: 'Raindrop', draw(ctx, w, h, p) {
+      const u = w/120;
+      const s = 0.5 + p * 0.5;
+      ctx.save(); ctx.translate(w/2, h/2); ctx.scale(s, s);
+      ctx.beginPath();
+      ctx.moveTo(0, -35*u);
+      ctx.bezierCurveTo(-25*u, -5*u, -25*u, 20*u, 0, 30*u);
+      ctx.bezierCurveTo(25*u, 20*u, 25*u, -5*u, 0, -35*u);
+      ctx.fillStyle = `rgba(80,160,255,${0.15+p*0.2})`; ctx.fill();
+      ctx.strokeStyle = `rgba(80,160,255,${0.4+p*0.3})`; ctx.lineWidth = 2*u/s; ctx.stroke();
+      ctx.restore();
+      // ripples at bottom
+      for (let i = 0; i < 3; i++) {
+        const rp = (p*2 + i*0.3) % 1;
+        const r = rp * 30*u;
+        ctx.beginPath(); ctx.ellipse(w/2, h/2 + 30*u*s, r, r*0.3, 0, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(80,160,255,${0.3-rp*0.28})`; ctx.lineWidth = 1.5*u; ctx.stroke();
+      }
+    }},
+    { name: 'Firefly', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let i = 0; i < 15; i++) {
+        const seed = i * 97.3;
+        const cx = (seed * 3.1 % 80 + 20) / 120 * w;
+        const cy = (seed * 2.7 % 80 + 20) / 120 * h;
+        const flicker = Math.sin(p * Math.PI * 2 + seed) * 0.5 + 0.5;
+        const r = (2 + flicker * 3) * u;
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r*3);
+        g.addColorStop(0, `rgba(255,240,100,${flicker*0.6})`);
+        g.addColorStop(1, 'rgba(255,240,100,0)');
+        ctx.fillStyle = g; ctx.fillRect(cx-r*3, cy-r*3, r*6, r*6);
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(255,250,150,${flicker*0.8})`; ctx.fill();
+      }
+    }},
+    { name: 'Moon Phases', draw(ctx, w, h, p) {
+      const u = w/120;
+      const r = 25*u;
+      ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(220,220,200,${0.2+p*0.15})`; ctx.fill();
+      ctx.strokeStyle = `rgba(220,220,200,${0.4+p*0.3})`; ctx.lineWidth = 1.5*u; ctx.stroke();
+      // shadow
+      ctx.save(); ctx.beginPath(); ctx.arc(w/2, h/2, r, 0, Math.PI*2); ctx.clip();
+      const shadowX = w/2 + (p - 0.5) * r * 3;
+      ctx.beginPath(); ctx.arc(shadowX, h/2, r*1.1, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(26,26,46,0.85)'; ctx.fill();
+      ctx.restore();
+    }},
+    { name: 'Windmill', draw(ctx, w, h, p) {
+      const u = w/120;
+      const blades = 4;
+      const spin = p * Math.PI * 2;
+      ctx.save(); ctx.translate(w/2, h/2);
+      for (let i = 0; i < blades; i++) {
+        const a = spin + (Math.PI*2/blades)*i;
+        ctx.save(); ctx.rotate(a);
+        ctx.beginPath(); ctx.moveTo(0, 0);
+        ctx.lineTo(5*u, -35*u); ctx.lineTo(0, -30*u); ctx.closePath();
+        ctx.fillStyle = `hsla(${i*90+200},50%,60%,${0.2+p*0.2})`; ctx.fill();
+        ctx.strokeStyle = `hsla(${i*90+200},50%,60%,${0.4+p*0.3})`; ctx.lineWidth = 1*u; ctx.stroke();
+        ctx.restore();
+      }
+      ctx.beginPath(); ctx.arc(0, 0, 3*u, 0, Math.PI*2);
+      ctx.fillStyle = '#aaa'; ctx.fill();
+      ctx.restore();
+    }},
+    { name: 'Constellation', draw(ctx, w, h, p) {
+      const u = w/120;
+      const stars = [
+        [0.3,0.25],[0.5,0.15],[0.7,0.3],[0.6,0.5],[0.4,0.6],
+        [0.25,0.45],[0.55,0.75],[0.75,0.65],[0.35,0.8],[0.8,0.45]
+      ];
+      const edges = [[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[3,7],[4,6],[6,8],[7,9]];
+      const glow = 0.3 + p * 0.5;
+      edges.forEach(([a,b]) => {
+        ctx.beginPath();
+        ctx.moveTo(stars[a][0]*w, stars[a][1]*h);
+        ctx.lineTo(stars[b][0]*w, stars[b][1]*h);
+        ctx.strokeStyle = `rgba(180,200,255,${glow*0.3})`; ctx.lineWidth = 1*u; ctx.stroke();
+      });
+      stars.forEach(([sx,sy], i) => {
+        const twinkle = Math.sin(p*Math.PI*2 + i*1.5)*0.3+0.7;
+        const r = (2+twinkle*2)*u;
+        ctx.beginPath(); ctx.arc(sx*w, sy*h, r, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(200,220,255,${glow*twinkle})`; ctx.fill();
+      });
+    }},
+    { name: 'Candle', draw(ctx, w, h, p) {
+      const u = w/120;
+      // body
+      ctx.fillStyle = 'rgba(240,220,180,0.25)';
+      ctx.fillRect(w/2-8*u, h/2, 16*u, 30*u);
+      ctx.strokeStyle = 'rgba(240,220,180,0.4)'; ctx.lineWidth = 1*u;
+      ctx.strokeRect(w/2-8*u, h/2, 16*u, 30*u);
+      // wick
+      ctx.beginPath(); ctx.moveTo(w/2, h/2); ctx.lineTo(w/2, h/2-6*u);
+      ctx.strokeStyle = '#666'; ctx.lineWidth = 1*u; ctx.stroke();
+      // flame
+      const flicker = Math.sin(p*Math.PI*2)*2*u;
+      const fs = 0.7+p*0.3;
+      ctx.save(); ctx.translate(w/2+flicker, h/2-6*u);
+      ctx.beginPath();
+      ctx.moveTo(0, -22*u*fs);
+      ctx.bezierCurveTo(-8*u*fs, -12*u*fs, -6*u*fs, 2*u, 0, 4*u);
+      ctx.bezierCurveTo(6*u*fs, 2*u, 8*u*fs, -12*u*fs, 0, -22*u*fs);
+      const fg = ctx.createRadialGradient(0, -8*u, 0, 0, -8*u, 18*u*fs);
+      fg.addColorStop(0, `rgba(255,250,200,${0.5+p*0.3})`);
+      fg.addColorStop(0.5, `rgba(255,160,50,${0.3+p*0.2})`);
+      fg.addColorStop(1, 'rgba(255,80,20,0)');
+      ctx.fillStyle = fg; ctx.fill();
+      ctx.restore();
+    }},
+    { name: 'Ocean Wave', draw(ctx, w, h, p) {
+      const u = w/120;
+      for (let layer = 0; layer < 4; layer++) {
+        const yBase = h*0.4 + layer*12*u;
+        ctx.beginPath();
+        for (let x = 0; x < w; x++) {
+          const amp = (10 + p*12)*u - layer*2*u;
+          const freq = 0.04/u + layer*0.005/u;
+          const y = yBase + Math.sin(x*freq + layer*0.8 + p*Math.PI*2) * amp;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+        ctx.fillStyle = `hsla(${200+layer*10},60%,${40+layer*8}%,${0.12-layer*0.02+p*0.08})`; ctx.fill();
+      }
+    }}
+  ];
+
+  // Build picker grid
+  const cardCanvases = [];
+  BREATH_THEMES.forEach((theme, i) => {
+    const card = document.createElement('div');
+    card.className = 'breath-card';
+    card.dataset.index = i;
+    const cvs = document.createElement('canvas');
+    cvs.width = 120; cvs.height = 120;
+    card.appendChild(cvs);
+    const lbl = document.createElement('div');
+    lbl.className = 'label';
+    lbl.textContent = theme.name;
+    card.appendChild(lbl);
+    breathGrid.appendChild(card);
+    cardCanvases.push(cvs);
+    card.addEventListener('click', () => {
+      breathGrid.querySelectorAll('.breath-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  // Animate picker previews
+  let pickerRAF = null;
+  function animatePicker(ts) {
+    if (!breathModal.classList.contains('open')) { pickerRAF = null; return; }
+    const p = breathPhase(ts);
+    cardCanvases.forEach((cvs, i) => {
+      const c = cvs.getContext('2d');
+      c.clearRect(0, 0, 120, 120);
+      BREATH_THEMES[i].draw(c, 120, 120, p);
+    });
+    pickerRAF = requestAnimationFrame(animatePicker);
+  }
+
+  breathBtn.addEventListener('click', () => {
+    breathModal.classList.add('open');
+    if (activeBreath >= 0) {
+      const cards = breathGrid.querySelectorAll('.breath-card');
+      cards.forEach((c, i) => c.classList.toggle('selected', i === activeBreath));
+    }
+    if (!pickerRAF) pickerRAF = requestAnimationFrame(animatePicker);
+  });
+
+  breathClose.addEventListener('click', () => {
+    const sel = breathGrid.querySelector('.breath-card.selected');
+    if (sel) {
+      activeBreath = parseInt(sel.dataset.index);
+      breathLabel.textContent = BREATH_THEMES[activeBreath].name;
+      breathOverlay.style.display = '';
+      breathPlaceholder.style.display = 'none';
+      startBreathOverlay();
+    }
+    breathModal.classList.remove('open');
+  });
+
+  breathNone.addEventListener('click', () => {
+    activeBreath = -1;
+    breathOverlay.style.display = 'none';
+    breathPlaceholder.style.display = '';
+    if (breathRAF) { cancelAnimationFrame(breathRAF); breathRAF = null; }
+    breathModal.classList.remove('open');
+    breathGrid.querySelectorAll('.breath-card').forEach(c => c.classList.remove('selected'));
+  });
+
+  breathModal.addEventListener('click', (e) => {
+    if (e.target === breathModal) breathModal.classList.remove('open');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && breathModal.classList.contains('open')) {
+      breathModal.classList.remove('open');
+    }
+  });
+
+  function startBreathOverlay() {
+    if (breathRAF) cancelAnimationFrame(breathRAF);
+    function loop(ts) {
+      if (activeBreath < 0) return;
+      breathCtx.clearRect(0, 0, BW, BH);
+      const p = breathPhase(ts);
+      BREATH_THEMES[activeBreath].draw(breathCtx, BW, BH, p);
+      breathLabel.innerHTML = breathText(ts).replace('\n', '<br>');
+      breathRAF = requestAnimationFrame(loop);
+    }
+    breathRAF = requestAnimationFrame(loop);
+  }
+
+  breathOverlay.style.display = 'none';
 
   // Timer tick
   function tick() {
