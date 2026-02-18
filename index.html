@@ -287,6 +287,9 @@ const PALETTE = [
   { name: 'Dark Gray',  rgb: [100, 100, 100], css: '#646464' },
 ];
 
+const MAGNIFIER_RADIUS = 40; // px, radius of the circular lens
+const MAGNIFIER_DOTS = 5;    // dots visible across diameter
+
 // ─── State ─────────────────────────────────────────────────────────
 let grid = null;           // grid[row][col] = paletteIndex
 let hoverCell = null;      // {r, c} or null
@@ -657,6 +660,59 @@ function render() {
       return `${d.label[0]}:${prefix}${d.hitEdge ? d.dist + '→e' : d.dist}`;
     });
     infoDist.textContent = distStrs.join('  ');
+
+    // ── Magnifier inset ──────────────────────────────────────────────
+    const rightPanelOpen = buildPanel.classList.contains('visible');
+    const leftPanelOpen = buildPanelLeft.classList.contains('visible');
+    let magX = w - MAGNIFIER_RADIUS - 20;
+    if (rightPanelOpen) magX = leftPanelOpen
+      ? w / 2
+      : MAGNIFIER_RADIUS + 20;
+    const magY = MAGNIFIER_RADIUS + 20;
+    const magCS = (MAGNIFIER_RADIUS * 2) / MAGNIFIER_DOTS;
+    const magDotR = magCS * 0.38;
+    const cellsVisible = Math.floor(MAGNIFIER_DOTS / 2) + 1;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(magX, magY, MAGNIFIER_RADIUS, 0, Math.PI * 2);
+    ctx.clip();
+
+    // dark background
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(magX - MAGNIFIER_RADIUS, magY - MAGNIFIER_RADIUS,
+                 MAGNIFIER_RADIUS * 2, MAGNIFIER_RADIUS * 2);
+
+    // draw neighboring dots
+    for (let dr = -cellsVisible; dr <= cellsVisible; dr++) {
+      for (let dc = -cellsVisible; dc <= cellsVisible; dc++) {
+        const gr = r + dr;
+        const gc = c + dc;
+        if (gr < 0 || gr >= GRID_SIZE || gc < 0 || gc >= GRID_SIZE) continue;
+        const dx = magX + dc * magCS;
+        const dy = magY + dr * magCS;
+        ctx.fillStyle = PALETTE[grid[gr][gc]].css;
+        ctx.beginPath();
+        ctx.arc(dx, dy, magDotR, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // highlight ring around hovered (center) dot
+    ctx.strokeStyle = '#e94560';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(magX, magY, magDotR + 3, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // border around magnifier
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(magX, magY, MAGNIFIER_RADIUS, 0, Math.PI * 2);
+    ctx.stroke();
   } else {
     infoCoords.textContent = '—';
     infoColor.textContent = '—';
