@@ -3,7 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LEGO Mosaic Helper</title>
+<title>LEGO Mosaic Helper — Build Tool for Mosaic Maker 40179</title>
+<meta name="description" content="Free companion tool for the LEGO Mosaic Maker 40179. Drop your photo, get an interactive color grid with distance guides, build order readouts, and speech — dot by dot.">
+<meta name="keywords" content="LEGO Mosaic Maker 40179, LEGO mosaic helper, LEGO mosaic build tool, LEGO 40179, mosaic maker companion">
+<meta property="og:title" content="LEGO Mosaic Helper — Build Tool for Mosaic Maker 40179">
+<meta property="og:description" content="Free companion tool for the LEGO Mosaic Maker 40179. Drop your photo, get an interactive color grid with distance guides, build order readouts, and speech — dot by dot.">
+<meta property="og:image" content="hero.jpg">
+<meta property="og:type" content="website">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -165,6 +171,11 @@
     background: #16213e;
     border-top: 1px solid #0f3460;
     flex-shrink: 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 101;
   }
 
   /* Import overlay */
@@ -177,12 +188,73 @@
     align-items: center;
     justify-content: center;
     z-index: 100;
+    overflow-y: auto;
   }
   #import-overlay.hidden { display: none; }
 
+  .homepage {
+    max-width: 1000px;
+    margin: auto;
+    padding: 32px;
+  }
+  .hero-section {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    align-items: center;
+  }
+  .hero-left {
+    flex: 1;
+    text-align: center;
+  }
+  .hero-left img {
+    max-height: 280px;
+    width: auto;
+  }
+  .hero-left h2 {
+    font-size: 20px;
+    color: #fff;
+    margin: 16px 0 8px;
+  }
+  .hero-left p {
+    font-size: 14px;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .hero-left ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #aaa;
+  }
+  .hero-left ul li {
+    margin: 6px 0;
+  }
+  .hero-left ul li::before {
+    content: "✓ ";
+    color: #533483;
+  }
+  .hero-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+  .hero-right img {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #333;
+  }
+  .hero-right #drop-zone {
+    width: 100%;
+  }
+  @media (max-width: 768px) {
+    .hero-section { flex-direction: column; }
+  }
+
   #drop-zone {
-    width: 400px;
-    height: 250px;
     border: 3px dashed #533483;
     border-radius: 12px;
     display: flex;
@@ -190,6 +262,7 @@
     align-items: center;
     justify-content: center;
     gap: 12px;
+    padding: 24px;
     transition: border-color 0.2s;
   }
   #drop-zone.dragover { border-color: #e94560; background: rgba(83, 52, 131, 0.2); }
@@ -210,7 +283,7 @@
 <body>
 
 <div id="toolbar">
-  <h1>LEGO Mosaic Helper</h1>
+  <h1><a href="./" style="color:inherit;text-decoration:none">LEGO Mosaic Helper</a></h1>
   <button id="btn-import">Choose Image</button>
   <button id="btn-section-grid">Section Grid</button>
   <button id="btn-correction">Correction Mode</button>
@@ -240,11 +313,27 @@
     <canvas id="grid-canvas"></canvas>
 
     <div id="import-overlay">
-      <div id="drop-zone">
-        <p>Drop a LEGO plate image here</p>
-        <label for="file-input">Choose File</label>
-        <input type="file" id="file-input" accept="image/*">
-        <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+      <div class="homepage">
+        <div class="hero-section">
+          <div class="hero-left">
+            <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener"><img src="product-box.jpg" alt="LEGO Mosaic Maker 40179 box"></a>
+            <h2>Your Build Companion for <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">LEGO® Mosaic Maker 40179</a></h2>
+            <p>Place 2,304 dots with confidence. Drop your reference photo and get an interactive color grid with distance guides, row-by-row build order, and voice readouts — so you never lose your place.</p>
+            <ul>
+              <li>Auto-detect all 5 colors from any photo</li>
+              <li>Distance rays show how far to the next color change</li>
+              <li>Build order with speech — hands-free, dot by dot</li>
+            </ul>
+          </div>
+          <div class="hero-right">
+            <img src="hero.jpg" alt="LEGO Mosaic Helper app screenshot">
+            <div id="drop-zone">
+              <p>Drop a LEGO plate image here</p>
+              <label for="file-input">Choose File</label>
+              <input type="file" id="file-input" accept="image/*">
+              <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+            </div>
+          </div>
       </div>
     </div>
 
