@@ -49,12 +49,109 @@
   #info-panel span { white-space: nowrap; }
 
   /* Main area */
-  #main { flex: 1; position: relative; overflow: hidden; }
+  #main { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
+  #canvas-area { flex: 1; position: relative; overflow: hidden; }
   #grid-canvas {
     position: absolute;
     top: 0; left: 0;
     cursor: crosshair;
   }
+
+  /* Direction popup */
+  #direction-popup {
+    display: none;
+    position: absolute;
+    z-index: 50;
+    grid-template-columns: 32px 32px 32px;
+    grid-template-rows: 32px 32px 32px;
+    gap: 2px;
+  }
+  #direction-popup.visible { display: grid; }
+  #direction-popup button {
+    width: 32px; height: 32px;
+    background: #0f3460;
+    color: #eee;
+    border: 1px solid #533483;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  #direction-popup button:hover { background: #533483; }
+  .dir-spacer { visibility: hidden; }
+
+  /* Build order panel */
+  #build-panel {
+    width: 260px;
+    background: #16213e;
+    border-left: 1px solid #0f3460;
+    display: none;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  #build-panel.visible { display: flex; }
+  #build-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #0f3460;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  #build-panel-header button {
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  #build-panel-header button:hover { color: #e94560; }
+  #build-panel-info {
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #aaa;
+    border-bottom: 1px solid #0f3460;
+  }
+  #build-panel-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .build-run {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 14px;
+  }
+  .build-run-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  #build-panel-footer {
+    padding: 10px 12px;
+    border-top: 1px solid #0f3460;
+    text-align: center;
+  }
+  #btn-speak {
+    background: #0f3460;
+    color: #eee;
+    border: 1px solid #533483;
+    padding: 6px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  #btn-speak:hover { background: #533483; }
 
   #footer {
     text-align: center;
@@ -113,6 +210,7 @@
   <button id="btn-import">Choose Image</button>
   <button id="btn-section-grid">Section Grid</button>
   <button id="btn-correction">Correction Mode</button>
+  <button id="btn-build-order">Build Order</button>
   <button id="btn-fit">Fit to Screen</button>
   <div id="info-panel">
     <span id="info-coords">—</span>
@@ -122,17 +220,42 @@
 </div>
 
 <div id="main">
-  <canvas id="grid-canvas"></canvas>
+  <div id="canvas-area">
+    <canvas id="grid-canvas"></canvas>
 
-  <div id="import-overlay">
-    <div id="drop-zone">
-      <p>Drop a LEGO plate image here</p>
-      <label for="file-input">Choose File</label>
-      <input type="file" id="file-input" accept="image/*">
-      <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+    <div id="import-overlay">
+      <div id="drop-zone">
+        <p>Drop a LEGO plate image here</p>
+        <label for="file-input">Choose File</label>
+        <input type="file" id="file-input" accept="image/*">
+        <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+      </div>
+    </div>
+
+    <div id="direction-popup">
+      <span class="dir-spacer"></span>
+      <button data-dr="-1" data-dc="0">&#9650;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="0" data-dc="-1">&#9664;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="0" data-dc="1">&#9654;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="1" data-dc="0">&#9660;</button>
+      <span class="dir-spacer"></span>
     </div>
   </div>
 
+  <div id="build-panel">
+    <div id="build-panel-header">
+      <span>Build Order</span>
+      <button id="btn-close-panel">&times;</button>
+    </div>
+    <div id="build-panel-info"></div>
+    <div id="build-panel-list"></div>
+    <div id="build-panel-footer">
+      <button id="btn-speak">Speak</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -155,6 +278,8 @@ let scale = 1;
 let offsetX = 0, offsetY = 0;
 let sectionGridOn = false;
 let correctionMode = false;
+let buildOrderMode = false;
+let buildOrderData = null;    // {r, c, dr, dc, runs}
 let isPanning = false;
 let panStartX, panStartY, panStartOX, panStartOY;
 
@@ -165,6 +290,7 @@ const CELL_SIZE_BASE = 14;     // base cell size in px
 const canvas = document.getElementById('grid-canvas');
 const ctx = canvas.getContext('2d');
 const mainEl = document.getElementById('main');
+const canvasArea = document.getElementById('canvas-area');
 const importOverlay = document.getElementById('import-overlay');
 
 const infoCoords = document.getElementById('info-coords');
@@ -175,6 +301,14 @@ const btnImport = document.getElementById('btn-import');
 const btnSectionGrid = document.getElementById('btn-section-grid');
 const btnCorrection = document.getElementById('btn-correction');
 const btnFit = document.getElementById('btn-fit');
+const btnBuildOrder = document.getElementById('btn-build-order');
+
+const directionPopup = document.getElementById('direction-popup');
+const buildPanel = document.getElementById('build-panel');
+const buildPanelInfo = document.getElementById('build-panel-info');
+const buildPanelList = document.getElementById('build-panel-list');
+const btnClosePanel = document.getElementById('btn-close-panel');
+const btnSpeak = document.getElementById('btn-speak');
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -322,8 +456,8 @@ function calcDistances(r, c) {
 
 // ─── Rendering ─────────────────────────────────────────────────────
 function resizeCanvas() {
-  canvas.width = mainEl.clientWidth;
-  canvas.height = mainEl.clientHeight;
+  canvas.width = canvasArea.clientWidth;
+  canvas.height = canvasArea.clientHeight;
   render();
 }
 
@@ -346,8 +480,8 @@ function screenToGrid(sx, sy) {
 }
 
 function fitToScreen() {
-  const w = mainEl.clientWidth;
-  const h = mainEl.clientHeight;
+  const w = canvasArea.clientWidth;
+  const h = canvasArea.clientHeight;
   const margin = 20;
   scale = Math.min((w - margin * 2) / (GRID_SIZE * CELL_SIZE_BASE),
                    (h - margin * 2) / (GRID_SIZE * CELL_SIZE_BASE));
@@ -377,6 +511,29 @@ function render() {
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
       ctx.fill();
     }
+  }
+
+  // build order highlight
+  if (buildOrderData) {
+    const { r: boR, c: boC, dr: boDR, dc: boDC, runs } = buildOrderData;
+    let totalDots = 0;
+    for (const run of runs) totalDots += run.count;
+    if (totalDots === 0) { /* skip highlight */ }
+    const startR = boR + boDR;
+    const startC = boC + boDC;
+    const endR = boR + boDR * totalDots;
+    const endC = boC + boDC * totalDots;
+    const { x: sx, y: sy } = gridToScreen(startR, startC);
+    const { x: ex, y: ey } = gridToScreen(endR, endC);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(233, 69, 96, 0.5)';
+    ctx.lineWidth = cs * 0.8;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+    ctx.restore();
   }
 
   // section grid
@@ -503,7 +660,7 @@ canvas.addEventListener('mouseleave', () => {
 
 canvas.addEventListener('mousedown', e => {
   if (!grid) return;
-  if (correctionMode) return; // handled in click
+  if (correctionMode || buildOrderMode) return; // handled in click
   isPanning = true;
   panStartX = e.clientX;
   panStartY = e.clientY;
@@ -515,7 +672,16 @@ canvas.addEventListener('mouseup', () => { isPanning = false; });
 canvas.addEventListener('mouseleave', () => { isPanning = false; });
 
 canvas.addEventListener('click', e => {
-  if (!grid || !correctionMode) return;
+  if (!grid) return;
+  if (buildOrderMode) {
+    hideDirectionPopup();
+    const rect = canvas.getBoundingClientRect();
+    const cell = screenToGrid(e.clientX - rect.left, e.clientY - rect.top);
+    if (!cell) return;
+    showDirectionPopup(cell.r, cell.c);
+    return;
+  }
+  if (!correctionMode) return;
   const rect = canvas.getBoundingClientRect();
   const cell = screenToGrid(e.clientX - rect.left, e.clientY - rect.top);
   if (!cell) return;
@@ -555,9 +721,146 @@ btnCorrection.addEventListener('click', () => {
   correctionMode = !correctionMode;
   btnCorrection.classList.toggle('active', correctionMode);
   canvas.style.cursor = correctionMode ? 'pointer' : 'crosshair';
+  if (correctionMode && buildOrderMode) {
+    buildOrderMode = false;
+    btnBuildOrder.classList.remove('active');
+    closeBuildOrder();
+  }
 });
 
 btnFit.addEventListener('click', fitToScreen);
+
+// ─── Build Order Mode ──────────────────────────────────────────────
+btnBuildOrder.addEventListener('click', () => {
+  buildOrderMode = !buildOrderMode;
+  btnBuildOrder.classList.toggle('active', buildOrderMode);
+  if (buildOrderMode) {
+    // turn off correction mode if on
+    if (correctionMode) {
+      correctionMode = false;
+      btnCorrection.classList.remove('active');
+    }
+    canvas.style.cursor = 'pointer';
+  } else {
+    canvas.style.cursor = 'crosshair';
+    closeBuildOrder();
+  }
+});
+
+function showDirectionPopup(r, c) {
+  const { x, y } = gridToScreen(r, c);
+  const rect = canvas.getBoundingClientRect();
+  const popupW = 32 * 3 + 2 * 2;
+  const popupH = 32 * 3 + 2 * 2;
+  directionPopup.style.left = (rect.left - canvasArea.getBoundingClientRect().left + x - popupW / 2) + 'px';
+  directionPopup.style.top = (rect.top - canvasArea.getBoundingClientRect().top + y - popupH / 2) + 'px';
+  directionPopup.classList.add('visible');
+  directionPopup.dataset.row = r;
+  directionPopup.dataset.col = c;
+}
+
+function hideDirectionPopup() {
+  directionPopup.classList.remove('visible');
+}
+
+directionPopup.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-dr]');
+  if (!btn) return;
+  e.stopPropagation();
+  const r = parseInt(directionPopup.dataset.row);
+  const c = parseInt(directionPopup.dataset.col);
+  const dr = parseInt(btn.dataset.dr);
+  const dc = parseInt(btn.dataset.dc);
+  hideDirectionPopup();
+  executeBuildOrder(r, c, dr, dc);
+});
+
+// dismiss popup when clicking outside
+document.addEventListener('mousedown', e => {
+  if (directionPopup.classList.contains('visible') && !directionPopup.contains(e.target)) {
+    hideDirectionPopup();
+  }
+});
+
+function computeBuildOrder(r, c, dr, dc) {
+  const runs = [];
+  let nr = r + dr, nc = c + dc;
+  while (nr >= 0 && nr < GRID_SIZE && nc >= 0 && nc < GRID_SIZE) {
+    const colorIdx = grid[nr][nc];
+    if (runs.length && runs[runs.length - 1].colorIdx === colorIdx) {
+      runs[runs.length - 1].count++;
+    } else {
+      runs.push({ colorIdx, count: 1 });
+    }
+    nr += dr;
+    nc += dc;
+  }
+  return runs;
+}
+
+function directionLabel(dr, dc) {
+  if (dr === -1) return 'Up';
+  if (dr === 1) return 'Down';
+  if (dc === -1) return 'Left';
+  return 'Right';
+}
+
+function executeBuildOrder(r, c, dr, dc) {
+  const runs = computeBuildOrder(r, c, dr, dc);
+  buildOrderData = { r, c, dr, dc, runs };
+
+  // populate panel
+  buildPanelInfo.textContent = `Row ${r + 1}, Col ${c + 1} → ${directionLabel(dr, dc)}`;
+  buildPanelList.innerHTML = '';
+  for (const run of runs) {
+    const div = document.createElement('div');
+    div.className = 'build-run';
+    const dot = document.createElement('span');
+    dot.className = 'build-run-dot';
+    dot.style.background = PALETTE[run.colorIdx].css;
+    const label = document.createElement('span');
+    label.textContent = `${run.count}× ${PALETTE[run.colorIdx].name}`;
+    div.appendChild(dot);
+    div.appendChild(label);
+    buildPanelList.appendChild(div);
+  }
+
+  buildPanel.classList.add('visible');
+  resizeCanvas();
+  render();
+  speakBuildOrder(runs);
+}
+
+function buildSpeechText(runs) {
+  return runs.map(r => `${r.count} ${PALETTE[r.colorIdx].name}`).join('. ') + '.';
+}
+
+function speakBuildOrder(runs) {
+  window.speechSynthesis.cancel();
+  const text = buildSpeechText(runs);
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;
+  window.speechSynthesis.speak(utterance);
+}
+
+btnSpeak.addEventListener('click', () => {
+  if (buildOrderData) {
+    speakBuildOrder(buildOrderData.runs);
+  }
+});
+
+btnClosePanel.addEventListener('click', () => {
+  closeBuildOrder();
+});
+
+function closeBuildOrder() {
+  window.speechSynthesis.cancel();
+  buildOrderData = null;
+  buildPanel.classList.remove('visible');
+  hideDirectionPopup();
+  resizeCanvas();
+  render();
+}
 
 // ─── Init ──────────────────────────────────────────────────────────
 window.addEventListener('resize', resizeCanvas);
