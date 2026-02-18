@@ -186,72 +186,89 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     z-index: 100;
     overflow-y: auto;
   }
   #import-overlay.hidden { display: none; }
 
   .homepage {
-    max-width: 1000px;
-    margin: auto;
-    padding: 32px;
-  }
-  .hero-section {
-    display: flex;
-    flex-direction: row;
-    gap: 40px;
-    align-items: center;
-  }
-  .hero-left {
-    flex: 1;
-    text-align: center;
-  }
-  .hero-left img {
-    max-height: 280px;
-    width: auto;
-  }
-  .hero-left h2 {
-    font-size: 20px;
-    color: #fff;
-    margin: 16px 0 8px;
-  }
-  .hero-left p {
-    font-size: 14px;
-    color: #aaa;
-    line-height: 1.5;
-  }
-  .hero-left ul {
-    list-style: none;
-    padding: 0;
-    margin-top: 12px;
-    font-size: 14px;
-    color: #aaa;
-  }
-  .hero-left ul li {
-    margin: 6px 0;
-  }
-  .hero-left ul li::before {
-    content: "✓ ";
-    color: #533483;
-  }
-  .hero-right {
-    flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 24px;
-  }
-  .hero-right img {
+    max-width: 900px;
     width: 100%;
-    border-radius: 8px;
-    border: 1px solid #333;
+    padding: 40px;
+    margin: auto;
   }
-  .hero-right #drop-zone {
+  .homepage-title {
+    font-size: 2rem;
+    color: #fff;
+    line-height: 1.3;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .homepage-subtext {
+    font-size: 0.95rem;
+    color: #b0b0c0;
+    line-height: 1.6;
+    text-align: center;
+    max-width: 640px;
+    margin-bottom: 32px;
+  }
+  .homepage .screenshot {
     width: 100%;
+    max-width: 800px;
+    border-radius: 12px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+    margin-bottom: 36px;
   }
-  @media (max-width: 768px) {
-    .hero-section { flex-direction: column; }
+  .info-row {
+    display: flex;
+    gap: 32px;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 36px;
+  }
+  .info-row .product-img {
+    width: 120px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+  .info-row .product-link {
+    display: inline-block;
+    color: #e94560;
+    font-size: 0.82rem;
+    text-decoration: none;
+  }
+  .info-row .product-link:hover { text-decoration: underline; }
+  .info-text {
+    flex: 1;
+  }
+  .info-text ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 12px;
+  }
+  .info-text ul li {
+    padding: 7px 0;
+    font-size: 0.9rem;
+    color: #c0c0d0;
+  }
+  .info-text ul li::before {
+    content: "✦ ";
+    color: #e94560;
+  }
+  .homepage #drop-zone {
+    width: 100%;
+    max-width: 700px;
+  }
+  @media (max-width: 600px) {
+    .homepage { padding: 40px 20px; }
+    .info-row { flex-direction: column; align-items: center; text-align: center; }
+    .homepage-title { font-size: 1.5rem; }
   }
 
   #drop-zone {
@@ -265,6 +282,7 @@
     padding: 24px;
     transition: border-color 0.2s;
   }
+  #drop-zone:hover { border-color: #e94560; }
   #drop-zone.dragover { border-color: #e94560; background: rgba(83, 52, 131, 0.2); }
   #drop-zone p { font-size: 16px; color: #aaa; }
   #drop-zone label {
@@ -314,26 +332,26 @@
 
     <div id="import-overlay">
       <div class="homepage">
-        <div class="hero-section">
-          <div class="hero-left">
-            <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener"><img src="product-box.jpg" alt="LEGO Mosaic Maker 40179 box"></a>
-            <h2>Your Build Companion for <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">LEGO® Mosaic Maker 40179</a></h2>
-            <p>Place 2,304 dots with confidence. Drop your reference photo and get an interactive color grid with distance guides, row-by-row build order, and voice readouts — so you never lose your place.</p>
+        <h2 class="homepage-title">Your Build Companion for LEGO® Mosaic Maker 40179</h2>
+        <p class="homepage-subtext">Place 2,304 dots with confidence. Drop your reference photo and get an interactive color grid with distance guides, row-by-row build order, and voice readouts — so you never lose your place.</p>
+        <img src="hero.jpg" alt="LEGO Mosaic Helper app screenshot" class="screenshot">
+        <div class="info-row">
+          <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener"><img src="product-box.jpg" alt="LEGO Mosaic Maker 40179 box" class="product-img"></a>
+          <div class="info-text">
             <ul>
               <li>Auto-detect all 5 colors from any photo</li>
               <li>Distance rays show how far to the next color change</li>
               <li>Build order with speech — hands-free, dot by dot</li>
             </ul>
+            <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener" class="product-link">View LEGO® Mosaic Maker 40179 on LEGO.com &rarr;</a>
           </div>
-          <div class="hero-right">
-            <img src="hero.jpg" alt="LEGO Mosaic Helper app screenshot">
-            <div id="drop-zone">
-              <p>Drop a LEGO plate image here</p>
-              <label for="file-input">Choose File</label>
-              <input type="file" id="file-input" accept="image/*">
-              <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
-            </div>
-          </div>
+        </div>
+        <div id="drop-zone">
+          <p>Drop a LEGO plate image here</p>
+          <label for="file-input">Choose File</label>
+          <input type="file" id="file-input" accept="image/*">
+          <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+        </div>
       </div>
     </div>
 
