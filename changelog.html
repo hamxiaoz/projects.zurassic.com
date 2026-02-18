@@ -142,8 +142,8 @@
       mis-detected colors. All in a single HTML file.
     </p>
     <div class="screenshots">
-      <img class="small" src="0.png" alt="Import screen">
-      <img class="small" src="1.png" alt="Mosaic grid loaded">
+      <img class="small" src="story/0.png" alt="Import screen">
+      <img class="small" src="story/1.png" alt="Mosaic grid loaded">
     </div>
   </div>
 
@@ -156,7 +156,7 @@
       — which matches what you actually count on the real plate.
     </p>
     <div class="screenshots">
-      <img src="2 update distance.png" alt="Fixing distance calculation">
+      <img src="story/2 update distance.png" alt="Fixing distance calculation">
     </div>
   </div>
 
@@ -173,12 +173,12 @@
       adjacent color block is — a useful landmark for counting on the real plate.
     </p>
     <div class="screenshots">
-      <img class="small" src="3 not showing distance.png" alt="No distance shown for adjacent different color">
-      <img class="small" src="4.png" alt="Planning the new logic">
+      <img class="small" src="story/3 not showing distance.png" alt="No distance shown for adjacent different color">
+      <img class="small" src="story/4.png" alt="Planning the new logic">
     </div>
     <div class="screenshots" style="margin-top:10px">
-      <img class="small" src="5 1.png" alt="Cyan lines showing adjacent block distances">
-      <img class="small" src="5 2.png" alt="Mixed red and cyan rays">
+      <img class="small" src="story/5 1.png" alt="Cyan lines showing adjacent block distances">
+      <img class="small" src="story/5 2.png" alt="Mixed red and cyan rays">
     </div>
   </div>
 
@@ -210,14 +210,49 @@
       and the app running on a laptop nearby. It works.
     </p>
     <div class="screenshots">
-      <img src="workbennch.jpeg" alt="The real LEGO mosaic workbench">
+      <img src="story/workbennch.jpeg" alt="The real LEGO mosaic workbench">
     </div>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag feature">Feature</span>
+    <h2>Build Order with Speech</h2>
+    <p>
+      Counting dots row by row is tedious. The new Build Order mode lets you click any dot,
+      pick a direction, and the app computes the full sequence of color runs along that line.
+      It shows a side panel listing each run ("3x Light Gray, 1x White, 2x Black...") and
+      highlights the path on the canvas in red.
+    </p>
+    <p>
+      Best part: it speaks the sequence out loud using the browser's speech synthesis.
+      You can keep your eyes on the plate and just listen. Hit the Speak button to replay anytime.
+    </p>
+    <div class="screenshots">
+      <img class="small" src="story/6 speak build order.png" alt="Direction picker popup">
+      <img class="small" src="story/6 speak build order 2.png" alt="Build order panel with speech">
+    </div>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag feature">Feature</span>
+    <h2>Dual Build Panels — Left & Right</h2>
+    <p>
+      Two people can now build the mosaic at the same time. The single "Build Order" button
+      was replaced with "Build Left" and "Build Right" — each populating its own panel
+      on either side of the canvas.
+    </p>
+    <p>
+      Each panel has independent data, speech, and close controls. The canvas shows both
+      highlights simultaneously: <strong style="color:#4287f5">blue</strong> for the left builder,
+      <strong style="color:#e94560">red</strong> for the right. Panels overlay the canvas
+      without shifting the mosaic, so the plate stays centered no matter which panels are open.
+    </p>
   </div>
 
 </div>
 
 <div class="footer">
-  Built with Claude Code in a single session. The entire app is one HTML file.
+  Built with Claude Code. The entire app is one HTML file. <a href="index.html" style="color:#888">Back to the app</a>
 </div>
 
 <div id="lightbox">
