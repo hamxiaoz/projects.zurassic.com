@@ -14,6 +14,7 @@
   }
 
   header {
+    position: relative;
     text-align: center;
     padding: 60px 20px 40px;
     background: linear-gradient(135deg, #1a1a2e, #16213e);
@@ -21,6 +22,8 @@
   }
   header h1 { font-size: 36px; color: #fff; margin-bottom: 8px; }
   header p { font-size: 16px; color: #aaa; max-width: 500px; margin: 0 auto; }
+  .back-link { position: absolute; top: 20px; left: 20px; color: #aaa; text-decoration: none; font-size: 14px; }
+  .back-link:hover { color: #fff; }
 
   .timeline {
     max-width: 720px;
@@ -122,6 +125,7 @@
 <body>
 
 <header>
+  <a href="index.html#home" class="back-link">&larr; Back to Home</a>
   <h1>LEGO Mosaic Helper</h1>
   <p>How a weekend LEGO project turned into a single-file web app — one improvement at a time.</p>
 </header>
@@ -212,7 +216,7 @@
       and the app running on a laptop nearby. It works.
     </p>
     <div class="screenshots">
-      <img src="story/workbennch.jpeg" alt="The real LEGO mosaic workbench">
+      <img src="story/workbennch.png" alt="The real LEGO mosaic workbench">
     </div>
   </div>
 
@@ -273,10 +277,27 @@
     </p>
   </div>
 
+  <div class="entry">
+    <span class="tag improve">Improve</span>
+    <h2>Homepage Navigation & URL Routing</h2>
+    <p>
+      The toolbar (Choose Image, Section Grid, etc.) is now hidden on the homepage and only appears
+      once an image is loaded — keeping the landing page clean and focused.
+    </p>
+    <p>
+      Added hash-based URL routing: loading an image sets the URL to <code>#app</code>, and returning
+      to the homepage sets it to <code>#home</code>. The browser back button now works to navigate
+      between the app and homepage. The footer hides in app view to avoid overlapping the canvas.
+    </p>
+    <div class="screenshots">
+      <img src="story/7.png" alt="Clean homepage with hidden toolbar">
+    </div>
+  </div>
+
 </div>
 
 <div class="footer">
-  <a href="index.html" style="color:#888">Back to the app</a>
+  <a href="index.html#home" style="color:#888">Back to Home</a>
 </div>
 
 <div id="lightbox">

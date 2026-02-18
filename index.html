@@ -191,6 +191,8 @@
     overflow-y: auto;
   }
   #import-overlay.hidden { display: none; }
+  #toolbar.hidden { display: none; }
+  #footer.hidden { display: none; }
 
   .homepage {
     display: flex;
@@ -300,8 +302,8 @@
 </head>
 <body>
 
-<div id="toolbar">
-  <h1><a href="./" style="color:inherit;text-decoration:none">LEGO Mosaic Helper</a></h1>
+<div id="toolbar" class="hidden">
+  <h1><a href="#home" style="color:inherit;text-decoration:none">LEGO Mosaic Helper</a></h1>
   <button id="btn-import">Choose Image</button>
   <button id="btn-section-grid">Section Grid</button>
   <button id="btn-correction">Correction Mode</button>
@@ -347,7 +349,7 @@
           </div>
         </div>
         <div id="drop-zone">
-          <p>Drop a LEGO plate image here</p>
+          <p>Drop the LEGO mosaic image here</p>
           <label for="file-input">Choose File</label>
           <input type="file" id="file-input" accept="image/*">
           <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
@@ -457,6 +459,9 @@ document.getElementById('btn-demo').addEventListener('click', () => {
     loadedImage = img;
     extractGrid();
     importOverlay.classList.add('hidden');
+    document.getElementById('toolbar').classList.remove('hidden');
+    document.getElementById('footer').classList.add('hidden');
+    location.hash = 'app';
     fitToScreen();
     render();
   };
@@ -486,6 +491,9 @@ function handleFile(file) {
       loadedImage = img;
       extractGrid();
       importOverlay.classList.add('hidden');
+      document.getElementById('toolbar').classList.remove('hidden');
+      document.getElementById('footer').classList.add('hidden');
+      location.hash = 'app';
       fitToScreen();
       render();
     };
@@ -504,6 +512,27 @@ dropZone.addEventListener('drop', e => {
 fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
 btnImport.addEventListener('click', () => {
   importOverlay.classList.remove('hidden');
+  document.getElementById('toolbar').classList.add('hidden');
+  document.getElementById('footer').classList.remove('hidden');
+  location.hash = 'home';
+});
+
+// ─── Hash Navigation ──────────────────────────────────────────────
+window.addEventListener('hashchange', () => {
+  const hash = location.hash.replace('#', '');
+  if (hash === 'changelog') {
+    location.href = 'changelog.html';
+    return;
+  }
+  if (hash === 'app' && loadedImage) {
+    importOverlay.classList.add('hidden');
+    document.getElementById('toolbar').classList.remove('hidden');
+    document.getElementById('footer').classList.add('hidden');
+  } else {
+    importOverlay.classList.remove('hidden');
+    document.getElementById('toolbar').classList.add('hidden');
+    document.getElementById('footer').classList.remove('hidden');
+  }
 });
 
 // ─── Extract Grid from Full Image ─────────────────────────────────
