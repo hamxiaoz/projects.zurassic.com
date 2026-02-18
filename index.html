@@ -49,8 +49,8 @@
   #info-panel span { white-space: nowrap; }
 
   /* Main area */
-  #main { flex: 1; display: flex; flex-direction: row; overflow: hidden; }
-  #canvas-area { flex: 1; position: relative; overflow: hidden; }
+  #main { flex: 1; position: relative; overflow: hidden; }
+  #canvas-area { position: absolute; inset: 0; overflow: hidden; }
   #grid-canvas {
     position: absolute;
     top: 0; left: 0;
@@ -83,18 +83,22 @@
   #direction-popup button:hover { background: #533483; }
   .dir-spacer { visibility: hidden; }
 
-  /* Build order panel */
-  #build-panel {
+  /* Build order panels (shared styles) */
+  .build-panel {
+    position: absolute;
+    top: 0;
+    bottom: 0;
     width: 260px;
     background: #16213e;
-    border-left: 1px solid #0f3460;
     display: none;
     flex-direction: column;
-    flex-shrink: 0;
     overflow: hidden;
+    z-index: 40;
   }
-  #build-panel.visible { display: flex; }
-  #build-panel-header {
+  .build-panel.visible { display: flex; }
+  #build-panel { right: 0; border-left: 1px solid #0f3460; }
+  #build-panel-left { left: 0; border-right: 1px solid #0f3460; }
+  .build-panel-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -103,7 +107,7 @@
     font-weight: 600;
     font-size: 14px;
   }
-  #build-panel-header button {
+  .build-panel-header button {
     background: none;
     border: none;
     color: #aaa;
@@ -111,14 +115,14 @@
     cursor: pointer;
     padding: 0 4px;
   }
-  #build-panel-header button:hover { color: #e94560; }
-  #build-panel-info {
+  .build-panel-header button:hover { color: #e94560; }
+  .build-panel-info {
     padding: 8px 12px;
     font-size: 12px;
     color: #aaa;
     border-bottom: 1px solid #0f3460;
   }
-  #build-panel-list {
+  .build-panel-list {
     flex: 1;
     overflow-y: auto;
     padding: 8px 12px;
@@ -137,12 +141,12 @@
     flex-shrink: 0;
     border: 1px solid rgba(255,255,255,0.2);
   }
-  #build-panel-footer {
+  .build-panel-footer {
     padding: 10px 12px;
     border-top: 1px solid #0f3460;
     text-align: center;
   }
-  #btn-speak {
+  .btn-speak {
     background: #0f3460;
     color: #eee;
     border: 1px solid #533483;
@@ -151,7 +155,7 @@
     cursor: pointer;
     font-size: 13px;
   }
-  #btn-speak:hover { background: #533483; }
+  .btn-speak:hover { background: #533483; }
 
   #footer {
     text-align: center;
@@ -210,7 +214,8 @@
   <button id="btn-import">Choose Image</button>
   <button id="btn-section-grid">Section Grid</button>
   <button id="btn-correction">Correction Mode</button>
-  <button id="btn-build-order">Build Order</button>
+  <button id="btn-build-left">Build Left</button>
+  <button id="btn-build-right">Build Right</button>
   <button id="btn-fit">Fit to Screen</button>
   <div id="info-panel">
     <span id="info-coords">—</span>
@@ -220,6 +225,17 @@
 </div>
 
 <div id="main">
+  <div id="build-panel-left" class="build-panel">
+    <div class="build-panel-header">
+      <span>Build Left</span>
+      <button id="btn-close-panel-left">&times;</button>
+    </div>
+    <div id="build-panel-left-info" class="build-panel-info"></div>
+    <div id="build-panel-left-list" class="build-panel-list"></div>
+    <div class="build-panel-footer">
+      <button id="btn-speak-left" class="btn-speak">Speak</button>
+    </div>
+  </div>
   <div id="canvas-area">
     <canvas id="grid-canvas"></canvas>
 
@@ -245,15 +261,15 @@
     </div>
   </div>
 
-  <div id="build-panel">
-    <div id="build-panel-header">
-      <span>Build Order</span>
+  <div id="build-panel" class="build-panel">
+    <div class="build-panel-header">
+      <span>Build Right</span>
       <button id="btn-close-panel">&times;</button>
     </div>
-    <div id="build-panel-info"></div>
-    <div id="build-panel-list"></div>
-    <div id="build-panel-footer">
-      <button id="btn-speak">Speak</button>
+    <div id="build-panel-info" class="build-panel-info"></div>
+    <div id="build-panel-list" class="build-panel-list"></div>
+    <div class="build-panel-footer">
+      <button id="btn-speak" class="btn-speak">Speak</button>
     </div>
   </div>
 </div>
@@ -278,8 +294,9 @@ let scale = 1;
 let offsetX = 0, offsetY = 0;
 let sectionGridOn = false;
 let correctionMode = false;
-let buildOrderMode = false;
-let buildOrderData = null;    // {r, c, dr, dc, runs}
+let buildOrderTarget = null;  // null, 'left', or 'right'
+let buildOrderDataLeft = null;   // {r, c, dr, dc, runs}
+let buildOrderDataRight = null;  // {r, c, dr, dc, runs}
 let isPanning = false;
 let panStartX, panStartY, panStartOX, panStartOY;
 
@@ -301,14 +318,22 @@ const btnImport = document.getElementById('btn-import');
 const btnSectionGrid = document.getElementById('btn-section-grid');
 const btnCorrection = document.getElementById('btn-correction');
 const btnFit = document.getElementById('btn-fit');
-const btnBuildOrder = document.getElementById('btn-build-order');
+const btnBuildLeft = document.getElementById('btn-build-left');
+const btnBuildRight = document.getElementById('btn-build-right');
 
 const directionPopup = document.getElementById('direction-popup');
+
 const buildPanel = document.getElementById('build-panel');
 const buildPanelInfo = document.getElementById('build-panel-info');
 const buildPanelList = document.getElementById('build-panel-list');
 const btnClosePanel = document.getElementById('btn-close-panel');
 const btnSpeak = document.getElementById('btn-speak');
+
+const buildPanelLeft = document.getElementById('build-panel-left');
+const buildPanelLeftInfo = document.getElementById('build-panel-left-info');
+const buildPanelLeftList = document.getElementById('build-panel-left-list');
+const btnClosePanelLeft = document.getElementById('btn-close-panel-left');
+const btnSpeakLeft = document.getElementById('btn-speak-left');
 
 const dropZone = document.getElementById('drop-zone');
 const fileInput = document.getElementById('file-input');
@@ -513,12 +538,13 @@ function render() {
     }
   }
 
-  // build order highlight
-  if (buildOrderData) {
-    const { r: boR, c: boC, dr: boDR, dc: boDC, runs } = buildOrderData;
+  // build order highlights
+  function drawBuildHighlight(data, color) {
+    if (!data) return;
+    const { r: boR, c: boC, dr: boDR, dc: boDC, runs } = data;
     let totalDots = 0;
     for (const run of runs) totalDots += run.count;
-    if (totalDots === 0) { /* skip highlight */ }
+    if (totalDots === 0) return;
     const startR = boR + boDR;
     const startC = boC + boDC;
     const endR = boR + boDR * totalDots;
@@ -526,7 +552,7 @@ function render() {
     const { x: sx, y: sy } = gridToScreen(startR, startC);
     const { x: ex, y: ey } = gridToScreen(endR, endC);
     ctx.save();
-    ctx.strokeStyle = 'rgba(233, 69, 96, 0.5)';
+    ctx.strokeStyle = color;
     ctx.lineWidth = cs * 0.8;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -535,6 +561,8 @@ function render() {
     ctx.stroke();
     ctx.restore();
   }
+  drawBuildHighlight(buildOrderDataLeft, 'rgba(66, 135, 245, 0.5)');
+  drawBuildHighlight(buildOrderDataRight, 'rgba(233, 69, 96, 0.5)');
 
   // section grid
   if (sectionGridOn) {
@@ -660,7 +688,7 @@ canvas.addEventListener('mouseleave', () => {
 
 canvas.addEventListener('mousedown', e => {
   if (!grid) return;
-  if (correctionMode || buildOrderMode) return; // handled in click
+  if (correctionMode || buildOrderTarget) return; // handled in click
   isPanning = true;
   panStartX = e.clientX;
   panStartY = e.clientY;
@@ -673,7 +701,7 @@ canvas.addEventListener('mouseleave', () => { isPanning = false; });
 
 canvas.addEventListener('click', e => {
   if (!grid) return;
-  if (buildOrderMode) {
+  if (buildOrderTarget) {
     hideDirectionPopup();
     const rect = canvas.getBoundingClientRect();
     const cell = screenToGrid(e.clientX - rect.left, e.clientY - rect.top);
@@ -721,31 +749,39 @@ btnCorrection.addEventListener('click', () => {
   correctionMode = !correctionMode;
   btnCorrection.classList.toggle('active', correctionMode);
   canvas.style.cursor = correctionMode ? 'pointer' : 'crosshair';
-  if (correctionMode && buildOrderMode) {
-    buildOrderMode = false;
-    btnBuildOrder.classList.remove('active');
-    closeBuildOrder();
+  if (correctionMode && buildOrderTarget) {
+    buildOrderTarget = null;
+    btnBuildLeft.classList.remove('active');
+    btnBuildRight.classList.remove('active');
+    hideDirectionPopup();
   }
 });
 
 btnFit.addEventListener('click', fitToScreen);
 
 // ─── Build Order Mode ──────────────────────────────────────────────
-btnBuildOrder.addEventListener('click', () => {
-  buildOrderMode = !buildOrderMode;
-  btnBuildOrder.classList.toggle('active', buildOrderMode);
-  if (buildOrderMode) {
-    // turn off correction mode if on
-    if (correctionMode) {
-      correctionMode = false;
-      btnCorrection.classList.remove('active');
-    }
-    canvas.style.cursor = 'pointer';
-  } else {
+function activateBuildTarget(side) {
+  if (buildOrderTarget === side) {
+    // toggle off
+    buildOrderTarget = null;
+    btnBuildLeft.classList.remove('active');
+    btnBuildRight.classList.remove('active');
     canvas.style.cursor = 'crosshair';
-    closeBuildOrder();
+    hideDirectionPopup();
+    return;
   }
-});
+  buildOrderTarget = side;
+  btnBuildLeft.classList.toggle('active', side === 'left');
+  btnBuildRight.classList.toggle('active', side === 'right');
+  if (correctionMode) {
+    correctionMode = false;
+    btnCorrection.classList.remove('active');
+  }
+  canvas.style.cursor = 'pointer';
+}
+
+btnBuildLeft.addEventListener('click', () => activateBuildTarget('left'));
+btnBuildRight.addEventListener('click', () => activateBuildTarget('right'));
 
 function showDirectionPopup(r, c) {
   const { x, y } = gridToScreen(r, c);
@@ -757,6 +793,7 @@ function showDirectionPopup(r, c) {
   directionPopup.classList.add('visible');
   directionPopup.dataset.row = r;
   directionPopup.dataset.col = c;
+  directionPopup.dataset.target = buildOrderTarget;
 }
 
 function hideDirectionPopup() {
@@ -771,8 +808,9 @@ directionPopup.addEventListener('click', e => {
   const c = parseInt(directionPopup.dataset.col);
   const dr = parseInt(btn.dataset.dr);
   const dc = parseInt(btn.dataset.dc);
+  const target = directionPopup.dataset.target;
   hideDirectionPopup();
-  executeBuildOrder(r, c, dr, dc);
+  executeBuildOrder(r, c, dr, dc, target);
 });
 
 // dismiss popup when clicking outside
@@ -805,13 +843,27 @@ function directionLabel(dr, dc) {
   return 'Right';
 }
 
-function executeBuildOrder(r, c, dr, dc) {
+function executeBuildOrder(r, c, dr, dc, target) {
   const runs = computeBuildOrder(r, c, dr, dc);
-  buildOrderData = { r, c, dr, dc, runs };
+  const data = { r, c, dr, dc, runs };
+
+  // pick panel elements based on target
+  let panel, panelInfo, panelList;
+  if (target === 'left') {
+    buildOrderDataLeft = data;
+    panel = buildPanelLeft;
+    panelInfo = buildPanelLeftInfo;
+    panelList = buildPanelLeftList;
+  } else {
+    buildOrderDataRight = data;
+    panel = buildPanel;
+    panelInfo = buildPanelInfo;
+    panelList = buildPanelList;
+  }
 
   // populate panel
-  buildPanelInfo.textContent = `Row ${r + 1}, Col ${c + 1} → ${directionLabel(dr, dc)}`;
-  buildPanelList.innerHTML = '';
+  panelInfo.textContent = `Row ${r + 1}, Col ${c + 1} → ${directionLabel(dr, dc)}`;
+  panelList.innerHTML = '';
   for (const run of runs) {
     const div = document.createElement('div');
     div.className = 'build-run';
@@ -822,10 +874,10 @@ function executeBuildOrder(r, c, dr, dc) {
     label.textContent = `${run.count}× ${PALETTE[run.colorIdx].name}`;
     div.appendChild(dot);
     div.appendChild(label);
-    buildPanelList.appendChild(div);
+    panelList.appendChild(div);
   }
 
-  buildPanel.classList.add('visible');
+  panel.classList.add('visible');
   resizeCanvas();
   render();
   speakBuildOrder(runs);
@@ -844,19 +896,34 @@ function speakBuildOrder(runs) {
 }
 
 btnSpeak.addEventListener('click', () => {
-  if (buildOrderData) {
-    speakBuildOrder(buildOrderData.runs);
+  if (buildOrderDataRight) {
+    speakBuildOrder(buildOrderDataRight.runs);
+  }
+});
+
+btnSpeakLeft.addEventListener('click', () => {
+  if (buildOrderDataLeft) {
+    speakBuildOrder(buildOrderDataLeft.runs);
   }
 });
 
 btnClosePanel.addEventListener('click', () => {
-  closeBuildOrder();
+  closeBuildOrderPanel('right');
 });
 
-function closeBuildOrder() {
+btnClosePanelLeft.addEventListener('click', () => {
+  closeBuildOrderPanel('left');
+});
+
+function closeBuildOrderPanel(side) {
   window.speechSynthesis.cancel();
-  buildOrderData = null;
-  buildPanel.classList.remove('visible');
+  if (side === 'left') {
+    buildOrderDataLeft = null;
+    buildPanelLeft.classList.remove('visible');
+  } else {
+    buildOrderDataRight = null;
+    buildPanel.classList.remove('visible');
+  }
   hideDirectionPopup();
   resizeCanvas();
   render();
