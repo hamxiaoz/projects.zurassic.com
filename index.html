@@ -216,8 +216,21 @@
     line-height: 1.6;
     text-align: center;
     max-width: 640px;
-    margin-bottom: 32px;
+    margin-bottom: 20px;
   }
+  .backstory-pill {
+    display: inline-block;
+    padding: 8px 20px;
+    font-size: 0.82rem;
+    color: #d0c0e0;
+    background: rgba(83, 52, 131, 0.35);
+    border: 1px solid #533483;
+    border-radius: 20px;
+    text-decoration: none;
+    margin-bottom: 32px;
+    transition: all 0.2s;
+  }
+  .backstory-pill:hover { background: rgba(83, 52, 131, 0.6); color: #fff; }
   .homepage .screenshot {
     width: 100%;
     max-width: 800px;
@@ -336,6 +349,7 @@
       <div class="homepage">
         <h2 class="homepage-title">Your Build Companion for LEGO® Mosaic Maker 40179</h2>
         <p class="homepage-subtext">Place 2,304 dots with confidence. Drop your reference photo and get an interactive color grid with distance guides, row-by-row build order, and voice readouts — so you never lose your place.</p>
+        <a href="https://www.linkedin.com/pulse/applied-ai-field-notes-001-lego-mosaic-helper-andrew-zheng-ave1c" target="_blank" class="backstory-pill">&#x1F4D6; Read the backstory</a>
         <img src="hero.jpg" alt="LEGO Mosaic Helper app screenshot" class="screenshot">
         <div class="info-row">
           <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener"><img src="product-box.jpg" alt="LEGO Mosaic Maker 40179 box" class="product-img"></a>
@@ -1125,6 +1139,6 @@ function closeBuildOrderPanel(side) {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 </script>
-<div id="footer">&copy; 2026 <a href="https://zurassic.com" target="_blank" style="color:#777;text-decoration:none">zurassic.com</a> &middot; <a href="changelog.html" style="color:#777;text-decoration:none">Changelog</a></div>
+<div id="footer">&copy; 2026 <a href="https://zurassic.com" target="_blank" style="color:#777;text-decoration:none">zurassic.com</a> &middot; <a href="changelog.html" style="color:#777;text-decoration:none">Changelog</a> &middot; <a href="https://www.linkedin.com/pulse/applied-ai-field-notes-001-lego-mosaic-helper-andrew-zheng-ave1c" target="_blank" style="color:#777;text-decoration:none">The Story Behind This App</a></div>
 </body>
 </html>
