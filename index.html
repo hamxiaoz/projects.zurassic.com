@@ -87,6 +87,8 @@
     padding: 0;
   }
   #direction-popup button:hover { background: #533483; }
+  #btn-clear-dot-visited { background: #8b0000; font-size: 12px; }
+  #btn-clear-dot-visited:hover { background: #c0392b; }
   .dir-spacer { visibility: hidden; }
 
   /* Build order panels (shared styles) */
@@ -323,6 +325,7 @@
   <button id="btn-build-left">Build Left</button>
   <button id="btn-build-right">Build Right</button>
   <button id="btn-fit">Fit to Screen</button>
+  <button id="btn-clear-visited">Clear Visited</button>
   <div id="info-panel">
     <span id="info-coords">—</span>
     <span id="info-color">—</span>
@@ -372,7 +375,7 @@
     </div>
 
     <div id="direction-popup">
-      <span class="dir-spacer"></span>
+      <button id="btn-clear-dot-visited" title="Clear visited">&#10005;</button>
       <button data-dr="-1" data-dc="0">&#9650;</button>
       <span class="dir-spacer"></span>
       <button data-dr="0" data-dc="-1">&#9664;</button>
@@ -423,6 +426,7 @@ let correctionMode = false;
 let buildOrderTarget = null;  // null, 'left', or 'right'
 let buildOrderDataLeft = null;   // {r, c, dr, dc, runs}
 let buildOrderDataRight = null;  // {r, c, dr, dc, runs}
+let visitedDots = new Set();
 let isPanning = false;
 let panStartX, panStartY, panStartOX, panStartOY;
 
@@ -444,6 +448,7 @@ const btnImport = document.getElementById('btn-import');
 const btnSectionGrid = document.getElementById('btn-section-grid');
 const btnCorrection = document.getElementById('btn-correction');
 const btnFit = document.getElementById('btn-fit');
+const btnClearVisited = document.getElementById('btn-clear-visited');
 const btnBuildLeft = document.getElementById('btn-build-left');
 const btnBuildRight = document.getElementById('btn-build-right');
 
@@ -559,6 +564,7 @@ function extractGrid() {
 
   const imgW = loadedImage.width, imgH = loadedImage.height;
 
+  visitedDots.clear();
   grid = [];
   for (let r = 0; r < GRID_SIZE; r++) {
     grid[r] = [];
@@ -688,6 +694,21 @@ function render() {
       ctx.beginPath();
       ctx.arc(x, y, dotR, 0, Math.PI * 2);
       ctx.fill();
+    }
+  }
+
+  // visited dot indicators — red circle around the dot
+  if (visitedDots.size > 0) {
+    ctx.strokeStyle = 'rgba(255, 0, 255, 0.95)';
+    ctx.lineWidth = Math.max(1.5, dotR * 0.18);
+    for (const key of visitedDots) {
+      const [rr, cc] = key.split(',');
+      const { x, y } = gridToScreen(+rr, +cc);
+      const ringR = dotR * 1.15;
+      if (x + ringR < 0 || x - ringR > w || y + ringR < 0 || y - ringR > h) continue;
+      ctx.beginPath();
+      ctx.arc(x, y, ringR, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
 
@@ -964,6 +985,7 @@ btnCorrection.addEventListener('click', () => {
 });
 
 btnFit.addEventListener('click', fitToScreen);
+btnClearVisited.addEventListener('click', () => { visitedDots.clear(); render(); });
 
 // ─── Build Order Mode ──────────────────────────────────────────────
 function activateBuildTarget(side) {
@@ -1007,6 +1029,15 @@ function hideDirectionPopup() {
 }
 
 directionPopup.addEventListener('click', e => {
+  if (e.target.id === 'btn-clear-dot-visited') {
+    e.stopPropagation();
+    const r = parseInt(directionPopup.dataset.row);
+    const c = parseInt(directionPopup.dataset.col);
+    visitedDots.delete(`${r},${c}`);
+    hideDirectionPopup();
+    render();
+    return;
+  }
   const btn = e.target.closest('button[data-dr]');
   if (!btn) return;
   e.stopPropagation();
@@ -1052,6 +1083,17 @@ function directionLabel(dr, dc) {
 function executeBuildOrder(r, c, dr, dc, target) {
   const runs = computeBuildOrder(r, c, dr, dc);
   const data = { r, c, dr, dc, runs };
+
+  // mark all dots in this build order as visited
+  visitedDots.add(`${r},${c}`);
+  let vr = r + dr, vc = c + dc;
+  for (const run of runs) {
+    for (let i = 0; i < run.count; i++) {
+      visitedDots.add(`${vr},${vc}`);
+      vr += dr;
+      vc += dc;
+    }
+  }
 
   // pick panel elements based on target
   let panel, panelInfo, panelList;
