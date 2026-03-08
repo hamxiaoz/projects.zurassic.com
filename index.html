@@ -3,7 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Metronome</title>
+<title>Clarinet Practice Tool</title>
+<script type="module">
+import { FaceLandmarker, FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs';
+window._FaceLandmarker = FaceLandmarker;
+window._FilesetResolver = FilesetResolver;
+window._mediapipeReady = true;
+window.dispatchEvent(new Event('mediapipe-ready'));
+</script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.min.css">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -11,9 +19,141 @@
     background: #1a1a2e;
     color: #e0e0e0;
     display: flex;
+    flex-direction: column;
     height: 100vh;
     overflow: hidden;
   }
+  /* Navbar */
+  .navbar {
+    height: 48px;
+    background: #0f1628;
+    border-bottom: 1px solid #2a2a4a;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  .nav-logo {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e0e0e0;
+    flex: 1;
+    text-align: left;
+  }
+  .nav-btn {
+    background: #2a2a4a;
+    color: #e0e0e0;
+    border: none;
+    border-radius: 7px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+    flex: none;
+  }
+  .nav-btn:hover { background: #3a3a5a; }
+  .nav-btn.active { background: #e94560; color: white; }
+  /* Main content area */
+  .main-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+  /* Footer */
+  .site-footer {
+    height: 36px;
+    background: #0f1628;
+    border-top: 1px solid #2a2a4a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #555;
+    flex-shrink: 0;
+    z-index: 50;
+  }
+  .site-footer a {
+    color: #7ab4f5;
+    text-decoration: none;
+  }
+  .site-footer a:hover { text-decoration: underline; }
+  .site-footer .sep { color: #333; }
+  /* Changelog modal */
+  .changelog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .changelog-backdrop.open { display: flex; }
+  .changelog-box {
+    background: #16213e;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 520px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    border: 1px solid #2a2a4a;
+  }
+  .changelog-box h2 {
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e0e0e0;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+  .changelog-list {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .changelog-entry {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #1e2d50;
+  }
+  .changelog-entry:last-child { border-bottom: none; }
+  .changelog-date {
+    font-size: 11px;
+    color: #555;
+    min-width: 80px;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+  .changelog-desc {
+    font-size: 14px;
+    color: #c8c8d8;
+    line-height: 1.5;
+  }
+  .changelog-close-row {
+    margin-top: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  .changelog-close-btn {
+    background: #2a2a4a; color: #e0e0e0;
+    border: none; border-radius: 8px;
+    padding: 10px 32px; font-size: 14px;
+    cursor: pointer; font-family: inherit;
+  }
+  .changelog-close-btn:hover { background: #3a3a5a; }
   .mirror-panel {
     flex: 2;
     display: flex;
@@ -29,16 +169,26 @@
     object-fit: cover;
     transform: scaleX(-1);
   }
-  .mirror-panel .cam-msg {
-    color: #555;
-    font-size: 18px;
-    position: absolute;
+  .cam-msg {
+    color: #666;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 10px;
+    width: 100%;
+    line-height: 1.5;
   }
-  .cam-toggle {
+  .cam-controls {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .cam-controls button {
     background: rgba(0,0,0,0.5);
     color: #e0e0e0;
     border: 1px solid #444;
@@ -49,7 +199,40 @@
     font-family: inherit;
     flex: none;
   }
-  .cam-toggle:hover { background: rgba(0,0,0,0.7); }
+  .cam-controls button:hover { background: rgba(0,0,0,0.7); }
+  .puff-banner {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: rgba(233,69,96,0.75);
+    color: white;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 14px;
+    z-index: 20;
+    display: none;
+  }
+  #meshCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    transform: scaleX(-1);
+  }
+  .calibration-overlay {
+    position: absolute;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 16px;
+    z-index: 20;
+    text-align: center;
+  }
   .metronome-panel {
     flex: 1;
     display: flex;
@@ -67,7 +250,7 @@
     width: 100%;
     box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   }
-  h1 { text-align: center; margin-bottom: 24px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; }
+  .section-title { text-align: center; margin-bottom: 24px; font-size: 13px; font-weight: 500; letter-spacing: 3px; text-transform: uppercase; color: #888; }
   .beat-display {
     display: flex;
     justify-content: center;
@@ -123,41 +306,305 @@
     background: #2a2a4a; color: #e0e0e0; font-size: 14px;
     font-family: inherit; cursor: pointer; outline: none;
   }
-  .hint-row { display: flex; justify-content: center; align-items: center; margin-top: 16px; position: relative; }
-  .elapsed { font-size: 13px; color: #666; position: absolute; left: 0; }
-  .hint { font-size: 12px; color: #555; }
-  .timer-section {
-    margin-top: 24px;
-    padding-top: 20px;
+  .row-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 0;
     border-top: 1px solid #2a2a4a;
+  }
+  .row-section-label {
+    font-size: 11px;
+    color: #555;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    min-width: 52px;
+  }
+  .lcd-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    background: #0c1208;
+    border-radius: 4px;
+    padding: 4px 8px;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,0.8), 0 0 0 1px #1a2010;
+    flex-shrink: 0;
+  }
+  .lcd-ghost {
+    position: absolute;
+    inset: 4px 8px;
+    font-family: 'DSEG7 Classic', monospace;
+    font-size: 22px;
+    line-height: 1;
+    color: rgba(140, 200, 60, 0.12);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .elapsed-display, .timer-display {
+    font-family: 'DSEG7 Classic', monospace;
+    font-size: 22px;
+    line-height: 1;
+    letter-spacing: 1px;
+    color: #a8e063;
+    text-shadow: 0 0 6px rgba(168, 224, 99, 0.7), 0 0 14px rgba(168, 224, 99, 0.3);
+    position: relative;
+    z-index: 1;
+    white-space: nowrap;
+  }
+  .elapsed-display { flex: 1; }
+  .timer-display.timer-done {
+    color: #e94560;
+    text-shadow: 0 0 6px rgba(233, 69, 96, 0.7), 0 0 14px rgba(233, 69, 96, 0.3);
+    animation: pulse 1s infinite;
+  }
+  .row-icon-btn {
+    background: #2a2a4a;
+    border: none;
+    color: #888;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 7px;
+    line-height: 1;
+    flex: none;
+    transition: background 0.2s, color 0.2s;
+    font-family: inherit;
+  }
+  .row-icon-btn:hover:not(:disabled) { background: #3a3a5a; color: #e0e0e0; }
+  .row-icon-btn:disabled { color: #3a3a5a; cursor: default; }
+  .row-icon-btn.running { background: #e94560; color: white; }
+  .row-icon-btn.running:hover { background: #c73650; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* Notes panel overlay */
+  .notes-panel {
+    position: fixed;
+    top: 48px; right: 0; bottom: 36px;
+    width: 360px;
+    background: #16213e;
+    border-left: 1px solid #2a2a4a;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+  }
+  .notes-panel.open { transform: translateX(0); }
+  .notes-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #2a2a4a;
+    flex-shrink: 0;
+  }
+  .notes-panel-header h2 {
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e0e0e0;
+  }
+  .notes-close {
+    background: none; border: none; color: #888;
+    font-size: 20px; cursor: pointer; padding: 4px 8px;
+    line-height: 1; flex: none;
+  }
+  .notes-close:hover { color: #e0e0e0; }
+  .notes-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .notes-list:empty::after {
+    content: 'No notes yet. Add one below.';
+    color: #555;
+    font-size: 13px;
+  }
+  .note-entry {
+    background: #1e2d50;
+    border-radius: 8px;
+    padding: 12px 14px;
+    position: relative;
+  }
+  .note-entry-date {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .note-entry-text {
+    font-size: 14px;
+    color: #c8c8d8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+    padding-right: 52px;
+  }
+  .note-entry-actions {
+    position: absolute;
+    top: 8px; right: 8px;
+    display: flex;
+    gap: 2px;
+  }
+  .note-entry-actions button {
+    background: none; border: none;
+    font-size: 13px; cursor: pointer;
+    padding: 2px 6px; line-height: 1;
+    flex: none; border-radius: 4px;
+    color: #555;
+  }
+  .note-entry-actions .edit-btn:hover { color: #7ab4f5; background: rgba(122,180,245,0.1); }
+  .note-entry-actions .delete-btn:hover { color: #e94560; background: rgba(233,69,96,0.1); }
+  .note-entry-edit-area {
+    width: 100%;
+    background: #0f1a32;
+    border: 1px solid #e94560;
+    border-radius: 6px;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 10px;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+    margin-top: 6px;
+  }
+  .note-entry-edit-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .note-entry-edit-actions button {
+    flex: 1; padding: 6px; font-size: 13px;
+    border-radius: 6px; cursor: pointer; border: none;
+    font-family: inherit;
+  }
+  .note-save-btn { background: #e94560; color: white; }
+  .note-save-btn:hover { background: #c73650; }
+  .note-cancel-btn { background: #2a2a4a; color: #e0e0e0; }
+  .note-cancel-btn:hover { background: #3a3a5a; }
+  .notes-shortcut-hint {
+    font-size: 11px;
+    color: #444;
+    text-align: center;
+    padding: 8px 0 0;
+  }
+  .notes-add {
+    padding: 16px 20px;
+    border-top: 1px solid #2a2a4a;
+    flex-shrink: 0;
+  }
+  .notes-add textarea {
+    width: 100%;
+    background: #1e2d50;
+    border: 1px solid #2a2a4a;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-family: inherit;
+    font-size: 14px;
+    padding: 10px 12px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    margin-bottom: 10px;
+  }
+  .notes-add textarea:focus { border-color: #e94560; }
+  .notes-add textarea::placeholder { color: #444; }
+  .btn-add-note {
+    background: #e94560; color: white;
+    width: 100%; font-size: 14px;
+  }
+  .btn-add-note:hover { background: #c73650; }
+
+  /* Notes modal (shown on timer start) */
+  .notes-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: none;
+  }
+  .notes-modal-backdrop.open { display: flex; }
+  .notes-modal-box {
+    background: #16213e;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 480px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    border: 1px solid #2a2a4a;
+  }
+  .notes-modal-box h2 {
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #e0e0e0;
+    margin-bottom: 20px;
     text-align: center;
   }
-  .timer-display {
-    font-size: 36px;
-    font-weight: 200;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
+  .notes-modal-list {
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
   }
-  .timer-controls { display: flex; gap: 10px; margin-bottom: 12px; }
-  .btn-timer { background: #2a2a4a; color: #e0e0e0; }
-  .btn-timer:hover { background: #3a3a5a; }
-  .btn-timer.running { background: #e94560; color: white; }
-  .btn-timer.running:hover { background: #c73650; }
-  .timer-done { color: #e94560; animation: pulse 1s infinite; }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .notes-modal-entry {
+    background: #1e2d50;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .notes-modal-entry-date {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 5px;
+  }
+  .notes-modal-entry-text {
+    font-size: 14px;
+    color: #c8c8d8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .notes-modal-empty {
+    color: #555;
+    font-size: 14px;
+    text-align: center;
+    padding: 12px 0;
+  }
+  .btn-understood {
+    background: #e94560; color: white;
+    width: 100%; font-size: 15px; padding: 13px;
+    flex-shrink: 0;
+  }
+  .btn-understood:hover { background: #c73650; }
 </style>
 </head>
 <body>
 
-<div class="mirror-panel">
-  <video id="webcam" autoplay playsinline muted></video>
-  <span class="cam-msg" id="camMsg">Click "Start Camera" to begin</span>
-  <button class="cam-toggle" id="camToggle">Start Camera</button>
-</div>
+<nav class="navbar">
+  <span class="nav-logo">Clarinet Practice Tool</span>
+  <button class="nav-btn" id="notesToggleBtn">Practice Notes</button>
+</nav>
+
+<main class="main-content">
 
 <div class="metronome-panel">
   <div class="container">
-    <h1>Metronome</h1>
+    <div class="section-title">Metronome</div>
     <div class="beat-display" id="beatDisplay"></div>
     <div class="bpm-section">
       <div class="bpm-value"><input type="number" id="bpmInput" value="120" min="20" max="300"></div>
@@ -192,34 +639,87 @@
         <option value="184">Presto (184)</option>
       </select>
     </div>
-    <div class="hint-row">
-      <span class="elapsed" id="elapsed"></span>
-      <span class="hint">Space to start/stop</span>
+    <div class="row-section">
+      <span class="row-section-label">Timer</span>
+      <div class="lcd-wrap"><span class="lcd-ghost">88:88</span><div class="timer-display" id="timerDisplay">30:00</div></div>
+      <select id="timerPreset" style="flex:1;padding:6px 8px;border-radius:6px;border:none;background:#2a2a4a;color:#e0e0e0;font-size:13px;font-family:inherit;cursor:pointer;outline:none;">
+        <option value="1">1 min</option>
+        <option value="5">5 min</option>
+        <option value="10">10 min</option>
+        <option value="15">15 min</option>
+        <option value="20">20 min</option>
+        <option value="25">25 min</option>
+        <option value="30" selected>30 min</option>
+        <option value="40">40 min</option>
+        <option value="45">45 min</option>
+        <option value="60">60 min</option>
+        <option value="90">90 min</option>
+      </select>
+      <button class="row-icon-btn" id="timerBtn" title="Start / Pause">▶</button>
+      <button class="row-icon-btn" id="timerReset" title="Reset">↺</button>
     </div>
-    <div class="timer-section">
-      <h1>Timer</h1>
-      <div class="timer-display" id="timerDisplay">30:00</div>
-      <div class="row">
-        <label>Duration</label>
-        <select id="timerPreset">
-          <option value="1">1 min</option>
-          <option value="5">5 min</option>
-          <option value="10">10 min</option>
-          <option value="15">15 min</option>
-          <option value="20">20 min</option>
-          <option value="25">25 min</option>
-          <option value="30" selected>30 min</option>
-          <option value="40">40 min</option>
-          <option value="45">45 min</option>
-          <option value="60">60 min</option>
-          <option value="90">90 min</option>
-        </select>
-      </div>
-      <div class="timer-controls">
-        <button class="btn-timer" id="timerBtn">Start Timer</button>
-        <button class="btn-timer" id="timerReset">Reset</button>
-      </div>
+    <div class="row-section">
+      <span class="row-section-label">Elapsed</span>
+      <div class="lcd-wrap"><span class="lcd-ghost">88:88</span><div class="elapsed-display" id="elapsed">00:00</div></div>
+      <button class="row-icon-btn" id="elapsedPauseBtn" title="Pause / Resume" disabled>⏸</button>
+      <button class="row-icon-btn" id="elapsedResetBtn" title="Reset" disabled>↺</button>
     </div>
+  </div>
+</div>
+
+<div class="mirror-panel">
+  <video id="webcam" autoplay playsinline muted></video>
+  <canvas id="meshCanvas" style="display:none"></canvas>
+  <div id="landmarkTooltip" style="display:none;position:absolute;background:rgba(0,0,0,0.8);color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;pointer-events:none;z-index:25"></div>
+  <div class="puff-banner" id="puffBanner">Cheeks puffing!</div>
+  <div class="calibration-overlay" id="calibrationOverlay" style="display:none"></div>
+  <div class="cam-controls">
+    <button id="camToggle">Start Camera</button>
+    <button id="calibrateBtn" style="display:none">Calibrate</button>
+    <button id="meshToggle" style="display:none">Show Mesh</button>
+    <span class="cam-msg" id="camMsg">Start your camera to see yourself in the mirror</span>
+  </div>
+</div>
+
+</main>
+
+<footer class="site-footer">
+  <span>© 2026 <a href="https://zurassic.com" target="_blank" rel="noopener">zurassic.com</a></span>
+  <span class="sep">·</span>
+  <a href="#" id="changelogLink">Changelog</a>
+</footer>
+
+<!-- Changelog modal -->
+<div class="changelog-backdrop" id="changelogBackdrop">
+  <div class="changelog-box">
+    <h2>Changelog</h2>
+    <div class="changelog-list" id="changelogList"></div>
+    <div class="changelog-close-row">
+      <button class="changelog-close-btn" id="changelogCloseBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Practice Notes panel -->
+<div class="notes-panel" id="notesPanel">
+  <div class="notes-panel-header">
+    <h2>Practice Notes</h2>
+    <button class="notes-close" id="notesPanelClose">&times;</button>
+  </div>
+  <div class="notes-list" id="notesList"></div>
+  <div class="notes-add">
+    <textarea id="noteInput" placeholder="Add a practice note…"></textarea>
+    <button class="btn-add-note" id="addNoteBtn">Add Note</button>
+    <div class="notes-shortcut-hint">Press <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">N</kbd> to open &amp; focus · <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">Ctrl+Enter</kbd> to save</div>
+  </div>
+</div>
+
+<!-- Notes modal (shown on timer start) -->
+<div class="notes-modal-backdrop" id="notesModalBackdrop">
+  <div class="notes-modal-box">
+    <h2>Practice Notes</h2>
+    <div class="notes-modal-list" id="notesModalList"></div>
+    <button class="btn-understood" id="notesUnderstoodBtn">Yes, I understand</button>
   </div>
 </div>
 
@@ -228,6 +728,9 @@
   const video = document.getElementById('webcam');
   const camMsg = document.getElementById('camMsg');
   const camToggle = document.getElementById('camToggle');
+  const calibrateBtn = document.getElementById('calibrateBtn');
+  const puffBanner = document.getElementById('puffBanner');
+  const calibrationOverlay = document.getElementById('calibrationOverlay');
   let camStream = null;
   let camOn = false;
 
@@ -244,6 +747,9 @@
         video.style.display = '';
         camToggle.textContent = 'Stop Camera';
         camOn = true;
+        calibrateBtn.style.display = '';
+        meshToggle.style.display = '';
+        initFaceMesh();
       })
       .catch(() => {
         camMsg.textContent = 'Camera not available';
@@ -258,14 +764,262 @@
     }
     video.srcObject = null;
     video.style.display = 'none';
-    camMsg.textContent = 'Camera is off';
+    camMsg.textContent = 'Start your camera to see yourself in the mirror';
     camMsg.style.display = '';
     camToggle.textContent = 'Start Camera';
     camOn = false;
+    calibrateBtn.style.display = 'none';
+    meshToggle.style.display = 'none';
+    meshCanvas.style.display = 'none';
+    showMesh = false;
+    puffBanner.style.display = 'none';
   }
 
   camToggle.addEventListener('click', () => {
     if (camOn) stopCamera(); else startCamera();
+  });
+
+  // --- Cheek Puff Detection via MediaPipe Face Mesh ---
+  const meshCanvas = document.getElementById('meshCanvas');
+  const meshCtx = meshCanvas.getContext('2d');
+  const meshToggle = document.getElementById('meshToggle');
+  let showMesh = false;
+  let faceLandmarker = null;
+  let faceMeshReady = false;
+  let faceMeshLoading = false;
+  let calibrating = false;
+  let puffThreshold = localStorage.getItem('puffThreshold') ? Number(localStorage.getItem('puffThreshold')) : null;
+  let calibrationSamples = [];
+  let calibrationBaseline = 0;
+  let detectionRAF = null;
+  let lastLandmarks = null;
+  const landmarkTooltip = document.getElementById('landmarkTooltip');
+
+  // Configurable cheek landmarks — click mesh to change
+  let leftCheekIdx = Number(localStorage.getItem('leftCheekIdx')) || 234;
+  let rightCheekIdx = Number(localStorage.getItem('rightCheekIdx')) || 454;
+  let pickingLandmark = null; // null | 'left' | 'right'
+
+  function dist(a, b) {
+    const dx = a.x - b.x, dy = a.y - b.y;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function getCheekRatio(landmarks) {
+    const cheekWidth = dist(landmarks[leftCheekIdx], landmarks[rightCheekIdx]);
+    const eyeDist = dist(landmarks[33], landmarks[263]);
+    return cheekWidth / eyeDist;
+  }
+
+  function findNearestLandmark(mouseX, mouseY) {
+    if (!lastLandmarks) return -1;
+    const w = meshCanvas.offsetWidth, h = meshCanvas.offsetHeight;
+    let best = -1, bestDist = Infinity;
+    for (let i = 0; i < lastLandmarks.length; i++) {
+      // canvas is scaleX(-1), so mirror the x
+      const px = (1 - lastLandmarks[i].x) * w;
+      const py = lastLandmarks[i].y * h;
+      const d = (px - mouseX) ** 2 + (py - mouseY) ** 2;
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    return bestDist < 400 ? best : -1; // within ~20px
+  }
+
+  meshCanvas.style.pointerEvents = 'none';
+  // Enable pointer events only when mesh is visible
+  function updateMeshPointerEvents() {
+    meshCanvas.style.pointerEvents = showMesh ? 'auto' : 'none';
+  }
+
+  meshCanvas.addEventListener('mousemove', (e) => {
+    if (!lastLandmarks) return;
+    const rect = meshCanvas.getBoundingClientRect();
+    const idx = findNearestLandmark(e.clientX - rect.left, e.clientY - rect.top);
+    if (idx >= 0) {
+      landmarkTooltip.style.display = 'block';
+      landmarkTooltip.style.left = (e.clientX - rect.left + 12) + 'px';
+      landmarkTooltip.style.top = (e.clientY - rect.top - 8) + 'px';
+      let label = `#${idx}`;
+      if (idx === leftCheekIdx) label += ' (L cheek)';
+      if (idx === rightCheekIdx) label += ' (R cheek)';
+      if (pickingLandmark) label += ` — click to set ${pickingLandmark} cheek`;
+      landmarkTooltip.textContent = label;
+    } else {
+      landmarkTooltip.style.display = 'none';
+    }
+  });
+
+  meshCanvas.addEventListener('mouseleave', () => {
+    landmarkTooltip.style.display = 'none';
+  });
+
+  meshCanvas.addEventListener('click', (e) => {
+    if (!lastLandmarks) return;
+    const rect = meshCanvas.getBoundingClientRect();
+    const idx = findNearestLandmark(e.clientX - rect.left, e.clientY - rect.top);
+    if (idx < 0) return;
+    if (!pickingLandmark) {
+      pickingLandmark = 'left';
+      calibrationOverlay.style.display = 'block';
+      calibrationOverlay.textContent = 'Click a landmark for LEFT cheek';
+    } else if (pickingLandmark === 'left') {
+      leftCheekIdx = idx;
+      localStorage.setItem('leftCheekIdx', idx);
+      pickingLandmark = 'right';
+      calibrationOverlay.textContent = `Left cheek = #${idx}. Now click RIGHT cheek`;
+    } else {
+      rightCheekIdx = idx;
+      localStorage.setItem('rightCheekIdx', idx);
+      pickingLandmark = null;
+      calibrationOverlay.textContent = `Cheek landmarks: L=#${leftCheekIdx} R=#${rightCheekIdx}`;
+      // Clear old calibration since landmarks changed
+      puffThreshold = null;
+      localStorage.removeItem('puffThreshold');
+      setTimeout(() => { calibrationOverlay.style.display = 'none'; }, 2000);
+    }
+  });
+
+  async function initFaceMesh() {
+    if (faceLandmarker || faceMeshLoading) return;
+    faceMeshLoading = true;
+    calibrateBtn.textContent = 'Loading model...';
+    calibrateBtn.disabled = true;
+    try {
+      // Wait for the module script to load
+      if (!window._mediapipeReady) {
+        await new Promise(r => window.addEventListener('mediapipe-ready', r, { once: true }));
+      }
+      const FaceLandmarker = window._FaceLandmarker;
+      const FilesetResolver = window._FilesetResolver;
+      const filesetResolver = await FilesetResolver.forVisionTasks(
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/wasm'
+      );
+      faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+        baseOptions: {
+          modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task',
+          delegate: 'GPU'
+        },
+        runningMode: 'VIDEO',
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false
+      });
+      faceMeshReady = true;
+      console.log('FaceMesh model loaded successfully');
+      calibrateBtn.textContent = 'Calibrate';
+      calibrateBtn.disabled = false;
+      startDetectionLoop();
+    } catch (e) {
+      console.error('FaceMesh load failed:', e);
+      calibrateBtn.textContent = 'Load failed';
+      faceMeshLoading = false;
+    }
+  }
+
+  function drawMesh(landmarks) {
+    const w = meshCanvas.width = meshCanvas.offsetWidth;
+    const h = meshCanvas.height = meshCanvas.offsetHeight;
+    meshCtx.clearRect(0, 0, w, h);
+    meshCtx.fillStyle = 'rgba(0,255,128,0.6)';
+    for (const pt of landmarks) {
+      meshCtx.beginPath();
+      meshCtx.arc(pt.x * w, pt.y * h, 1.5, 0, Math.PI * 2);
+      meshCtx.fill();
+    }
+    // highlight cheek + eye landmarks used for detection
+    const highlights = { [leftCheekIdx]: '#ff0', [rightCheekIdx]: '#ff0', '33': '#0ff', '263': '#0ff' };
+    for (const [idx, color] of Object.entries(highlights)) {
+      const pt = landmarks[Number(idx)];
+      meshCtx.fillStyle = color;
+      meshCtx.beginPath();
+      meshCtx.arc(pt.x * w, pt.y * h, 4, 0, Math.PI * 2);
+      meshCtx.fill();
+    }
+  }
+
+  function startDetectionLoop() {
+    function tick() {
+      detectionRAF = requestAnimationFrame(tick);
+      if (!camOn || !faceMeshReady || !faceLandmarker) return;
+      if (video.readyState < 2) return;
+      const now = performance.now();
+      const result = faceLandmarker.detectForVideo(video, now);
+      if (!result.faceLandmarks || !result.faceLandmarks.length) return;
+      const landmarks = result.faceLandmarks[0];
+      lastLandmarks = landmarks;
+      const ratio = getCheekRatio(landmarks);
+
+      if (showMesh) drawMesh(landmarks);
+
+      if (calibrating) {
+        calibrationSamples.push(ratio);
+        return;
+      }
+
+      if (puffThreshold !== null) {
+        puffBanner.style.display = ratio > puffThreshold ? '' : 'none';
+      }
+    }
+    if (!detectionRAF) tick();
+  }
+
+  meshToggle.addEventListener('click', () => {
+    showMesh = !showMesh;
+    meshToggle.textContent = showMesh ? 'Hide Mesh' : 'Show Mesh';
+    meshCanvas.style.display = showMesh ? 'block' : 'none';
+    updateMeshPointerEvents();
+    if (!showMesh) {
+      meshCtx.clearRect(0, 0, meshCanvas.width, meshCanvas.height);
+      landmarkTooltip.style.display = 'none';
+      if (pickingLandmark) { pickingLandmark = null; calibrationOverlay.style.display = 'none'; }
+    }
+  });
+
+  calibrateBtn.addEventListener('click', async () => {
+    if (calibrating) return;
+    if (!faceMeshReady) {
+      calibrationOverlay.style.display = 'block';
+      calibrationOverlay.textContent = 'Model still loading, please wait...';
+      setTimeout(() => { calibrationOverlay.style.display = 'none'; }, 2000);
+      return;
+    }
+    calibrating = true;
+    calibrationOverlay.style.display = 'block';
+
+    // Step 1: baseline
+    calibrationOverlay.textContent = 'Relax your face...';
+    calibrationSamples = [];
+    await new Promise(r => setTimeout(r, 2000));
+    calibrationBaseline = calibrationSamples.length ? calibrationSamples.reduce((a, b) => a + b) / calibrationSamples.length : 0;
+
+    // Step 2: puffed
+    calibrationOverlay.textContent = 'Now puff your cheeks!';
+    calibrationSamples = [];
+    await new Promise(r => setTimeout(r, 2000));
+    const puffedAvg = calibrationSamples.length ? calibrationSamples.reduce((a, b) => a + b) / calibrationSamples.length : 0;
+
+    if (calibrationBaseline > 0 && puffedAvg > calibrationBaseline) {
+      puffThreshold = (calibrationBaseline + puffedAvg) / 2;
+      localStorage.setItem('puffThreshold', puffThreshold);
+
+      // Verification phase: 3 test rounds
+      for (let i = 1; i <= 3; i++) {
+        calibrationOverlay.textContent = `Test ${i}/3 — puff now to verify...`;
+        calibrating = false; // allow detection loop to check threshold
+        await new Promise(r => setTimeout(r, 2500));
+        const detected = puffBanner.style.display !== 'none';
+        calibrationOverlay.textContent = `Test ${i}/3 — ${detected ? 'Puff detected!' : 'No puff detected'}`;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+      calibrating = true;
+      puffBanner.style.display = 'none';
+      calibrationOverlay.textContent = 'Calibration complete!';
+    } else {
+      calibrationOverlay.textContent = 'Calibration failed — try again';
+    }
+
+    setTimeout(() => { calibrationOverlay.style.display = 'none'; }, 1500);
+    calibrating = false;
   });
 
   // Metronome
@@ -287,8 +1041,61 @@
   const presetSelect = document.getElementById('presetSelect');
   const beatDisplay = document.getElementById('beatDisplay');
   const elapsedEl = document.getElementById('elapsed');
+  const elapsedPauseBtn = document.getElementById('elapsedPauseBtn');
+  const elapsedResetBtn = document.getElementById('elapsedResetBtn');
   let elapsedInterval = null;
   let elapsedStart = 0;
+  let elapsedAccum = 0;
+  let elapsedPaused = false;
+  let elapsedEverStarted = false;
+
+  function updateElapsedDisplay() {
+    const total = elapsedAccum + (elapsedPaused ? 0 : Date.now() - elapsedStart);
+    const s = Math.floor(total / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    elapsedEl.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function startElapsed() {
+    elapsedAccum = 0;
+    elapsedPaused = false;
+    elapsedEverStarted = true;
+    elapsedStart = Date.now();
+    elapsedEl.textContent = '00:00';
+    elapsedPauseBtn.disabled = false;
+    elapsedPauseBtn.textContent = '⏸';
+    elapsedResetBtn.disabled = false;
+    clearInterval(elapsedInterval);
+    elapsedInterval = setInterval(updateElapsedDisplay, 1000);
+  }
+
+  function resetElapsed() {
+    clearInterval(elapsedInterval);
+    elapsedAccum = 0;
+    elapsedPaused = false;
+    elapsedEverStarted = false;
+    elapsedEl.textContent = '00:00';
+    elapsedPauseBtn.disabled = true;
+    elapsedPauseBtn.textContent = '⏸';
+    elapsedResetBtn.disabled = true;
+  }
+
+  elapsedPauseBtn.addEventListener('click', () => {
+    if (elapsedPaused) {
+      elapsedStart = Date.now();
+      elapsedPaused = false;
+      elapsedPauseBtn.textContent = '⏸';
+      elapsedInterval = setInterval(updateElapsedDisplay, 1000);
+    } else {
+      elapsedAccum += Date.now() - elapsedStart;
+      elapsedPaused = true;
+      clearInterval(elapsedInterval);
+      elapsedPauseBtn.textContent = '▶';
+    }
+  });
+
+  elapsedResetBtn.addEventListener('click', resetElapsed);
 
   function buildDots() {
     beatDisplay.innerHTML = '';
@@ -363,14 +1170,7 @@
     timerID = setInterval(scheduler, lookahead);
     startBtn.textContent = 'Stop';
     startBtn.classList.add('running');
-    elapsedStart = Date.now();
-    elapsedEl.textContent = '00:00';
-    elapsedInterval = setInterval(() => {
-      const s = Math.floor((Date.now() - elapsedStart) / 1000);
-      const m = Math.floor(s / 60);
-      const sec = s % 60;
-      elapsedEl.textContent = String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-    }, 1000);
+    if (!elapsedEverStarted) startElapsed();
   }
 
   function stop() {
@@ -379,11 +1179,9 @@
     startBtn.textContent = 'Start';
     startBtn.classList.remove('running');
     beatDisplay.querySelectorAll('.beat-dot').forEach(d => d.classList.remove('active', 'accent'));
-    clearInterval(elapsedInterval);
-    elapsedEl.textContent = '';
   }
 
-  startBtn.addEventListener('click', () => isRunning ? stop() : start());
+  startBtn.addEventListener('click', () => isRunning ? stop() : showNotesModal(() => start()));
 
   // Tap tempo
   let tapTimes = [];
@@ -399,11 +1197,18 @@
     }
   });
 
-  // Spacebar
+  // Keyboard shortcuts
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+    const tag = e.target.tagName;
+    const inField = tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA';
+    if (e.code === 'Space' && !inField) {
       e.preventDefault();
-      isRunning ? stop() : start();
+      isRunning ? stop() : showNotesModal(() => start());
+    }
+    if (e.key === 'n' && !inField && !e.metaKey && !e.ctrlKey) {
+      e.preventDefault();
+      if (!notesPanel.classList.contains('open')) openNotesPanel();
+      noteInput.focus();
     }
   });
 
@@ -436,8 +1241,9 @@
   });
 
   function startTimer() {
+    if (!elapsedEverStarted) startElapsed();
     timerRunning = true;
-    timerBtn.textContent = 'Pause Timer';
+    timerBtn.textContent = '⏸';
     timerBtn.classList.add('running');
     timerInterval = setInterval(() => {
       if (timerRemaining > 0) {
@@ -454,7 +1260,7 @@
   function stopTimer() {
     timerRunning = false;
     clearInterval(timerInterval);
-    timerBtn.textContent = timerRemaining === 0 ? 'Done' : 'Start Timer';
+    timerBtn.textContent = timerRemaining === 0 ? '✓' : '▶';
     timerBtn.classList.remove('running');
   }
 
@@ -483,16 +1289,236 @@
     if (alertInterval) { clearInterval(alertInterval); alertInterval = null; }
   }
 
-  timerBtn.addEventListener('click', () => {
-    if (timerRemaining === 0) { stopTimerAlert(); timerReset.click(); return; }
-    timerRunning ? stopTimer() : startTimer();
-  });
+  // timerBtn click is handled by the Practice Notes section below
 
   timerReset.addEventListener('click', () => {
     stopTimer();
     stopTimerAlert();
     timerRemaining = timerSeconds;
     updateTimerDisplay();
+  });
+
+  // Practice Notes
+  const NOTES_KEY = 'practiceNotes';
+  const notesPanel = document.getElementById('notesPanel');
+  const notesList = document.getElementById('notesList');
+  const noteInput = document.getElementById('noteInput');
+  const addNoteBtn = document.getElementById('addNoteBtn');
+  const notesToggleBtn = document.getElementById('notesToggleBtn');
+  const notesPanelClose = document.getElementById('notesPanelClose');
+  const notesModalBackdrop = document.getElementById('notesModalBackdrop');
+  const notesModalList = document.getElementById('notesModalList');
+  const notesUnderstoodBtn = document.getElementById('notesUnderstoodBtn');
+  let pendingTimerStart = false;
+
+  function loadNotes() {
+    try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveNotes(notes) {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+  }
+
+  function formatNoteDate(ts) {
+    return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  }
+
+  function renderNotesList() {
+    const notes = loadNotes();
+    notesList.innerHTML = '';
+    notes.slice().reverse().forEach(note => {
+      const entry = document.createElement('div');
+      entry.className = 'note-entry';
+      entry.dataset.id = note.id;
+      entry.innerHTML = `
+        <div class="note-entry-date">${formatNoteDate(note.id)}</div>
+        <div class="note-entry-text">${escapeHtml(note.text)}</div>
+        <div class="note-entry-actions">
+          <button class="edit-btn" title="Edit">&#9998;</button>
+          <button class="delete-btn" title="Delete">&times;</button>
+        </div>
+      `;
+      notesList.appendChild(entry);
+    });
+  }
+
+  function enterEditMode(entry) {
+    if (entry.classList.contains('editing')) return;
+    entry.classList.add('editing');
+    const textEl = entry.querySelector('.note-entry-text');
+    const originalText = textEl.textContent;
+    const actionsEl = entry.querySelector('.note-entry-actions');
+    actionsEl.style.display = 'none';
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'note-entry-edit-area';
+    textarea.value = originalText;
+    entry.appendChild(textarea);
+
+    const editActions = document.createElement('div');
+    editActions.className = 'note-entry-edit-actions';
+    editActions.innerHTML = '<button class="note-save-btn">Save</button><button class="note-cancel-btn">Cancel</button>';
+    entry.appendChild(editActions);
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+    editActions.querySelector('.note-save-btn').addEventListener('click', () => {
+      const newText = textarea.value.trim();
+      if (!newText) return;
+      const id = Number(entry.dataset.id);
+      const notes = loadNotes().map(n => n.id === id ? { ...n, text: newText } : n);
+      saveNotes(notes);
+      renderNotesList();
+    });
+
+    editActions.querySelector('.note-cancel-btn').addEventListener('click', () => {
+      renderNotesList();
+    });
+
+    textarea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) editActions.querySelector('.note-save-btn').click();
+      if (e.key === 'Escape') editActions.querySelector('.note-cancel-btn').click();
+    });
+  }
+
+  function renderNotesModal() {
+    const notes = loadNotes();
+    notesModalList.innerHTML = '';
+    if (notes.length === 0) {
+      notesModalList.innerHTML = '<div class="notes-modal-empty">No practice notes yet.</div>';
+      return;
+    }
+    notes.slice().reverse().forEach(note => {
+      const entry = document.createElement('div');
+      entry.className = 'notes-modal-entry';
+      entry.innerHTML = `
+        <div class="notes-modal-entry-date">${formatNoteDate(note.id)}</div>
+        <div class="notes-modal-entry-text">${escapeHtml(note.text)}</div>
+      `;
+      notesModalList.appendChild(entry);
+    });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function openNotesPanel() {
+    renderNotesList();
+    notesPanel.classList.add('open');
+    notesToggleBtn.classList.add('active');
+  }
+
+  function closeNotesPanel() {
+    notesPanel.classList.remove('open');
+    notesToggleBtn.classList.remove('active');
+  }
+
+  function showNotesModal(onConfirm) {
+    renderNotesModal();
+    notesModalBackdrop.classList.add('open');
+    pendingTimerStart = onConfirm;
+  }
+
+  function closeNotesModal() {
+    notesModalBackdrop.classList.remove('open');
+    pendingTimerStart = false;
+  }
+
+  notesToggleBtn.addEventListener('click', () => {
+    notesPanel.classList.contains('open') ? closeNotesPanel() : openNotesPanel();
+  });
+
+
+  notesPanelClose.addEventListener('click', closeNotesPanel);
+
+  addNoteBtn.addEventListener('click', () => {
+    const text = noteInput.value.trim();
+    if (!text) return;
+    const notes = loadNotes();
+    notes.push({ id: Date.now(), text });
+    saveNotes(notes);
+    noteInput.value = '';
+    renderNotesList();
+  });
+
+  noteInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) addNoteBtn.click();
+  });
+
+  notesList.addEventListener('click', (e) => {
+    const deleteBtn = e.target.closest('.delete-btn');
+    if (deleteBtn) {
+      if (deleteBtn.dataset.confirming) {
+        const id = Number(deleteBtn.closest('.note-entry').dataset.id);
+        saveNotes(loadNotes().filter(n => n.id !== id));
+        renderNotesList();
+      } else {
+        deleteBtn.dataset.confirming = '1';
+        deleteBtn.textContent = 'Sure?';
+        deleteBtn.style.color = '#e94560';
+        const cancel = setTimeout(() => {
+          if (deleteBtn.dataset.confirming) {
+            delete deleteBtn.dataset.confirming;
+            deleteBtn.textContent = '×';
+            deleteBtn.style.color = '';
+          }
+        }, 3000);
+        deleteBtn.dataset.cancelTimeout = cancel;
+      }
+      return;
+    }
+    const editBtn = e.target.closest('.edit-btn');
+    if (editBtn) {
+      enterEditMode(editBtn.closest('.note-entry'));
+    }
+  });
+
+  notesUnderstoodBtn.addEventListener('click', () => {
+    const cb = pendingTimerStart;
+    closeNotesModal();
+    if (typeof cb === 'function') cb();
+  });
+
+  // Changelog
+  const CHANGELOG = [
+    { date: '2026-03-07', desc: 'Casio LCD-style 7-segment display for timer and elapsed time; elapsed section moved to bottom of panel; notes modal shown on metronome and timer start; camera button centred with helper text' },
+    { date: '2026-03-07', desc: 'Elapsed time section with pause/resume and reset; timer and elapsed redesigned as compact single rows; panel layout swapped (metronome left, camera right); practice notes moved to right-side panel' },
+    { date: '2026-03-01', desc: 'Add navbar, footer, changelog view, practice notes with inline editing, delete confirmation, and keyboard shortcuts' },
+    { date: '2026-03-01', desc: 'Add practice notes panel with localStorage persistence, timer-start modal, and show/hide toggle' },
+    { date: '2026-02-01', desc: 'Add webcam mirror, practice timer, and elapsed time display' },
+    { date: '2026-02-01', desc: 'Add web-based metronome with Web Audio API' },
+  ];
+
+  const changelogBackdrop = document.getElementById('changelogBackdrop');
+  const changelogList = document.getElementById('changelogList');
+  const changelogCloseBtn = document.getElementById('changelogCloseBtn');
+  const changelogLink = document.getElementById('changelogLink');
+
+  function openChangelog() {
+    changelogList.innerHTML = '';
+    CHANGELOG.forEach(entry => {
+      const el = document.createElement('div');
+      el.className = 'changelog-entry';
+      el.innerHTML = `<span class="changelog-date">${entry.date}</span><span class="changelog-desc">${escapeHtml(entry.desc)}</span>`;
+      changelogList.appendChild(el);
+    });
+    changelogBackdrop.classList.add('open');
+  }
+
+  changelogLink.addEventListener('click', (e) => { e.preventDefault(); openChangelog(); });
+  changelogCloseBtn.addEventListener('click', () => changelogBackdrop.classList.remove('open'));
+  changelogBackdrop.addEventListener('click', (e) => { if (e.target === changelogBackdrop) changelogBackdrop.classList.remove('open'); });
+
+  // Hook timer start to show notes modal first
+  timerBtn.addEventListener('click', () => {
+    if (timerRemaining === 0) { stopTimerAlert(); timerReset.click(); return; }
+    if (!timerRunning) {
+      showNotesModal(() => startTimer());
+    } else {
+      stopTimer();
+    }
   });
 </script>
 </body>
