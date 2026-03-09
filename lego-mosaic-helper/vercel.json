@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/lego-mosaic-helper/(.*)", "destination": "/$1" },
+    { "source": "/lego-mosaic-helper", "destination": "/" }
+  ]
+}

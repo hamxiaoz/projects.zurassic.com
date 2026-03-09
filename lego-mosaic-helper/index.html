@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEGO Mosaic Helper — Build Tool for Mosaic Maker 40179</title>
+<meta name="description" content="Free companion tool for the LEGO Mosaic Maker 40179. Drop your photo, get an interactive color grid with distance guides, build order readouts, and speech — dot by dot.">
+<meta name="keywords" content="LEGO Mosaic Maker 40179, LEGO mosaic helper, LEGO mosaic build tool, LEGO 40179, mosaic maker companion">
+<meta property="og:title" content="LEGO Mosaic Helper — Build Tool for Mosaic Maker 40179">
+<meta property="og:description" content="Free companion tool for the LEGO Mosaic Maker 40179. Drop your photo, get an interactive color grid with distance guides, build order readouts, and speech — dot by dot.">
+<meta property="og:image" content="hero.jpg">
+<meta property="og:type" content="website">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="toolbar" class="hidden">
+  <h1><a href="#home" style="color:inherit;text-decoration:none">LEGO Mosaic Helper</a></h1>
+  <button id="btn-import">Choose Image</button>
+  <button id="btn-section-grid">Section Grid</button>
+  <button id="btn-correction">Correction Mode</button>
+  <button id="btn-build-left">Build Left</button>
+  <button id="btn-build-right">Build Right</button>
+  <button id="btn-fit">Fit to Screen</button>
+  <button id="btn-clear-visited">Clear Visited</button>
+  <div id="info-panel">
+    <span id="info-coords">—</span>
+    <span id="info-color">—</span>
+    <span id="info-dist">—</span>
+  </div>
+</div>
+
+<div id="main">
+  <div id="build-panel-left" class="build-panel">
+    <div class="build-panel-header">
+      <span>Build Left</span>
+      <button id="btn-close-panel-left">&times;</button>
+    </div>
+    <div id="build-panel-left-info" class="build-panel-info"></div>
+    <div id="build-panel-left-list" class="build-panel-list"></div>
+    <div class="build-panel-footer">
+      <button id="btn-speak-left" class="btn-speak">Speak</button>
+    </div>
+  </div>
+  <div id="canvas-area">
+    <canvas id="grid-canvas"></canvas>
+
+    <div id="import-overlay">
+      <div class="homepage">
+        <h2 class="homepage-title">Your Build Companion for LEGO® Mosaic Maker 40179</h2>
+        <p class="homepage-subtext">Place 2,304 dots with confidence. Drop your reference photo and get an interactive color grid with distance guides, row-by-row build order, and voice readouts — so you never lose your place.</p>
+        <a href="https://www.linkedin.com/pulse/applied-ai-field-notes-001-lego-mosaic-helper-andrew-zheng-ave1c" target="_blank" class="backstory-pill">&#x1F4D6; Read the backstory</a>
+        <img src="hero.jpg" alt="LEGO Mosaic Helper app screenshot" class="screenshot">
+        <div class="info-row">
+          <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener"><img src="product-box.jpg" alt="LEGO Mosaic Maker 40179 box" class="product-img"></a>
+          <div class="info-text">
+            <ul>
+              <li>Auto-detect all 5 colors from any photo</li>
+              <li>Distance rays show how far to the next color change</li>
+              <li>Build order with speech — hands-free, dot by dot</li>
+            </ul>
+            <a href="https://www.lego.com/en-us/product/mosaic-maker-40179" target="_blank" rel="noopener" class="product-link">View LEGO® Mosaic Maker 40179 on LEGO.com &rarr;</a>
+          </div>
+        </div>
+        <div id="drop-zone">
+          <p>Drop the LEGO mosaic image here</p>
+          <label for="file-input">Choose File</label>
+          <input type="file" id="file-input" accept="image/*">
+          <button id="btn-demo" style="margin-top:8px;background:#0f3460;color:#eee;border:1px solid #533483;padding:8px 20px;border-radius:6px;cursor:pointer;font-size:14px">Load Demo</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="direction-popup">
+      <button id="btn-clear-dot-visited" title="Clear visited">&#10005;</button>
+      <button data-dr="-1" data-dc="0">&#9650;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="0" data-dc="-1">&#9664;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="0" data-dc="1">&#9654;</button>
+      <span class="dir-spacer"></span>
+      <button data-dr="1" data-dc="0">&#9660;</button>
+      <span class="dir-spacer"></span>
+    </div>
+  </div>
+
+  <div id="build-panel" class="build-panel">
+    <div class="build-panel-header">
+      <span>Build Right</span>
+      <button id="btn-close-panel">&times;</button>
+    </div>
+    <div id="build-panel-info" class="build-panel-info"></div>
+    <div id="build-panel-list" class="build-panel-list"></div>
+    <div class="build-panel-footer">
+      <button id="btn-speak" class="btn-speak">Speak</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<div id="footer">&copy; 2026 <a href="https://zurassic.com" target="_blank" style="color:#777;text-decoration:none">zurassic.com</a> &middot; <a href="changelog.html" style="color:#777;text-decoration:none">Changelog</a></div>
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Name Preview — Final Two</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Manrope:wght@400;700;800&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&family=Space+Mono:wght@400;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #080810;
+    min-height: 100vh;
+    padding: 60px 48px 80px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: 0.6;
+  }
+
+  /* ── Page title ── */
+  .page-title {
+    max-width: 1200px; margin: 0 auto 52px;
+    position: relative; z-index: 1;
+    display: flex; align-items: baseline; gap: 20px;
+    border-bottom: 1px solid #14141a;
+    padding-bottom: 20px;
+    opacity: 0; animation: fadeUp 0.5s ease forwards;
+  }
+  .page-title h1 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: #333; font-weight: 400;
+  }
+  .page-title span {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: #222;
+  }
+
+  /* ── Two-column comparison ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative; z-index: 1;
+  }
+
+  /* ── Design panel ── */
+  .design-panel {
+    display: flex; flex-direction: column; gap: 16px;
+    opacity: 0; animation: fadeUp 0.55s ease forwards;
+  }
+  .design-panel:nth-child(2) { animation-delay: 0.1s; }
+
+  .design-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+    color: #2a2a30; margin-bottom: 4px;
+  }
+
+  /* ══════════════════════════════════════
+     HERO CARD
+  ══════════════════════════════════════ */
+  .hero-card {
+    border-radius: 20px;
+    padding: 44px 48px 40px;
+    position: relative; overflow: hidden;
+  }
+
+  /* Glass highlight strip along top */
+  .hero-card::before {
+    content: '';
+    position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 18px; position: relative; z-index: 1;
+  }
+
+  .hero-name {
+    line-height: 1.0;
+    position: relative; z-index: 1;
+    margin-bottom: 18px;
+  }
+
+  .hero-tagline {
+    font-size: 12px; letter-spacing: 0.3px; line-height: 1.6;
+    position: relative; z-index: 1;
+  }
+
+  /* ── Design A: Clarinet Practice Stage ── theatrical crimson/gold */
+  .hero-a {
+    background: linear-gradient(140deg, #120608 0%, #1e0a0e 55%, #0e0406 100%);
+    border: 1px solid rgba(200,152,48,0.3);
+    box-shadow: 0 20px 60px rgba(180,30,50,0.12), 0 0 0 1px rgba(200,152,48,0.08),
+                inset 0 1px 0 rgba(255,200,80,0.06);
+  }
+  .hero-a::before {
+    background: linear-gradient(90deg, transparent, rgba(220,180,60,0.3) 30%, rgba(255,220,100,0.45) 50%, rgba(220,180,60,0.3) 70%, transparent);
+  }
+  /* Top-center gold glow */
+  .hero-a::after {
+    content: '';
+    position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+    width: 280px; height: 220px;
+    background: radial-gradient(ellipse, rgba(220,170,50,0.14) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-a .glow-corner {
+    position: absolute; top: -50px; right: -50px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(200,60,80,0.10) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero-a .hero-eyebrow { color: #6a3818; }
+  .hero-a .hero-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 3.5vw, 52px);
+    font-weight: 700; font-style: italic;
+    color: #fff;
+  }
+  .hero-a .hero-name span { color: #c89830; }
+  .hero-a .hero-tagline { color: #4a1e24; font-family: 'Playfair Display', serif; font-style: italic; font-size: 14px; }
+
+  /* ── Design B: PlayPulse ── coral/rose */
+  .hero-b {
+    background: linear-gradient(140deg, #140a10 0%, #1e0c18 55%, #10080c 100%);
+    border: 1px solid rgba(220,80,130,0.25);
+    box-shadow: 0 20px 60px rgba(200,50,110,0.12), 0 0 0 1px rgba(220,80,130,0.07),
+                inset 0 1px 0 rgba(255,140,180,0.06);
+  }
+  .hero-b::before {
+    background: linear-gradient(90deg, transparent, rgba(240,100,160,0.28) 30%, rgba(255,160,200,0.42) 50%, rgba(240,100,160,0.28) 70%, transparent);
+  }
+  .hero-b::after {
+    content: '';
+    position: absolute; top: -50px; right: -50px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(240,80,140,0.13) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .hero-b .glow-corner {
+    position: absolute; bottom: -40px; left: -40px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(180,40,100,0.09) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-b .hero-eyebrow { color: #6a2840; }
+  .hero-b .hero-name {
+    font-family: 'Manrope', sans-serif;
+    font-size: clamp(52px, 5vw, 76px);
+    font-weight: 800; letter-spacing: -3px;
+    color: #f06090;
+  }
+  .hero-b .hero-name span { color: #a03060; }
+  .hero-b .hero-tagline { color: #4a1830; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ══════════════════════════════════════
+     NAVBAR SAMPLES
+  ══════════════════════════════════════ */
+  .navbar-stack {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .navbar-sample-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: #282830; margin-bottom: 5px;
+  }
+
+  /* Faithful replica of the app navbar */
+  .app-navbar {
+    height: 50px;
+    display: flex; align-items: center;
+    padding: 0 22px; gap: 16px;
+    border-radius: 10px;
+  }
+  .app-nav-logo {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 17px; font-style: italic; font-weight: 500;
+    letter-spacing: 0.5px; flex: 1;
+  }
+  .app-nav-btn {
+    background: transparent; border-radius: 5px;
+    padding: 6px 14px; font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    cursor: default; flex: none; border: 1px solid;
+  }
+
+  /* Theme presets */
+  .nb-bluey-light  { background: #d6e8f8; border: 1px solid #b8d4ee; }
+  .nb-bluey-light  .app-nav-logo { color: #0a1a2e; }
+  .nb-bluey-light  .app-nav-btn  { border-color: #a8c4de; color: #4a6080; }
+
+  .nb-bluey-dark   { background: #101828; border: 1px solid #1a2838; }
+  .nb-bluey-dark   .app-nav-logo { color: #c8e0f0; }
+  .nb-bluey-dark   .app-nav-btn  { border-color: #1e3048; color: #5888b0; }
+
+  .nb-pikachu      { background: #fff8d8; border: 1px solid #f0e090; }
+  .nb-pikachu      .app-nav-logo { color: #1a1208; }
+  .nb-pikachu      .app-nav-btn  { border-color: #e8d070; color: #806010; }
+
+  .nb-deadpool     { background: #1c0808; border: 1px solid #300c0c; }
+  .nb-deadpool     .app-nav-logo { color: #f0d0c0; }
+  .nb-deadpool     .app-nav-btn  { border-color: #3a1010; color: #a04030; }
+
+  .nb-totoro       { background: #0e1810; border: 1px solid #1e2e18; }
+  .nb-totoro       .app-nav-logo { color: #c0d8b0; }
+  .nb-totoro       .app-nav-btn  { border-color: #2a4020; color: #5a8840; }
+
+  .nb-joker        { background: #120818; border: 1px solid #200c2e; }
+  .nb-joker        .app-nav-logo { color: #e0c8f8; }
+  .nb-joker        .app-nav-btn  { border-color: #2a1040; color: #8040c0; }
+
+  /* ── Footer ── */
+  .page-footer {
+    text-align: center; margin-top: 60px;
+    position: relative; z-index: 1;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px; color: #1e1e24; letter-spacing: 1px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>Final two designs</h1>
+  <span>Clarinet Practice Stage &nbsp;vs&nbsp; PlayPulse</span>
+</div>
+
+<div class="compare-grid">
+
+  <!-- ══ DESIGN A ══ -->
+  <div class="design-panel">
+    <div class="design-num">Design 01 — Clarinet Practice Stage</div>
+
+    <!-- Hero -->
+    <div class="hero-card hero-a">
+      <div class="glow-corner"></div>
+      <div class="hero-eyebrow">Clarinet Practice App</div>
+      <div class="hero-name"><span>Clarinet</span> Practice Stage</div>
+      <div class="hero-tagline">Your daily performance starts here</div>
+    </div>
+
+    <!-- Navbars -->
+    <div class="navbar-stack">
+      <div>
+        <div class="navbar-sample-label">Bluey Light (default)</div>
+        <div class="app-navbar nb-bluey-light">
+          <span class="app-nav-logo">Clarinet Practice Stage</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Bluey Dark</div>
+        <div class="app-navbar nb-bluey-dark">
+          <span class="app-nav-logo">Clarinet Practice Stage</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Pikachu Light</div>
+        <div class="app-navbar nb-pikachu">
+          <span class="app-nav-logo">Clarinet Practice Stage</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Totoro Dark</div>
+        <div class="app-navbar nb-totoro">
+          <span class="app-nav-logo">Clarinet Practice Stage</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ DESIGN B ══ -->
+  <div class="design-panel">
+    <div class="design-num">Design 02 — PlayPulse</div>
+
+    <!-- Hero -->
+    <div class="hero-card hero-b">
+      <div class="glow-corner"></div>
+      <div class="hero-eyebrow">Clarinet Practice App</div>
+      <div class="hero-name">Play<span>Pulse</span></div>
+      <div class="hero-tagline">Your rhythm, your practice</div>
+    </div>
+
+    <!-- Navbars -->
+    <div class="navbar-stack">
+      <div>
+        <div class="navbar-sample-label">Bluey Light (default)</div>
+        <div class="app-navbar nb-bluey-light">
+          <span class="app-nav-logo">PlayPulse</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Bluey Dark</div>
+        <div class="app-navbar nb-bluey-dark">
+          <span class="app-nav-logo">PlayPulse</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Pikachu Light</div>
+        <div class="app-navbar nb-pikachu">
+          <span class="app-nav-logo">PlayPulse</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+      <div>
+        <div class="navbar-sample-label">Deadpool Dark</div>
+        <div class="app-navbar nb-deadpool">
+          <span class="app-nav-logo">PlayPulse</span>
+          <button class="app-nav-btn">Theme</button>
+          <button class="app-nav-btn">Practice Notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-footer">name-preview.html · not committed</div>
+
+</body>
+</html>
