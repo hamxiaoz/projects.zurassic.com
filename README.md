@@ -49,8 +49,8 @@ git push
 
 Both existing projects were migrated from standalone repos using `git subtree add`, so their full commit history is preserved inline in this repo's `main` branch:
 
-- `music-practice-stage` — migrated from `/code/metronome`
-- `lego-mosaic-helper` — migrated from `/code/lego-helper` (was also at `github.com/hamxiaoz/lego-mosaic-helper`)
+- `music-practice-stage` — migrated from a standalone repo using `git subtree add`
+- `lego-mosaic-helper` — migrated from a standalone repo using `git subtree add`
 
 To see history for a specific subfolder:
 ```
@@ -67,7 +67,6 @@ git log -- lego-mosaic-helper/
 
 ## Claude / AI context
 
-- Project-level memory for `music-practice-stage` is at:
-  `~/.claude/projects/-Users-andrew-code-projects-zurassic-com-music-practice-stage/memory/MEMORY.md`
 - Each subfolder has `.claude/settings.local.json` for local Claude settings
 - When working on a specific project, open Claude from that subfolder so it picks up the right context
+- Project-level memory is stored locally in `~/.claude/projects/` (not committed to the repo)
