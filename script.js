@@ -756,6 +756,7 @@ notesUnderstoodBtn.addEventListener('click', () => {
 
 // Changelog
 const CHANGELOG = [
+  { date: '2026-03-08', desc: 'Renamed app to Music Practice Stage; nav title uses Playfair Display bold italic with theme accent colour on first word' },
   { date: '2026-03-08', desc: 'Split into separate CSS and JS files; dark/light theme toggle with 25 themes per mode; Bluey light as default; themes sorted by colour-wheel order; camera controls moved to top-left as compact horizontal row with Experiments group' },
   { date: '2026-03-07', desc: 'Design overhaul: BPM number switched to DM Mono for clear digit rendering, beat dots more visible, new Mint and Flame themes added, theme-aware CSS variables replace all hardcoded warm colors' },
   { date: '2026-03-07', desc: 'Casio LCD-style 7-segment display for timer and elapsed time; elapsed section moved to bottom of panel; notes modal shown on metronome and timer start; camera button centred with helper text' },

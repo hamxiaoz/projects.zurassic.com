@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Clarinet Practice Tool</title>
+<title>Music Practice Stage</title>
 <script type="module">
 import { FaceLandmarker, FilesetResolver } from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.18/vision_bundle.mjs';
 window._FaceLandmarker = FaceLandmarker;
@@ -13,13 +13,13 @@ window.dispatchEvent(new Event('mediapipe-ready'));
 </script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <nav class="navbar">
-  <span class="nav-logo">Clarinet Practice Tool</span>
+  <span class="nav-logo"><em>Music</em> Practice Stage</span>
   <button class="nav-btn" id="themeBtn">Theme</button>
   <button class="nav-btn" id="notesToggleBtn">Practice Notes</button>
 </nav>

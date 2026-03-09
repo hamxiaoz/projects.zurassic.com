@@ -49,14 +49,18 @@ body {
   z-index: 50;
 }
 .nav-logo {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 17px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
   font-style: italic;
-  font-weight: 500;
-  letter-spacing: 0.5px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
   color: var(--cream);
   flex: 1;
   text-align: left;
+}
+.nav-logo em {
+  font-style: italic;
+  color: var(--brass);
 }
 .nav-btn {
   background: transparent;
