@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LEGO Mosaic Helper — How It Evolved</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f1a;
+    color: #ddd;
+    line-height: 1.7;
+  }
+
+  header {
+    position: relative;
+    text-align: center;
+    padding: 60px 20px 40px;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-bottom: 2px solid #533483;
+  }
+  header h1 { font-size: 36px; color: #fff; margin-bottom: 8px; }
+  header p { font-size: 16px; color: #aaa; max-width: 500px; margin: 0 auto; }
+  .back-link { position: absolute; top: 20px; left: 20px; color: #aaa; text-decoration: none; font-size: 14px; }
+  .back-link:hover { color: #fff; }
+
+  .timeline {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 40px 20px 80px;
+    position: relative;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 28px;
+    top: 40px;
+    bottom: 80px;
+    width: 3px;
+    background: #533483;
+    border-radius: 2px;
+  }
+
+  .entry {
+    position: relative;
+    padding-left: 68px;
+    margin-bottom: 48px;
+  }
+  .entry::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: 6px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #533483;
+    border: 3px solid #0f0f1a;
+  }
+  .entry.highlight::before { background: #e94560; }
+
+  .entry .tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 10px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+  .tag.feature { background: #1b4332; color: #95d5b2; }
+  .tag.fix { background: #5c1a1a; color: #f5a0a0; }
+  .tag.improve { background: #1a3a5c; color: #a0d0f5; }
+  .tag.real { background: #5c4a1a; color: #f5dfa0; }
+
+  .entry h2 { font-size: 20px; color: #fff; margin-bottom: 6px; }
+  .entry p { font-size: 15px; color: #bbb; margin-bottom: 12px; }
+
+  .screenshots {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .screenshots img {
+    border-radius: 8px;
+    border: 1px solid #333;
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .screenshots img:hover { transform: scale(1.02); }
+  .screenshots img.small { flex: 1 1 0; min-width: 0; max-width: 48%; }
+
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 13px;
+    border-top: 1px solid #222;
+  }
+
+  /* lightbox */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  #lightbox.open { display: flex; }
+  #lightbox img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="index.html#home" class="back-link">&larr; Back to Home</a>
+  <h1>LEGO Mosaic Helper</h1>
+  <p>How a weekend LEGO project turned into a single-file web app — one improvement at a time.</p>
+</header>
+
+<div class="timeline">
+
+  <div class="entry highlight">
+    <span class="tag feature">Launch</span>
+    <h2>The First Working Version</h2>
+    <p>
+      Building a 48x48 LEGO mosaic means placing 2,304 tiny dots in the right colors.
+      Without reference points, you're constantly counting and losing your place.
+      The first version solved this: drop in your reference photo, and the app auto-detects all 2,304 colors
+      and shows them as an interactive grid. Hover any dot to see how far you are from the next
+      color change in every direction.
+    </p>
+    <p>
+      Also included from day one: zoom and pan, row/column crosshair highlighting,
+      coordinates display, a section grid (8x8 chunks), and a correction mode to fix any
+      mis-detected colors. All in a single HTML file.
+    </p>
+    <div class="screenshots">
+      <img class="small" src="story/0.png" alt="Import screen">
+      <img class="small" src="story/1.png" alt="Mosaic grid loaded">
+    </div>
+  </div>
+
+  <div class="entry">
+    <span class="tag fix">Fix</span>
+    <h2>Distance Was Off By One</h2>
+    <p>
+      The distance numbers were counting the different-colored boundary dot. If you were 3
+      same-colored dots away from a change, it showed "4". Fixed to only count same-color dots
+      — which matches what you actually count on the real plate.
+    </p>
+    <div class="screenshots">
+      <img src="story/2 update distance.png" alt="Fixing distance calculation">
+    </div>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag improve">Improvement</span>
+    <h2>The "Zero Distance" Problem</h2>
+    <p>
+      When the very next dot was already a different color, the distance was 0 and the app
+      showed nothing — no line, no number. But that's exactly when you need help most.
+    </p>
+    <p>
+      The fix: two modes. <strong>Red lines</strong> show how many same-color dots extend in a direction.
+      <strong>Cyan lines</strong> appear when the neighbor is different, showing how long that
+      adjacent color block is — a useful landmark for counting on the real plate.
+    </p>
+    <div class="screenshots">
+      <img class="small" src="story/3 not showing distance.png" alt="No distance shown for adjacent different color">
+      <img class="small" src="story/4.png" alt="Planning the new logic">
+    </div>
+    <div class="screenshots" style="margin-top:10px">
+      <img class="small" src="story/5 1.png" alt="Cyan lines showing adjacent block distances">
+      <img class="small" src="story/5 2.png" alt="Mixed red and cyan rays">
+    </div>
+  </div>
+
+  <div class="entry">
+    <span class="tag improve">Simplify</span>
+    <h2>Removed the Crop Step</h2>
+    <p>
+      The original had a crop/alignment screen with draggable corner handles. In practice,
+      reference photos are already just the plate. Removed the entire crop UI — now it goes
+      straight from image load to the interactive grid. One fewer step.
+    </p>
+  </div>
+
+  <div class="entry">
+    <span class="tag feature">Feature</span>
+    <h2>Embedded Demo Image</h2>
+    <p>
+      To share the app as a single file that works anywhere — even hosted on the web —
+      the demo mosaic was embedded directly as base64. A "Load Demo" button instantly shows
+      the mosaic without picking a file. The HTML is ~500KB but fully self-contained.
+    </p>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag real">Real World</span>
+    <h2>On the Workbench</h2>
+    <p>
+      Here's the actual build in progress. Bags of dots sorted by color, a row counter on the side,
+      and the app running on a laptop nearby. It works.
+    </p>
+    <div class="screenshots">
+      <img src="story/workbennch.png" alt="The real LEGO mosaic workbench">
+    </div>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag feature">Feature</span>
+    <h2>Build Order with Speech</h2>
+    <p>
+      Counting dots row by row is tedious. The new Build Order mode lets you click any dot,
+      pick a direction, and the app computes the full sequence of color runs along that line.
+      It shows a side panel listing each run ("3x Light Gray, 1x White, 2x Black...") and
+      highlights the path on the canvas in red.
+    </p>
+    <p>
+      Best part: it speaks the sequence out loud using the browser's speech synthesis.
+      You can keep your eyes on the plate and just listen. Hit the Speak button to replay anytime.
+    </p>
+    <div class="screenshots">
+      <img class="small" src="story/6 speak build order.png" alt="Direction picker popup">
+      <img class="small" src="story/6 speak build order 2.png" alt="Build order panel with speech">
+    </div>
+  </div>
+
+  <div class="entry">
+    <span class="tag feature">Feature</span>
+    <h2>Magnifier on Hover</h2>
+    <p>
+      At normal zoom levels the dots are tiny and hard to distinguish. Now when you hover
+      any dot, a circular magnifier appears in the top-right corner of the canvas showing
+      the hovered dot and its neighbors at a zoomed-in scale. The magnifier automatically
+      repositions when build order panels are open so it's never hidden.
+    </p>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag feature">Feature</span>
+    <h2>Homepage & SEO</h2>
+    <p>
+      Added a proper homepage with a stacked vertical layout: centered headline and tagline,
+      full-width app screenshot, product box alongside feature bullets, and a prominent drop zone CTA.
+      Includes SEO meta tags, Open Graph tags, and a compressed product image.
+      The header title is now a clickable link, and the product name links to the official LEGO product page.
+    </p>
+  </div>
+
+  <div class="entry highlight">
+    <span class="tag feature">Feature</span>
+    <h2>Dual Build Panels — Left & Right</h2>
+    <p>
+      Two people can now build the mosaic at the same time. The single "Build Order" button
+      was replaced with "Build Left" and "Build Right" — each populating its own panel
+      on either side of the canvas.
+    </p>
+    <p>
+      Each panel has independent data, speech, and close controls. The canvas shows both
+      highlights simultaneously: <strong style="color:#4287f5">blue</strong> for the left builder,
+      <strong style="color:#e94560">red</strong> for the right. Panels overlay the canvas
+      without shifting the mosaic, so the plate stays centered no matter which panels are open.
+    </p>
+  </div>
+
+  <div class="entry">
+    <span class="tag improve">Improve</span>
+    <h2>Homepage Navigation & URL Routing</h2>
+    <p>
+      The toolbar (Choose Image, Section Grid, etc.) is now hidden on the homepage and only appears
+      once an image is loaded — keeping the landing page clean and focused.
+    </p>
+    <p>
+      Added hash-based URL routing: loading an image sets the URL to <code>#app</code>, and returning
+      to the homepage sets it to <code>#home</code>. The browser back button now works to navigate
+      between the app and homepage. The footer hides in app view to avoid overlapping the canvas.
+    </p>
+    <div class="screenshots">
+      <img src="story/7.png" alt="Clean homepage with hidden toolbar">
+    </div>
+  </div>
+
+  <div class="entry">
+    <span class="tag feature">Feature</span>
+    <h2>Backstory Link</h2>
+    <p>
+      Added a purple pill button on the homepage linking to the
+      <a href="https://www.linkedin.com/pulse/applied-ai-field-notes-001-lego-mosaic-helper-andrew-zheng-ave1c" target="_blank" style="color:#a0d0f5">LinkedIn article</a>
+      about how this app was built. Sits between the tagline and the hero screenshot
+      so visitors can read the full story behind the project.
+    </p>
+  </div>
+
+  <div class="entry">
+    <span class="tag feature">Feature</span>
+    <h2>Visited Dot Indicators</h2>
+    <p>
+      When you click a dot and choose a build direction, every dot in that build order line
+      now gets a magenta ring indicator so you can see which rows and columns you've already worked on.
+      Markers accumulate across multiple build orders, making it easy to track progress on the mosaic.
+    </p>
+    <p>
+      A "Clear Visited" toolbar button wipes all markers at once, and the direction popup now includes
+      an &times; button in the corner to clear an individual dot's marker. Markers also reset automatically
+      when a new image is loaded.
+    </p>
+  </div>
+
+</div>
+
+<div class="footer">
+  <a href="index.html#home" style="color:#888">Back to Home</a>
+</div>
+
+<div id="lightbox">
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<script>
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+
+  document.querySelectorAll('.screenshots img').forEach(img => {
+    img.addEventListener('click', () => {
+      lightboxImg.src = img.src;
+      lightbox.classList.add('open');
+    });
+  });
+
+  lightbox.addEventListener('click', () => {
+    lightbox.classList.remove('open');
+  });
+</script>
+</body>
+</html>
