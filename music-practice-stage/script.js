@@ -887,6 +887,8 @@ notesModalList.addEventListener('click', (e) => {
 
 // Changelog
 const CHANGELOG = [
+  { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
+  { date: '2026-03-09', desc: 'Nav buttons updated with icons: color wheel for Theme, pencil for Practice Notes' },
   { date: '2026-03-09', desc: 'Timer duration select replaced with compact gear icon dropdown; fixes timer row overflow on narrow/iPad screens' },
   { date: '2026-03-09', desc: 'Notes modal CTA changed to "ok, let\'s go"; clicking outside the modal cancels and does not start the timer' },
   { date: '2026-03-08', desc: 'Renamed app to Music Practice Stage; nav title uses Playfair Display bold italic with theme accent colour on first word' },

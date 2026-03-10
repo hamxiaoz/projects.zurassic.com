@@ -77,6 +77,30 @@ body {
   flex: none;
 }
 .nav-btn:hover { border-color: var(--brass); color: var(--brass); }
+.color-wheel {
+  display: inline-block;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background:
+    conic-gradient(from -90deg,
+      hsl(0,100%,50%),
+      hsl(30,100%,50%),
+      hsl(60,100%,50%),
+      hsl(90,100%,50%),
+      hsl(120,100%,50%),
+      hsl(150,100%,50%),
+      hsl(180,100%,50%),
+      hsl(210,100%,50%),
+      hsl(240,100%,50%),
+      hsl(270,100%,50%),
+      hsl(300,100%,50%),
+      hsl(330,100%,50%),
+      hsl(360,100%,50%)
+    );
+  vertical-align: middle;
+  flex-shrink: 0;
+  position: relative; top: -1px;
+}
 .nav-btn.active { border-color: var(--brass); color: var(--brass); background: var(--brass-glow); }
 
 /* ── Layout ── */
@@ -513,3 +537,39 @@ select:hover { border-color: var(--border-hi); }
 .btn-understood { background: var(--brass); color: var(--bg); width: 100%; font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; flex-shrink: 0; padding: 12px; }
 .btn-understood:hover { background: var(--brass-hi); }
 .modal-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 17px; font-style: italic; color: var(--cream); text-align: center; margin-top: 12px; line-height: 1.5; }
+
+/* ── Mobile ── */
+@media (max-width: 640px) {
+  body { height: auto; min-height: 100dvh; overflow: auto; }
+
+  .navbar { padding: 0 12px; gap: 8px; }
+  .nav-logo {
+    font-size: 15px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  .nav-btn { padding: 6px 10px; font-size: 9px; letter-spacing: 1px; white-space: nowrap; flex: none; }
+
+  .main-content { flex-direction: column; overflow: visible; }
+
+  .metronome-panel {
+    flex: none;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    padding: 16px 14px;
+  }
+
+  .mirror-panel {
+    flex: none;
+    width: 100%;
+    height: 50vw;
+    min-height: 220px;
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+
+  .site-footer { height: auto; padding: 10px; }
+}
