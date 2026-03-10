@@ -489,7 +489,9 @@ document.addEventListener('keydown', (e) => {
 const timerDisplay = document.getElementById('timerDisplay');
 const timerBtn = document.getElementById('timerBtn');
 const timerReset = document.getElementById('timerReset');
-const timerPreset = document.getElementById('timerPreset');
+const timerPresetBtn = document.getElementById('timerPresetBtn');
+const timerPresetMenu = document.getElementById('timerPresetMenu');
+const timerPresetWrap = document.getElementById('timerPresetWrap');
 let timerSeconds = 30 * 60;
 let timerRemaining = timerSeconds;
 let timerInterval = null;
@@ -506,11 +508,25 @@ function updateTimerDisplay() {
   timerDisplay.classList.toggle('timer-done', timerRemaining === 0);
 }
 
-timerPreset.addEventListener('change', () => {
-  timerSeconds = Number(timerPreset.value) * 60;
+timerPresetBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  timerPresetMenu.classList.toggle('hidden');
+});
+
+timerPresetMenu.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-value]');
+  if (!btn) return;
+  timerPresetMenu.querySelectorAll('button').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  timerSeconds = Number(btn.dataset.value) * 60;
   timerRemaining = timerSeconds;
+  timerPresetMenu.classList.add('hidden');
   stopTimer();
   updateTimerDisplay();
+});
+
+document.addEventListener('click', (e) => {
+  if (!timerPresetWrap.contains(e.target)) timerPresetMenu.classList.add('hidden');
 });
 
 function startTimer() {
