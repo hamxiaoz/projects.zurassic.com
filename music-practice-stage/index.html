@@ -158,9 +158,20 @@ window.dispatchEvent(new Event('mediapipe-ready'));
 <!-- Notes modal (shown on timer start) -->
 <div class="notes-modal-backdrop" id="notesModalBackdrop">
   <div class="notes-modal-box">
-    <h2>Practice Notes</h2>
+    <div class="notes-modal-header">
+      <h2>Practice Notes</h2>
+      <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note">+</button>
+    </div>
+    <div class="notes-modal-add-form hidden" id="notesModalAddForm">
+      <textarea id="notesModalInput" placeholder="New note..."></textarea>
+      <div class="notes-modal-add-actions">
+        <button class="note-save-btn" id="notesModalSaveBtn">Save</button>
+        <button class="note-cancel-btn" id="notesModalCancelBtn">Cancel</button>
+      </div>
+    </div>
     <div class="notes-modal-list" id="notesModalList"></div>
-    <button class="btn-understood" id="notesUnderstoodBtn">Yes, I understand</button>
+    <button class="btn-understood" id="notesUnderstoodBtn">ok, let's go</button>
+    <p class="modal-quote">"The musician who knows where they're going arrives faster."</p>
   </div>
 </div>
 

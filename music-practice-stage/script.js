@@ -582,6 +582,11 @@ const notesPanelClose = document.getElementById('notesPanelClose');
 const notesModalBackdrop = document.getElementById('notesModalBackdrop');
 const notesModalList = document.getElementById('notesModalList');
 const notesUnderstoodBtn = document.getElementById('notesUnderstoodBtn');
+const notesModalAddBtn = document.getElementById('notesModalAddBtn');
+const notesModalAddForm = document.getElementById('notesModalAddForm');
+const notesModalInput = document.getElementById('notesModalInput');
+const notesModalSaveBtn = document.getElementById('notesModalSaveBtn');
+const notesModalCancelBtn = document.getElementById('notesModalCancelBtn');
 let pendingTimerStart = false;
 
 function loadNotes() {
@@ -665,11 +670,56 @@ function renderNotesModal() {
   notes.slice().reverse().forEach(note => {
     const entry = document.createElement('div');
     entry.className = 'notes-modal-entry';
+    entry.dataset.id = note.id;
     entry.innerHTML = `
       <div class="notes-modal-entry-date">${formatNoteDate(note.id)}</div>
       <div class="notes-modal-entry-text">${escapeHtml(note.text)}</div>
+      <div class="note-entry-actions">
+        <button class="edit-btn" title="Edit">&#9998;</button>
+        <button class="delete-btn" title="Delete">&times;</button>
+      </div>
     `;
     notesModalList.appendChild(entry);
+  });
+}
+
+function enterEditModeModal(entry) {
+  if (entry.classList.contains('editing')) return;
+  entry.classList.add('editing');
+  const textEl = entry.querySelector('.notes-modal-entry-text');
+  const originalText = textEl.textContent;
+  const actionsEl = entry.querySelector('.note-entry-actions');
+  actionsEl.style.display = 'none';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'note-entry-edit-area';
+  textarea.value = originalText;
+  entry.appendChild(textarea);
+
+  const editActions = document.createElement('div');
+  editActions.className = 'note-entry-edit-actions';
+  editActions.innerHTML = '<button class="note-save-btn">Save</button><button class="note-cancel-btn">Cancel</button>';
+  entry.appendChild(editActions);
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+  editActions.querySelector('.note-save-btn').addEventListener('click', () => {
+    const newText = textarea.value.trim();
+    if (!newText) return;
+    const id = Number(entry.dataset.id);
+    const notes = loadNotes().map(n => n.id === id ? { ...n, text: newText } : n);
+    saveNotes(notes);
+    renderNotesModal();
+    renderNotesList();
+  });
+
+  editActions.querySelector('.note-cancel-btn').addEventListener('click', () => {
+    renderNotesModal();
+  });
+
+  textarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) editActions.querySelector('.note-save-btn').click();
+    if (e.key === 'Escape') editActions.querySelector('.note-cancel-btn').click();
   });
 }
 
@@ -754,8 +804,74 @@ notesUnderstoodBtn.addEventListener('click', () => {
   if (typeof cb === 'function') cb();
 });
 
+notesModalBackdrop.addEventListener('click', (e) => {
+  if (e.target === notesModalBackdrop) closeNotesModal();
+});
+
+notesModalAddBtn.addEventListener('click', () => {
+  const isOpen = !notesModalAddForm.classList.contains('hidden');
+  if (isOpen) {
+    notesModalAddForm.classList.add('hidden');
+    notesModalInput.value = '';
+  } else {
+    notesModalAddForm.classList.remove('hidden');
+    notesModalInput.focus();
+  }
+});
+
+notesModalSaveBtn.addEventListener('click', () => {
+  const text = notesModalInput.value.trim();
+  if (!text) return;
+  const notes = loadNotes();
+  notes.push({ id: Date.now(), text });
+  saveNotes(notes);
+  notesModalInput.value = '';
+  notesModalAddForm.classList.add('hidden');
+  renderNotesModal();
+  renderNotesList();
+});
+
+notesModalCancelBtn.addEventListener('click', () => {
+  notesModalInput.value = '';
+  notesModalAddForm.classList.add('hidden');
+});
+
+notesModalInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) notesModalSaveBtn.click();
+  if (e.key === 'Escape') notesModalCancelBtn.click();
+});
+
+notesModalList.addEventListener('click', (e) => {
+  const deleteBtn = e.target.closest('.delete-btn');
+  if (deleteBtn) {
+    if (deleteBtn.dataset.confirming) {
+      const id = Number(deleteBtn.closest('.notes-modal-entry').dataset.id);
+      saveNotes(loadNotes().filter(n => n.id !== id));
+      renderNotesModal();
+      renderNotesList();
+    } else {
+      deleteBtn.dataset.confirming = '1';
+      deleteBtn.textContent = 'Sure?';
+      deleteBtn.style.color = '#e94560';
+      setTimeout(() => {
+        if (deleteBtn.dataset.confirming) {
+          delete deleteBtn.dataset.confirming;
+          deleteBtn.textContent = '×';
+          deleteBtn.style.color = '';
+        }
+      }, 3000);
+    }
+    return;
+  }
+  const editBtn = e.target.closest('.edit-btn');
+  if (editBtn) {
+    enterEditModeModal(editBtn.closest('.notes-modal-entry'));
+  }
+});
+
 // Changelog
 const CHANGELOG = [
+  { date: '2026-03-09', desc: 'Notes modal CTA changed to "ok, let\'s go"; clicking outside the modal cancels and does not start the timer' },
   { date: '2026-03-08', desc: 'Renamed app to Music Practice Stage; nav title uses Playfair Display bold italic with theme accent colour on first word' },
   { date: '2026-03-08', desc: 'Split into separate CSS and JS files; dark/light theme toggle with 25 themes per mode; Bluey light as default; themes sorted by colour-wheel order; camera controls moved to top-left as compact horizontal row with Experiments group' },
   { date: '2026-03-07', desc: 'Design overhaul: BPM number switched to DM Mono for clear digit rendering, beat dots more visible, new Mint and Flame themes added, theme-aware CSS variables replace all hardcoded warm colors' },
