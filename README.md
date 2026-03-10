@@ -29,14 +29,51 @@ URLs map directly to folder names:
 - `/music-practice-stage/` → `music-practice-stage/index.html`
 - `/lego-mosaic-helper/` → `lego-mosaic-helper/index.html`
 
-## Adding a new project
+## Working on a new (unfinished) project
+
+Every push to `main` deploys live, so don't push unfinished work there. Two options:
+
+### Option A — Feature branch (suggested)
+
+Work in a branch. Vercel auto-generates a **preview URL** for every branch so you can see it live before shipping.
+
+```
+git checkout -b my-new-project
+# work and commit freely...
+git push -u origin my-new-project
+# Vercel posts a preview URL in the GitHub PR / branch
+
+# When ready to ship:
+git checkout main
+git merge my-new-project
+git push
+git branch -d my-new-project
+```
+
+Only add the project to `index.html` as part of the final merge commit.
+
+### Option B — Git worktree
+
+Lets you work on a branch in a separate folder on disk without switching branches in this directory. Useful when juggling two projects simultaneously.
+
+```
+git checkout -b my-new-project
+git worktree add ../my-new-project-wip my-new-project
+# now ../my-new-project-wip is a separate working directory on that branch
+# work there, commit freely, push when ready as in Option A
+
+# Clean up when done:
+git worktree remove ../my-new-project-wip
+```
+
+## Adding a new project (when ready to ship)
 
 **1. Create a subfolder and build the project:**
 ```
 mkdir my-new-project
 ```
 
-**2. Add a card to `index.html`** — copy an existing `<li>` block in the `<ul class="projects">` section, increment the number, and update the href, title, and description.
+**2. Add an entry to `index.html`** — copy an existing `<li>` block in the `<ul class="projects">` section and update the href, title, and description.
 
 **3. Push:**
 ```
