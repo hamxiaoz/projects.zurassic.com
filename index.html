@@ -4,263 +4,168 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projects — zurassic</title>
-  <meta name="description" content="A small collection of tools and experiments by zurassic.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,400;1,9..144,600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    :root {
-      --bg:           #0c0a07;
-      --border:       #252018;
-      --border-hi:    #3a3020;
-      --accent:       #c9992a;
-      --accent-hi:    #e8b84b;
-      --text:         #e2d8c8;
-      --text-dim:     #7a7060;
-      --text-faint:   #38322a;
-    }
-
-    html { font-size: 16px; }
-
     body {
-      background: var(--bg);
-      /* warm radial glow from top-left */
-      background-image: radial-gradient(ellipse 70% 50% at 10% 0%, #1c140a 0%, transparent 60%);
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-weight: 300;
+      background: #f5f5f5;
+      color: #0a0a0a;
+      font-family: 'Space Grotesk', sans-serif;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding: 3rem 4rem;
+      animation: fadeIn 0.7s ease both;
     }
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 0 2rem;
-      width: 100%;
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
 
-    /* ── Header ── */
-    header {
-      padding: 5rem 0 3.5rem;
-      animation: fadeUp 0.5s ease both;
-    }
-
-    .eyebrow {
-      display: block;
+    .logo {
       font-size: 0.65rem;
-      letter-spacing: 0.22em;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 1.8rem;
+      color: #aaa;
+      font-weight: 400;
+      margin-bottom: 5rem;
+    }
+
+    main {
+      max-width: 700px;
     }
 
     h1 {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(2.8rem, 8vw, 5rem);
+      font-size: clamp(2.8rem, 6vw, 4.5rem);
       font-weight: 300;
-      font-style: normal;
-      line-height: 0.92;
-      letter-spacing: -0.03em;
-      color: var(--text);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 2.5rem;
+      color: #0a0a0a;
     }
 
-    h1 em {
-      font-style: italic;
-      font-weight: 600;
-      color: var(--accent);
-    }
-
-    .subhead {
-      margin-top: 1.4rem;
-      font-size: 0.7rem;
-      color: var(--text-dim);
-      letter-spacing: 0.06em;
-    }
-
-    /* ── Project list ── */
-    .divider {
-      border: none;
-      border-top: 1px solid var(--border);
+    .desc {
+      font-size: 0.85rem;
+      color: #888;
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 380px;
+      margin-bottom: 3.5rem;
     }
 
     .projects {
       list-style: none;
+      width: 100%;
     }
 
-    .project-item {
-      border-bottom: 1px solid var(--border);
-      animation: fadeUp 0.5s ease both;
+    .projects li {
+      border-bottom: 1px solid #ddd;
+      animation: slideIn 0.5s ease both;
     }
 
-    .project-item:nth-child(1) { animation-delay: 0.08s; }
-    .project-item:nth-child(2) { animation-delay: 0.16s; }
-    /* add more delays as you add projects */
+    .projects li:nth-child(1) { animation-delay: 0.15s; }
+    .projects li:nth-child(2) { animation-delay: 0.25s; }
 
-    .project-link {
-      display: grid;
-      grid-template-columns: 2.8rem 1fr 1.5rem;
-      align-items: center;
-      gap: 1.5rem;
-      padding: 1.9rem 0;
-      text-decoration: none;
-      color: inherit;
-      position: relative;
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
-    /* accent left-bar on hover */
-    .project-link::before {
-      content: '';
-      position: absolute;
-      left: -2rem;
-      top: 50%;
-      transform: translateY(-50%) scaleY(0);
-      width: 2px;
-      height: 60%;
-      background: var(--accent);
-      transition: transform 0.2s ease;
-      transform-origin: center;
-    }
-
-    .project-link:hover::before { transform: translateY(-50%) scaleY(1); }
-    .project-link:hover .project-num   { color: var(--accent); }
-    .project-link:hover .project-title { color: var(--accent-hi); }
-    .project-link:hover .arrow         { transform: translateX(5px); color: var(--accent); }
-
-    .project-num {
-      font-size: 0.6rem;
-      letter-spacing: 0.12em;
-      color: var(--text-faint);
-      transition: color 0.2s;
-      align-self: start;
-      padding-top: 0.25rem;
-    }
-
-    .project-content { min-width: 0; }
-
-    .project-title {
-      font-family: 'Fraunces', serif;
-      font-size: clamp(1.3rem, 3vw, 1.75rem);
-      font-weight: 300;
-      letter-spacing: -0.015em;
-      line-height: 1.1;
-      color: var(--text);
-      transition: color 0.2s;
-      margin-bottom: 0.45rem;
-    }
-
-    .project-desc {
-      font-size: 0.68rem;
-      color: var(--text-dim);
-      letter-spacing: 0.04em;
-      line-height: 1.6;
-    }
-
-    .arrow {
-      color: var(--text-faint);
-      font-size: 1rem;
-      transition: transform 0.2s ease, color 0.2s;
-      align-self: center;
-      justify-self: end;
-    }
-
-    /* ── Footer ── */
-    footer {
-      margin-top: auto;
-      padding: 2.5rem 0;
-      animation: fadeUp 0.5s 0.3s ease both;
-    }
-
-    footer .container {
+    .projects a {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-top: 1px solid var(--border);
-      padding-top: 2rem;
-    }
-
-    .footer-copy {
-      font-size: 0.62rem;
-      color: var(--text-faint);
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .footer-link {
-      font-size: 0.62rem;
-      color: var(--text-dim);
+      padding: 1.4rem 0;
       text-decoration: none;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      transition: color 0.2s;
+      color: #0a0a0a;
+      transition: color 0.15s;
     }
 
-    .footer-link:hover { color: var(--accent); }
+    .projects a:hover { color: #000; }
 
-    /* ── Animation ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0);    }
+    .project-name {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      font-weight: 500;
+      letter-spacing: -0.015em;
+      margin-bottom: 0.25rem;
     }
 
-    header { animation: fadeUp 0.5s ease both; }
+    .project-desc {
+      font-size: 0.75rem;
+      color: #aaa;
+      font-weight: 300;
+      letter-spacing: 0;
+    }
 
-    /* ── Responsive ── */
-    @media (max-width: 480px) {
-      .project-link {
-        grid-template-columns: 2.2rem 1fr 1rem;
-        gap: 1rem;
-      }
-      .project-link::before { display: none; }
+    .projects a:hover .project-desc { color: #888; }
+
+    .arrow {
+      font-size: 1rem;
+      color: #ccc;
+      transition: transform 0.2s ease, color 0.15s;
+    }
+
+    .projects a:hover .arrow {
+      transform: translateX(5px);
+      color: #0a0a0a;
+    }
+
+    footer {
+      margin-top: auto;
+      padding-top: 4rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+
+    footer a {
+      color: #aaa;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    footer a:hover { color: #0a0a0a; }
+
+    @media (max-width: 600px) {
+      body { padding: 2rem 1.5rem; }
+      .logo { margin-bottom: 3rem; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header>
-      <span class="eyebrow">projects.zurassic.com</span>
-      <h1>things<br>I <em>built</em></h1>
-      <p class="subhead">tools &amp; experiments</p>
-    </header>
+  <div class="logo">projects.zurassic.com</div>
 
-    <hr class="divider">
+  <main>
+    <h1>Things<br>I built.</h1>
+    <p class="desc">A small collection of tools and experiments. Built for fun, shipped for use.</p>
 
     <ul class="projects">
-      <!--
-        To add a project: copy one <li> block, increment the number,
-        and update href, title, and description.
-      -->
-      <li class="project-item">
-        <a href="/music-practice-stage/" class="project-link">
-          <span class="project-num">01</span>
-          <div class="project-content">
-            <div class="project-title">Music Practice Stage</div>
-            <div class="project-desc">Metronome, practice timer, webcam mirror and cheek-puff detection</div>
+      <li>
+        <a href="/music-practice-stage/">
+          <div>
+            <div class="project-name">Music Practice Stage</div>
+            <div class="project-desc">Metronome, timer, webcam mirror and posture tools</div>
           </div>
           <span class="arrow">→</span>
         </a>
       </li>
-      <li class="project-item">
-        <a href="/lego-mosaic-helper/" class="project-link">
-          <span class="project-num">02</span>
-          <div class="project-content">
-            <div class="project-title">LEGO Mosaic Helper</div>
-            <div class="project-desc">Turn any image into a LEGO mosaic with build order guidance</div>
+      <li>
+        <a href="/lego-mosaic-helper/">
+          <div>
+            <div class="project-name">LEGO Mosaic Helper</div>
+            <div class="project-desc">Turn any image into a LEGO mosaic with build guidance</div>
           </div>
           <span class="arrow">→</span>
         </a>
       </li>
     </ul>
-  </div>
+  </main>
 
   <footer>
-    <div class="container">
-      <span class="footer-copy">© zurassic</span>
-      <a href="https://zurassic.com" class="footer-link">zurassic.com ↗</a>
-    </div>
+    <a href="https://www.zurassic.com">← back to zurassic.com</a>
   </footer>
 </body>
 </html>
