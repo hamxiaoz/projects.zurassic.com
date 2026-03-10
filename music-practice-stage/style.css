@@ -330,6 +330,23 @@ select:hover { border-color: var(--border-hi); }
 
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
 
+/* ── Timer preset dropdown ── */
+.timer-preset-wrap { position: relative; flex: none; }
+.timer-preset-menu {
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--surface-hi, var(--surface)); border: 1px solid var(--border-hi);
+  border-radius: 7px; padding: 4px; display: flex; flex-direction: column; gap: 1px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 200; min-width: 80px;
+}
+.timer-preset-menu.hidden { display: none; }
+.timer-preset-menu button {
+  background: none; border: none; color: var(--cream-dim); font-family: 'DM Mono', monospace;
+  font-size: 11px; padding: 5px 10px; border-radius: 4px; cursor: pointer; text-align: left;
+  white-space: nowrap; transition: background 0.15s;
+}
+.timer-preset-menu button:hover { background: var(--border); color: var(--cream); }
+.timer-preset-menu button.selected { color: var(--brass); }
+
 /* ── Theme popup ── */
 .theme-popup {
   position: fixed;
