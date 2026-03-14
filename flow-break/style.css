@@ -1,0 +1,322 @@
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  body.warning { animation: flash 0.5s ease-in-out infinite alternate; }
+  @keyframes flash {
+    from { background: #1a1a2e; }
+    to { background: #8b0000; }
+  }
+
+  /* Top bar: controls left, timer center, camera right */
+  #top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 12px 16px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+  #controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  #controls button, #settings-btn {
+    background: #16213e;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  #controls button svg, #settings-btn svg { width: 16px; height: 16px; vertical-align: -2px; }
+  #controls button:hover, #settings-btn:hover { background: #1a2744; border-color: #555; }
+  #controls button.active { border-color: #4caf50; color: #4caf50; }
+  #mute-btn.muted { border-color: #ff9800; color: #ff9800; }
+  #settings-btn { font-size: 1.1rem; padding: 6px 10px; }
+
+  #timer-section {
+    text-align: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+  }
+  #status {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2px;
+  }
+  #status.sitting { color: #4caf50; }
+  #status.away { color: #ff6b6b; }
+  #status.warn { color: #ff1744; font-weight: bold; }
+  #status.stopped { color: #666; }
+  #timer {
+    font-size: 2.8rem;
+    font-weight: 200;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  #timer.away { color: #ff6b6b; }
+  #timer.warn { color: #ff1744; }
+  #timer.sitting { color: #e0e0e0; }
+  #timer.stopped { color: #666; }
+  #threshold-display {
+    font-size: 0.75rem;
+    color: #555;
+    margin-top: 2px;
+  }
+
+  #camera-preview {
+    width: 140px;
+    height: 105px;
+    border-radius: 8px;
+    border: 2px solid #333;
+    object-fit: cover;
+    background: #000;
+    flex-shrink: 0;
+  }
+  #hand-fx {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    width: 140px;
+    height: 105px;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  /* Settings panel */
+  #settings-panel {
+    display: none;
+    position: fixed;
+    top: 52px;
+    left: 16px;
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 16px;
+    z-index: 20;
+    min-width: 240px;
+  }
+  #settings-panel.open { display: block; }
+  #settings-panel label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: #aaa; }
+  #threshold-range { width: 100%; margin-bottom: 12px; }
+  #threshold-val { font-weight: bold; color: #e0e0e0; }
+  .quick-presets { display: flex; gap: 6px; }
+  .quick-presets button {
+    flex: 1;
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 6px 0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+  }
+  .quick-presets button:hover { border-color: #555; color: #e0e0e0; }
+  .quick-presets button.selected { border-color: #4caf50; color: #4caf50; }
+  .settings-divider { border-top: 1px solid #333; margin: 12px 0; }
+  .settings-actions { display: flex; gap: 8px; }
+  .settings-actions button {
+    flex: 1;
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #aaa;
+    padding: 8px 0;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .settings-actions button:hover { border-color: #555; color: #e0e0e0; }
+  .settings-actions button svg { width: 14px; height: 14px; }
+
+  /* Breath section — centered in remaining space */
+  #breath-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #breath-overlay canvas { display: block; width: min(60vw, 60vh); height: min(60vw, 60vh); }
+  #breath-label {
+    text-align: center;
+    font-size: 1rem;
+    color: #556;
+    margin-top: 8px;
+    line-height: 1.8;
+  }
+  #breath-placeholder {
+    color: #333;
+    font-size: 0.9rem;
+  }
+
+  /* Breath picker modal */
+  #breath-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #breath-modal.open { display: flex; }
+  #breath-modal-inner {
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    width: 96vw;
+    max-width: 96vw;
+    height: 94vh;
+    max-height: 94vh;
+    overflow-y: auto;
+  }
+  #breath-modal-inner h2 { margin-bottom: 4px; font-weight: 500; font-size: 1.2rem; }
+  #breath-modal-inner p { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  .breath-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .breath-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .breath-card:hover { border-color: #555; }
+  .breath-card.selected { border-color: #4caf50; }
+  .breath-card canvas { display: block; margin: 0 auto 6px; border-radius: 4px; }
+  .breath-card .label { font-size: 0.75rem; color: #aaa; }
+  #breath-close {
+    margin-top: 16px;
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #breath-close:hover { border-color: #555; }
+
+  /* Hand FX picker modal */
+  #handfx-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #handfx-modal.open { display: flex; }
+  #handfx-modal-inner {
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90vw;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  #handfx-modal-inner h2 { margin-bottom: 4px; font-weight: 500; font-size: 1.2rem; }
+  #handfx-modal-inner p { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  .handfx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .handfx-card {
+    background: #1a1a2e;
+    border: 2px solid #333;
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .handfx-card:hover { border-color: #555; }
+  .handfx-card.selected { border-color: #4caf50; }
+  .handfx-card canvas { display: block; margin: 0 auto 6px; border-radius: 4px; background: #0a0a15; }
+  .handfx-card .label { font-size: 0.75rem; color: #aaa; }
+  #handfx-close {
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #handfx-close:hover { border-color: #555; }
+  #breath-none {
+    margin-top: 16px;
+    margin-right: 8px;
+    background: none;
+    border: 1px solid #555;
+    color: #888;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #breath-none:hover { color: #e0e0e0; }
+
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: #1a1a2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    font-size: 1.2rem;
+    color: #888;
+  }
+
+#app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 4px 12px;
+  font-size: 0.65rem;
+  color: #555;
+  z-index: 5;
+}
+#app-footer a {
+  color: #555;
+  text-decoration: none;
+}
+#app-footer a:hover {
+  color: #999;
+}
+#app-footer .sep {
+  margin: 0 4px;
+}
