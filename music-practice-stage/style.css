@@ -573,11 +573,11 @@ select:hover { border-color: var(--border-hi); }
 .flip-digit { position: relative; width: 42px; height: 56px; }
 .flip-top, .flip-bottom, .flip-flap-upper, .flip-flap-lower {
   position: absolute; left: 0; right: 0; overflow: hidden;
-  background: var(--surface); border: 1px solid var(--border-hi);
-  text-align: center; color: var(--brass);
+  background: #1c1c1c; border: none;
+  text-align: center; color: #f0f0f0;
   font-family: 'DM Mono', monospace; font-size: 34px; font-weight: bold;
 }
-.flip-top, .flip-flap-upper { top: 0; height: 28px; border-radius: 6px 6px 0 0; border-bottom: 1px solid var(--bg); }
+.flip-top, .flip-flap-upper { top: 0; height: 28px; border-radius: 6px 6px 0 0; border-bottom: 1px solid #000; }
 .flip-bottom, .flip-flap-lower { top: 28px; height: 28px; border-radius: 0 0 6px 6px; border-top: none; }
 .flip-top span, .flip-bottom span, .flip-flap-upper span, .flip-flap-lower span { display: block; height: 56px; line-height: 56px; }
 .flip-bottom span, .flip-flap-lower span { margin-top: -28px; }
