@@ -16,19 +16,19 @@
     <p class="landing-sub">Flow Break uses computer vision to detect when you're at your desk and reminds you to stand up — before hours slip by unnoticed.</p>
     <div class="landing-features">
       <div class="feature-card">
-        <div class="feature-icon">👁</div>
-        <div class="feature-title">Presence Detection</div>
-        <div class="feature-desc">Your webcam detects when you're sitting at your desk. No data sent anywhere — everything runs locally in your browser.</div>
-      </div>
-      <div class="feature-card">
         <div class="feature-icon">⏱</div>
         <div class="feature-title">Sit Timer &amp; Alarm</div>
-        <div class="feature-desc">Set your sitting limit. When time's up, an alert fires with a flashing screen and sound to get your attention.</div>
+        <div class="feature-desc">Computer vision watches your desk. Set a sitting limit and Flow Break sounds an alarm — screen flash, custom alarm tone — when time's up.</div>
       </div>
       <div class="feature-card">
         <div class="feature-icon">✋</div>
         <div class="feature-title">Gesture Dismiss</div>
-        <div class="feature-desc">Hold an open palm toward the camera for 3 seconds to silence the alarm and reset the clock. No keyboard needed.</div>
+        <div class="feature-desc">Hold an open palm toward the camera for 3 seconds. Anime-style effects charge up and burst as the timer counts down. No keyboard needed.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎬</div>
+        <div class="feature-title">Movie-Inspired FX</div>
+        <div class="feature-desc">10 real-time video filters — Terminator HUD, Predator thermal, Night Vision, Matrix tint, Glitch and more. Pick your vibe.</div>
       </div>
     </div>
     <button id="landing-cta">Start Monitoring</button>
@@ -116,7 +116,7 @@
 <div id="videofx-modal">
   <div id="videofx-modal-inner">
     <h2>Choose Video FX</h2>
-    <p>Applies a real-time filter to the camera view. Click to preview instantly.</p>
+    <canvas id="videofx-preview" width="280" height="210"></canvas>
     <div id="videofx-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
       <button id="videofx-close">Done</button>

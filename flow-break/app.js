@@ -138,35 +138,52 @@
     }},
   ];
 
+  const videofxPreviewCanvas = document.getElementById('videofx-preview');
+  const videofxPreviewCtx = videofxPreviewCanvas.getContext('2d');
+
+  function drawTrackingBrackets(ctx, cw, ch) {
+    if (!lastDetectedBbox) return;
+    const sx = cw / (video.videoWidth || 320);
+    const sy = ch / (video.videoHeight || 240);
+    const [bx, by, bw, bh] = lastDetectedBbox.map((v, i) => v * (i % 2 === 0 ? sx : sy));
+    const c = Math.min(18, bw * 0.25, bh * 0.25);
+    ctx.save();
+    ctx.strokeStyle = personPresent ? 'rgba(76,175,80,0.9)' : 'rgba(255,107,107,0.7)';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = ctx.strokeStyle;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.moveTo(bx+c, by);     ctx.lineTo(bx, by);     ctx.lineTo(bx, by+c);
+    ctx.moveTo(bx+bw-c, by);  ctx.lineTo(bx+bw, by);  ctx.lineTo(bx+bw, by+c);
+    ctx.moveTo(bx, by+bh-c);  ctx.lineTo(bx, by+bh);  ctx.lineTo(bx+c, by+bh);
+    ctx.moveTo(bx+bw-c, by+bh); ctx.lineTo(bx+bw, by+bh); ctx.lineTo(bx+bw, by+bh-c);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function renderCameraLoop() {
     if (!running) { videoFxRAF = null; return; }
     if (video.readyState >= 2) {
+      const cw = cameraCanvas.width, ch = cameraCanvas.height;
       if (activeVideoFx > 0) {
-        cameraCtx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
-        const imgData = cameraCtx.getImageData(0, 0, cameraCanvas.width, cameraCanvas.height);
+        cameraCtx.drawImage(video, 0, 0, cw, ch);
+        const imgData = cameraCtx.getImageData(0, 0, cw, ch);
         VIDEO_FX[activeVideoFx].apply(imgData);
         cameraCtx.putImageData(imgData, 0, 0);
       } else {
-        cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+        cameraCtx.clearRect(0, 0, cw, ch);
       }
-      // Person tracking overlay (corner brackets)
-      if (lastDetectedBbox) {
-        const sx = cameraCanvas.width / (video.videoWidth || 320);
-        const sy = cameraCanvas.height / (video.videoHeight || 240);
-        const [bx, by, bw, bh] = lastDetectedBbox.map((v,i) => v * (i%2===0?sx:sy));
-        const c = Math.min(18, bw*0.25, bh*0.25);
-        cameraCtx.save();
-        cameraCtx.strokeStyle = personPresent ? 'rgba(76,175,80,0.9)' : 'rgba(255,107,107,0.7)';
-        cameraCtx.lineWidth = 2;
-        cameraCtx.shadowColor = cameraCtx.strokeStyle;
-        cameraCtx.shadowBlur = 6;
-        cameraCtx.beginPath();
-        cameraCtx.moveTo(bx+c,by);   cameraCtx.lineTo(bx,by);   cameraCtx.lineTo(bx,by+c);
-        cameraCtx.moveTo(bx+bw-c,by); cameraCtx.lineTo(bx+bw,by); cameraCtx.lineTo(bx+bw,by+c);
-        cameraCtx.moveTo(bx,by+bh-c); cameraCtx.lineTo(bx,by+bh); cameraCtx.lineTo(bx+c,by+bh);
-        cameraCtx.moveTo(bx+bw-c,by+bh); cameraCtx.lineTo(bx+bw,by+bh); cameraCtx.lineTo(bx+bw,by+bh-c);
-        cameraCtx.stroke();
-        cameraCtx.restore();
+      drawTrackingBrackets(cameraCtx, cw, ch);
+
+      // Update modal preview if open
+      if (document.getElementById('videofx-modal').classList.contains('open')) {
+        const pw = videofxPreviewCanvas.width, ph = videofxPreviewCanvas.height;
+        if (activeVideoFx > 0) {
+          videofxPreviewCtx.drawImage(cameraCanvas, 0, 0, pw, ph);
+        } else {
+          videofxPreviewCtx.drawImage(video, 0, 0, pw, ph);
+          drawTrackingBrackets(videofxPreviewCtx, pw, ph);
+        }
       }
     }
     videoFxRAF = requestAnimationFrame(renderCameraLoop);
@@ -735,6 +752,14 @@
     videofxList.querySelectorAll('.alarm-sound-item').forEach((el, i) => el.classList.toggle('selected', i === activeVideoFx));
     videofxModal.classList.add('open');
     settingsPanel.classList.remove('open');
+    if (!running) {
+      videofxPreviewCtx.fillStyle = '#0a0a15';
+      videofxPreviewCtx.fillRect(0, 0, videofxPreviewCanvas.width, videofxPreviewCanvas.height);
+      videofxPreviewCtx.fillStyle = '#444';
+      videofxPreviewCtx.font = '13px sans-serif';
+      videofxPreviewCtx.textAlign = 'center';
+      videofxPreviewCtx.fillText('Start monitoring to preview', videofxPreviewCanvas.width/2, videofxPreviewCanvas.height/2);
+    }
   });
   videofxClose.addEventListener('click', () => videofxModal.classList.remove('open'));
   videofxModal.addEventListener('click', (e) => { if (e.target === videofxModal) videofxModal.classList.remove('open'); });
@@ -892,10 +917,11 @@
     try {
       const predictions = await model.detect(video);
       const person = predictions.find(p => p.class === 'person' && p.score > 0.5);
+      const trackPerson = predictions.find(p => p.class === 'person' && p.score > 0.2);
+      if (trackPerson) lastDetectedBbox = trackPerson.bbox;
       if (person) {
         lastSeenTime = Date.now();
         personPresent = true;
-        lastDetectedBbox = person.bbox;
       } else if (personPresent && Date.now() - lastSeenTime > GRACE_MS) {
         personPresent = false;
       }

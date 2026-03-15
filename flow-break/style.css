@@ -119,8 +119,17 @@
     max-height: 85vh;
     overflow-y: auto;
   }
-  #videofx-modal-inner h2 { margin-bottom: 4px; font-weight: 500; font-size: 1.2rem; }
-  #videofx-modal-inner p { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  #videofx-modal-inner h2 { margin-bottom: 12px; font-weight: 500; font-size: 1.2rem; }
+  #videofx-preview {
+    display: block;
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid #333;
+    background: #000;
+    margin: 0 auto 14px;
+  }
   #videofx-list { display: flex; flex-direction: column; gap: 4px; }
   #videofx-close {
     background: #1a2744;
