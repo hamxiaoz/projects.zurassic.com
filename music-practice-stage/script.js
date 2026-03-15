@@ -630,10 +630,11 @@ function buildFlipClock(container, currCount, prevCount, animate) {
     const card = document.createElement('div');
     card.className = 'flip-digit';
 
-    // Only render flap elements for digits that will actually animate
+    // flip-top shows new digit (revealed when upper flap folds away)
+    // flip-bottom shows old digit when animating (covered when lower flap unfolds)
     let html =
       `<div class="flip-top"><span>${digit}</span></div>` +
-      `<div class="flip-bottom"><span>${digit}</span></div>`;
+      `<div class="flip-bottom"><span>${shouldFlip ? prevDigit : digit}</span></div>`;
     if (shouldFlip) {
       html +=
         `<div class="flip-flap-upper"><span>${prevDigit}</span></div>` +
