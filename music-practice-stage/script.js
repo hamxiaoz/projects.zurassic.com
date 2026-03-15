@@ -1099,7 +1099,7 @@ document.getElementById('notesImportInput').addEventListener('change', (e) => {
 
 // Changelog
 const CHANGELOG = [
-  { date: '2026-03-15', desc: 'Per-digit flip clock animation (black & white) shows session number in practice modal; increments once per day; session count shown in notes panel header' },
+  { date: '2026-03-15', desc: 'Per-digit flip clock animation (black & white) shows session number in practice modal; increments once per day; session count shown in notes panel header; fixed split-digit bug during pre-flip delay' },
   { date: '2026-03-15', desc: 'Gear ⚙ settings button: manually set session count or reset today\'s session to replay the flip animation' },
   { date: '2026-03-15', desc: 'Notes dates show date only; Backup (.md with session info) and Import buttons added to notes panel' },
   { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
