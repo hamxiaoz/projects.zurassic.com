@@ -77,6 +77,16 @@
     background: #000;
     display: block;
   }
+  #camera-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 210px;
+    border-radius: 12px;
+    pointer-events: none;
+    z-index: 1;
+  }
   #hand-fx {
     position: absolute;
     top: 0;
@@ -85,7 +95,43 @@
     height: 210px;
     border-radius: 12px;
     pointer-events: none;
+    z-index: 2;
   }
+
+  /* Video FX modal — reuses alarm-sound-modal styles */
+  #videofx-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  #videofx-modal.open { display: flex; }
+  #videofx-modal-inner {
+    background: #16213e;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    width: 380px;
+    max-width: 94vw;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  #videofx-modal-inner h2 { margin-bottom: 4px; font-weight: 500; font-size: 1.2rem; }
+  #videofx-modal-inner p { color: #888; font-size: 0.85rem; margin-bottom: 16px; }
+  #videofx-list { display: flex; flex-direction: column; gap: 4px; }
+  #videofx-close {
+    background: #1a2744;
+    border: 1px solid #333;
+    color: #e0e0e0;
+    padding: 8px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  #videofx-close:hover { border-color: #555; }
 
   #timer-section {
     text-align: center;

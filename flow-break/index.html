@@ -65,7 +65,10 @@
   <div class="settings-group">
     <div class="settings-group-label">FX</div>
     <div class="settings-actions">
+      <button id="videofx-btn"><i data-lucide="camera"></i> Video FX</button>
       <button id="handfx-btn"><i data-lucide="sparkles"></i> Hand FX</button>
+    </div>
+    <div class="settings-actions" style="margin-top:8px">
       <button id="test-btn"><i data-lucide="zap"></i> Test Alarm</button>
     </div>
   </div>
@@ -80,6 +83,7 @@
 <div id="main-section">
   <div id="camera-container">
     <video id="camera-preview" autoplay playsinline muted></video>
+    <canvas id="camera-canvas" width="280" height="210"></canvas>
     <canvas id="hand-fx" width="280" height="210"></canvas>
   </div>
   <div id="timer-section">
@@ -105,6 +109,17 @@
     <div id="alarm-sound-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
       <button id="alarm-sound-close">Select</button>
+    </div>
+  </div>
+</div>
+
+<div id="videofx-modal">
+  <div id="videofx-modal-inner">
+    <h2>Choose Video FX</h2>
+    <p>Applies a real-time filter to the camera view. Click to preview instantly.</p>
+    <div id="videofx-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button id="videofx-close">Done</button>
     </div>
   </div>
 </div>

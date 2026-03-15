@@ -34,6 +34,144 @@
   const HAND_DISMISS_MS = 3000;
   let handDetectTimeout = null;
 
+  // Camera canvas — tracking overlay + video FX
+  const cameraCanvas = document.getElementById('camera-canvas');
+  const cameraCtx = cameraCanvas.getContext('2d');
+  let videoFxRAF = null;
+  let activeVideoFx = 0;
+  let lastDetectedBbox = null; // [x, y, w, h] in video native coords
+
+  const VIDEO_FX = [
+    { name: 'None' },
+    { name: 'Anime', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        p[i]   = Math.round(p[i]   / 64) * 64;
+        p[i+1] = Math.round(p[i+1] / 64) * 64;
+        p[i+2] = Math.round(p[i+2] / 64) * 64;
+      }
+    }},
+    { name: 'Heatmap', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const t = g / 255;
+        if (t < 0.25)      { p[i]=0;   p[i+1]=Math.round(t*4*255); p[i+2]=255; }
+        else if (t < 0.5)  { p[i]=0;   p[i+1]=255; p[i+2]=Math.round((0.5-t)*4*255); }
+        else if (t < 0.75) { p[i]=Math.round((t-0.5)*4*255); p[i+1]=255; p[i+2]=0; }
+        else               { p[i]=255; p[i+1]=Math.round((1-t)*4*255); p[i+2]=0; }
+      }
+    }},
+    { name: 'Predator', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        p[i]   = Math.min(255, g * 0.25);
+        p[i+1] = Math.min(255, g * 1.3);
+        p[i+2] = Math.min(255, g * 0.45);
+      }
+    }},
+    { name: 'Night Vision', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const bright = Math.min(255, g * 1.6 + (Math.random()-0.5)*25);
+        p[i]=0; p[i+1]=Math.max(0,Math.min(255,bright)); p[i+2]=0;
+      }
+    }},
+    { name: 'Terminator', apply(d) {
+      const p = d.data, w = d.width;
+      for (let i = 0; i < p.length; i += 4) {
+        const row = Math.floor(i/4/w);
+        const sl = row % 3 === 0 ? 0.65 : 1;
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        p[i]   = Math.min(255, g * 1.5 * sl);
+        p[i+1] = Math.min(255, g * 0.12 * sl);
+        p[i+2] = Math.min(255, g * 0.08 * sl);
+      }
+    }},
+    { name: 'X-Ray', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const v = Math.min(255, Math.max(0, (255 - g - 128) * 2.2 + 128));
+        p[i] = p[i+1] = p[i+2] = v;
+      }
+    }},
+    { name: 'Matrix', apply(d) {
+      const p = d.data, w = d.width;
+      for (let i = 0; i < p.length; i += 4) {
+        const row = Math.floor(i/4/w);
+        const sl = row % 2 === 0 ? 0.8 : 1;
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        p[i]=0; p[i+1]=Math.min(255, g * 1.4 * sl); p[i+2]=0;
+      }
+    }},
+    { name: 'Noir', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const v = Math.min(255, Math.max(0, (g - 128) * 1.9 + 128));
+        p[i] = p[i+1] = p[i+2] = v;
+      }
+    }},
+    { name: 'Glitch', apply(d) {
+      const p = d.data, w = d.width;
+      const off = 10;
+      for (let i = 0; i < p.length; i += 4) {
+        const x = (i/4) % w;
+        const y = Math.floor(i/4/w);
+        const ri = (y * w + Math.min(w-1, x+off)) * 4;
+        const bi = (y * w + Math.max(0, x-off)) * 4;
+        p[i]   = p[ri];
+        p[i+2] = p[bi+2];
+      }
+    }},
+    { name: 'Infrared', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const r = p[i], g = p[i+1], b = p[i+2];
+        p[i]   = Math.min(255, b * 0.4 + (255-r) * 0.7);
+        p[i+1] = Math.min(255, (r+g) * 0.35);
+        p[i+2] = Math.min(255, (255-b) * 0.7 + r * 0.3);
+      }
+    }},
+  ];
+
+  function renderCameraLoop() {
+    if (!running) { videoFxRAF = null; return; }
+    if (video.readyState >= 2) {
+      if (activeVideoFx > 0) {
+        cameraCtx.drawImage(video, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        const imgData = cameraCtx.getImageData(0, 0, cameraCanvas.width, cameraCanvas.height);
+        VIDEO_FX[activeVideoFx].apply(imgData);
+        cameraCtx.putImageData(imgData, 0, 0);
+      } else {
+        cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+      }
+      // Person tracking overlay (corner brackets)
+      if (lastDetectedBbox) {
+        const sx = cameraCanvas.width / (video.videoWidth || 320);
+        const sy = cameraCanvas.height / (video.videoHeight || 240);
+        const [bx, by, bw, bh] = lastDetectedBbox.map((v,i) => v * (i%2===0?sx:sy));
+        const c = Math.min(18, bw*0.25, bh*0.25);
+        cameraCtx.save();
+        cameraCtx.strokeStyle = personPresent ? 'rgba(76,175,80,0.9)' : 'rgba(255,107,107,0.7)';
+        cameraCtx.lineWidth = 2;
+        cameraCtx.shadowColor = cameraCtx.strokeStyle;
+        cameraCtx.shadowBlur = 6;
+        cameraCtx.beginPath();
+        cameraCtx.moveTo(bx+c,by);   cameraCtx.lineTo(bx,by);   cameraCtx.lineTo(bx,by+c);
+        cameraCtx.moveTo(bx+bw-c,by); cameraCtx.lineTo(bx+bw,by); cameraCtx.lineTo(bx+bw,by+c);
+        cameraCtx.moveTo(bx,by+bh-c); cameraCtx.lineTo(bx,by+bh); cameraCtx.lineTo(bx+c,by+bh);
+        cameraCtx.moveTo(bx+bw-c,by+bh); cameraCtx.lineTo(bx+bw,by+bh); cameraCtx.lineTo(bx+bw,by+bh-c);
+        cameraCtx.stroke();
+        cameraCtx.restore();
+      }
+    }
+    videoFxRAF = requestAnimationFrame(renderCameraLoop);
+  }
+
   // Anime effect
   const handFxCanvas = document.getElementById('hand-fx');
   const handFxCtx = handFxCanvas.getContext('2d');
@@ -426,6 +564,7 @@
       document.body.classList.remove('warning');
       detect();
       tickInterval = setInterval(tick, 1000);
+      if (!videoFxRAF) videoFxRAF = requestAnimationFrame(renderCameraLoop);
     } else {
       stop();
     }
@@ -434,6 +573,9 @@
   function stop() {
     running = false;
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
+    if (videoFxRAF) { cancelAnimationFrame(videoFxRAF); videoFxRAF = null; }
+    cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
+    lastDetectedBbox = null;
     startBtn.innerHTML = '<i data-lucide="play"></i> Start Monitoring';
     lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
     startBtn.classList.remove('active');
@@ -570,6 +712,33 @@
     if (e.target === alarmSoundModal) alarmSoundModal.classList.remove('open');
   });
 
+  // Video FX picker
+  const videofxBtn = document.getElementById('videofx-btn');
+  const videofxModal = document.getElementById('videofx-modal');
+  const videofxList = document.getElementById('videofx-list');
+  const videofxClose = document.getElementById('videofx-close');
+
+  VIDEO_FX.forEach((fx, i) => {
+    const item = document.createElement('div');
+    item.className = 'alarm-sound-item' + (i === activeVideoFx ? ' selected' : '');
+    item.dataset.index = i;
+    item.innerHTML = `<span class="sound-dot"></span><span class="sound-name">${fx.name}</span>`;
+    item.addEventListener('click', () => {
+      videofxList.querySelectorAll('.alarm-sound-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      activeVideoFx = i;
+    });
+    videofxList.appendChild(item);
+  });
+
+  videofxBtn.addEventListener('click', () => {
+    videofxList.querySelectorAll('.alarm-sound-item').forEach((el, i) => el.classList.toggle('selected', i === activeVideoFx));
+    videofxModal.classList.add('open');
+    settingsPanel.classList.remove('open');
+  });
+  videofxClose.addEventListener('click', () => videofxModal.classList.remove('open'));
+  videofxModal.addEventListener('click', (e) => { if (e.target === videofxModal) videofxModal.classList.remove('open'); });
+
   const testBtn = document.getElementById('test-btn');
 
   // Test alarm button
@@ -587,6 +756,7 @@
       personPresent = true;
       detect();
       tickInterval = setInterval(tick, 1000);
+      if (!videoFxRAF) videoFxRAF = requestAnimationFrame(renderCameraLoop);
     }
     // Trigger warning state immediately
     isWarning = true;
@@ -721,10 +891,11 @@
     if (!running) return;
     try {
       const predictions = await model.detect(video);
-      const hasPerson = predictions.some(p => p.class === 'person' && p.score > 0.5);
-      if (hasPerson) {
+      const person = predictions.find(p => p.class === 'person' && p.score > 0.5);
+      if (person) {
         lastSeenTime = Date.now();
-        if (!personPresent) personPresent = true;
+        personPresent = true;
+        lastDetectedBbox = person.bbox;
       } else if (personPresent && Date.now() - lastSeenTime > GRACE_MS) {
         personPresent = false;
       }
