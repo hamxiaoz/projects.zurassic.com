@@ -104,6 +104,28 @@
 
     .projects a:hover .project-desc { color: #888; }
 
+    .project-tags {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.45rem;
+    }
+
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.04em;
+      color: #bbb;
+      background: #ebebeb;
+      border-radius: 3px;
+      padding: 0.15rem 0.45rem;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .projects a:hover .tag {
+      color: #888;
+      background: #e2e2e2;
+    }
+
     .arrow {
       font-size: 1rem;
       color: #ccc;
@@ -149,6 +171,7 @@
           <div>
             <div class="project-name">Music Practice Stage</div>
             <div class="project-desc">Metronome, session flip clock, practice notes, webcam mirror, and 50 themes</div>
+            <div class="project-tags"><span class="tag">#music</span></div>
           </div>
           <span class="arrow">→</span>
         </a>
@@ -158,6 +181,7 @@
           <div>
             <div class="project-name">LEGO Mosaic Helper</div>
             <div class="project-desc">Interactive build guide for LEGO Mosaic Maker 40179 — color grid, distance guides, and speech readout</div>
+            <div class="project-tags"><span class="tag">#lego</span></div>
           </div>
           <span class="arrow">→</span>
         </a>
@@ -167,6 +191,7 @@
           <div>
             <div class="project-name">Flow Break</div>
             <div class="project-desc">Camera sitting timer with video FX filters, breath animations, and gesture dismissal</div>
+            <div class="project-tags"><span class="tag">#wellness</span><span class="tag">#computer vision</span></div>
           </div>
           <span class="arrow">→</span>
         </a>
