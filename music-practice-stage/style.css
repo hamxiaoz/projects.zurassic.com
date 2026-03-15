@@ -583,7 +583,7 @@ select:hover { border-color: var(--border-hi); }
 .flip-top span, .flip-bottom span, .flip-flap-upper span, .flip-flap-lower span { display: block; height: 56px; line-height: 56px; }
 .flip-bottom span, .flip-flap-lower span { margin-top: -28px; }
 .flip-flap-upper { transform-origin: bottom center; z-index: 2; }
-.flip-flap-lower { transform-origin: top center; transform: rotateX(90deg); z-index: 2; }
+.flip-flap-lower { transform-origin: top center; z-index: 2; }
 @keyframes flip-upper-fold { from { transform: rotateX(0deg); } to { transform: rotateX(-90deg); } }
 @keyframes flip-lower-unfold { from { transform: rotateX(90deg); } to { transform: rotateX(0deg); } }
 .flip-digit-wrapper.new-digit { opacity: 0; }

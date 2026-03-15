@@ -622,31 +622,37 @@ function buildFlipClock(container, currCount, prevCount, animate) {
   curr.split('').forEach((digit, i) => {
     const prevDigit = prev[i];
     const isNewCard = i < newDigits;
+    const shouldFlip = animate && !isNewCard && digit !== prevDigit;
+    const shouldSlide = animate && isNewCard;
 
     const wrapper = document.createElement('div');
     wrapper.className = 'flip-digit-wrapper';
     const card = document.createElement('div');
     card.className = 'flip-digit';
-    const fromDigit = isNewCard ? digit : prevDigit;
-    card.innerHTML =
+
+    // Only render flap elements for digits that will actually animate
+    let html =
       `<div class="flip-top"><span>${digit}</span></div>` +
-      `<div class="flip-bottom"><span>${digit}</span></div>` +
-      `<div class="flip-flap-upper"><span>${fromDigit}</span></div>` +
-      `<div class="flip-flap-lower"><span>${digit}</span></div>`;
+      `<div class="flip-bottom"><span>${digit}</span></div>`;
+    if (shouldFlip) {
+      html +=
+        `<div class="flip-flap-upper"><span>${prevDigit}</span></div>` +
+        `<div class="flip-flap-lower"><span>${digit}</span></div>`;
+    }
+    card.innerHTML = html;
     wrapper.appendChild(card);
     container.appendChild(wrapper);
 
-    if (!animate) return;
-
-    if (isNewCard) {
+    if (shouldSlide) {
       wrapper.classList.add('new-digit');
       setTimeout(() => {
         wrapper.classList.remove('new-digit');
         wrapper.classList.add('slide-in');
       }, 1000 + i * 60);
-    } else if (digit !== prevDigit) {
+    } else if (shouldFlip) {
       const upper = card.querySelector('.flip-flap-upper');
       const lower = card.querySelector('.flip-flap-lower');
+      lower.style.transform = 'rotateX(90deg)'; // set via JS, not CSS default
       setTimeout(() => {
         upper.style.animation = 'flip-upper-fold 0.18s ease-in forwards';
         setTimeout(() => {
