@@ -8,6 +8,7 @@
   const thresholdVal = document.getElementById('threshold-val');
   const thresholdDisplay = document.getElementById('threshold-display');
   const loadingEl = document.getElementById('loading');
+  const landingEl = document.getElementById('landing');
   const startBtn = document.getElementById('start-btn');
   const muteBtn = document.getElementById('mute-btn');
   const presetBtns = document.querySelectorAll('.quick-presets button');
@@ -612,6 +613,12 @@
 
   loadingEl.style.display = 'none';
   lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+
+  // Landing page CTA — hides landing and starts monitoring
+  document.getElementById('landing-cta').addEventListener('click', () => {
+    landingEl.classList.add('hidden');
+    startBtn.click();
+  });
 
   // Check if hand is open (fingers extended)
   function isOpenHand(hand) {

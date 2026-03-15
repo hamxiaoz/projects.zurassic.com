@@ -413,6 +413,107 @@
   }
   #breath-none:hover { color: #e0e0e0; }
 
+  /* Landing page */
+  #landing {
+    position: fixed;
+    inset: 0;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 50;
+    overflow-y: auto;
+  }
+  #landing.hidden { display: none; }
+  .landing-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 700px;
+    width: 100%;
+    padding: 64px 24px 80px;
+    margin: auto;
+  }
+  .landing-tag {
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #4caf50;
+    margin-bottom: 22px;
+    font-weight: 600;
+  }
+  .landing-headline {
+    font-size: 2.4rem;
+    font-weight: 300;
+    color: #f0f0f0;
+    text-align: center;
+    line-height: 1.25;
+    margin-bottom: 18px;
+  }
+  .landing-sub {
+    font-size: 0.95rem;
+    color: #7878a0;
+    text-align: center;
+    line-height: 1.75;
+    max-width: 520px;
+    margin-bottom: 52px;
+  }
+  .landing-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 52px;
+  }
+  .feature-card {
+    background: #16213e;
+    border: 1px solid #222;
+    border-radius: 12px;
+    padding: 24px 18px;
+    text-align: center;
+  }
+  .feature-icon {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .feature-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #d0d0e0;
+    margin-bottom: 8px;
+    letter-spacing: 0.02em;
+  }
+  .feature-desc {
+    font-size: 0.78rem;
+    color: #5a5a7a;
+    line-height: 1.65;
+  }
+  #landing-cta {
+    background: #16213e;
+    border: 1px solid #4caf50;
+    color: #4caf50;
+    padding: 13px 44px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: background 0.2s, color 0.2s;
+    margin-bottom: 16px;
+  }
+  #landing-cta:hover { background: #4caf50; color: #1a1a2e; }
+  .landing-note {
+    font-size: 0.7rem;
+    color: #383858;
+    text-align: center;
+  }
+  @media (max-width: 560px) {
+    .landing-features { grid-template-columns: 1fr; }
+    .landing-headline { font-size: 1.8rem; }
+    .landing-inner { padding: 48px 20px 60px; }
+  }
+
   #loading {
     position: fixed;
     inset: 0;
