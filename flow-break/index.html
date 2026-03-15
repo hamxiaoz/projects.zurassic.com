@@ -3,43 +3,64 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sitting Timer</title>
+<title>Flow Break</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="loading">Loading model…</div>
 
 <div id="top-bar">
+  <div id="nav-title">Flow Break</div>
   <div id="controls">
     <button id="settings-btn"><i data-lucide="settings"></i></button>
-    <button id="start-btn"><i data-lucide="play"></i> Start</button>
-    <button id="mute-btn"><i data-lucide="volume-2"></i> Sound On</button>
-    <button id="camera-btn"><i data-lucide="video"></i> Camera Off</button>
-    <button id="breath-btn"><i data-lucide="wind"></i> Breathe</button>
+  </div>
+</div>
+
+<div id="settings-panel">
+  <div class="settings-group">
+    <div class="settings-group-label">Time</div>
+    <label>Alarm after sitting <span id="threshold-val">20</span> min</label>
+    <input type="range" id="threshold-range" min="1" max="60" value="20">
+    <div class="quick-presets">
+      <button data-min="10">10m</button>
+      <button data-min="15">15m</button>
+      <button data-min="20" class="selected">20m</button>
+      <button data-min="30">30m</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-group-label">Sound</div>
+    <div class="settings-actions">
+      <button id="mute-btn"><i data-lucide="volume-2"></i> Sound On</button>
+      <button id="alarm-sound-btn"><i data-lucide="music"></i> Alarm Sound</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-group-label">FX</div>
+    <div class="settings-actions">
+      <button id="handfx-btn"><i data-lucide="sparkles"></i> Hand FX</button>
+      <button id="test-btn"><i data-lucide="zap"></i> Test Alarm</button>
+    </div>
+  </div>
+  <div class="settings-group">
+    <div class="settings-group-label">Breathe</div>
+    <div class="settings-actions">
+      <button id="breath-btn" disabled><i data-lucide="wind"></i> Breathe</button>
+    </div>
+  </div>
+</div>
+
+<div id="main-section">
+  <div id="camera-container">
+    <video id="camera-preview" autoplay playsinline muted></video>
+    <canvas id="hand-fx" width="280" height="210"></canvas>
   </div>
   <div id="timer-section">
     <div id="status" class="stopped">Stopped</div>
     <div id="timer">00:00</div>
-    <div id="threshold-display">Threshold: 20 min</div>
+    <div id="threshold-display">Alarm after sitting 20 min</div>
   </div>
-  <video id="camera-preview" autoplay playsinline muted></video>
-  <canvas id="hand-fx" width="140" height="105"></canvas>
-</div>
-
-<div id="settings-panel">
-  <label>Sitting threshold: <span id="threshold-val">20</span> min</label>
-  <input type="range" id="threshold-range" min="1" max="60" value="20">
-  <div class="quick-presets">
-    <button data-min="10">10m</button>
-    <button data-min="15">15m</button>
-    <button data-min="20" class="selected">20m</button>
-    <button data-min="30">30m</button>
-  </div>
-  <div class="settings-divider"></div>
-  <div class="settings-actions">
-    <button id="handfx-btn"><i data-lucide="sparkles"></i> Hand FX</button>
-    <button id="test-btn"><i data-lucide="zap"></i> Test Alarm</button>
-  </div>
+  <button id="start-btn"><i data-lucide="play"></i> Start Monitoring</button>
 </div>
 
 <div id="breath-section">
@@ -47,7 +68,18 @@
     <canvas id="breath-canvas" width="600" height="600"></canvas>
     <div id="breath-label"></div>
   </div>
-  <div id="breath-placeholder">Click Breathe to choose an animation</div>
+  <div id="breath-placeholder"></div>
+</div>
+
+<div id="alarm-sound-modal">
+  <div id="alarm-sound-modal-inner">
+    <h2>Choose Alarm Sound</h2>
+    <p>Select a sound and preview it before confirming</p>
+    <div id="alarm-sound-list"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px">
+      <button id="alarm-sound-close">Select</button>
+    </div>
+  </div>
 </div>
 
 <div id="handfx-modal">

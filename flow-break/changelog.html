@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Changelog — Sitting Timer</title>
+<title>Changelog — Flow Break</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -106,7 +106,32 @@
   <h1>Changelog</h1>
 
   <div class="release">
-    <div class="release-date">2026-03-14</div>
+    <div class="release-date">2026-03-14 — v3</div>
+    <h2>Added</h2>
+    <ul>
+      <li>Landing page with feature overview and Start Monitoring CTA</li>
+      <li>20 alarm sounds with in-picker auto-preview (Classic Beep, Siren, Chime, Bird Tweet and more)</li>
+      <li>Hand FX now follows detected hand position on screen</li>
+    </ul>
+    <h2>Changed</h2>
+    <ul>
+      <li>Renamed to Flow Break</li>
+      <li>Simplified layout: camera, timer and start button centered on screen</li>
+      <li>Settings panel reorganized into grouped sections: Time, Sound, FX, Breathe</li>
+      <li>Camera access now requested on Start Monitoring click, not on page load</li>
+      <li>Gear button moved to right side of nav bar</li>
+    </ul>
+    <h2>Fixed</h2>
+    <ul>
+      <li>Hand detection reliability — added video readyState check before running inference</li>
+      <li>Open hand threshold relaxed to 3 fingers (was 4) for easier triggering</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <div class="release">
+    <div class="release-date">2026-03-14 — v2</div>
     <h2>Added</h2>
     <ul>
       <li>Hand pose detection to dismiss alarm — hold open palm toward camera for 3 seconds</li>

@@ -25,6 +25,7 @@
   let muted = false;
   let detectTimeout = null;
   let tickInterval = null;
+  let stream = null;
 
   // Hand gesture dismissal
   let handModel = null;
@@ -35,6 +36,7 @@
   // Anime effect
   const handFxCanvas = document.getElementById('hand-fx');
   const handFxCtx = handFxCanvas.getContext('2d');
+  let handFxCx = 0.5, handFxCy = 0.5; // normalized hand position (0-1)
   let handFxRAF = null;
   let handFxBurstTime = 0;
   let activeHandFx = 0;
@@ -259,15 +261,17 @@
 
   function drawHandFx(ctx, w, h, progress, time) {
     ctx.clearRect(0, 0, w, h);
-    if (progress <= 0) return;
+    if (progress <= 0 && handFxBurstTime === 0) return;
+
+    const hx = handFxCx * w;
+    const hy = handFxCy * h;
 
     // Burst effect when complete
     if (handFxBurstTime > 0) {
       const burstProgress = (Date.now() - handFxBurstTime) / 500;
       if (burstProgress < 1) {
-        const cx = w/2, cy = h/2;
-        const burstR = burstProgress * Math.max(w, h);
-        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, burstR);
+        const burstR = burstProgress * Math.max(w, h) * 1.5;
+        const grad = ctx.createRadialGradient(hx, hy, 0, hx, hy, burstR);
         grad.addColorStop(0, `rgba(255,255,255,${0.8 * (1 - burstProgress)})`);
         grad.addColorStop(0.3, `rgba(100,200,255,${0.6 * (1 - burstProgress)})`);
         grad.addColorStop(1, 'rgba(100,200,255,0)');
@@ -279,7 +283,11 @@
       return;
     }
 
+    // Translate so theme draw functions' (w/2, h/2) maps to actual hand position
+    ctx.save();
+    ctx.translate(hx - w / 2, hy - h / 2);
     HAND_FX_THEMES[activeHandFx].draw(ctx, w, h, progress, time);
+    ctx.restore();
   }
 
   function animateHandFx() {
@@ -373,7 +381,7 @@
     thresholdSec = minutes * 60;
     thresholdVal.textContent = minutes;
     thresholdRange.value = minutes;
-    thresholdDisplay.textContent = `Threshold: ${minutes} min`;
+    thresholdDisplay.textContent = `Alarm after sitting ${minutes} min`;
     presetBtns.forEach(b => b.classList.toggle('selected', parseInt(b.dataset.min) === minutes));
   }
 
@@ -399,8 +407,15 @@
   });
 
   // Start / Stop
-  startBtn.addEventListener('click', () => {
+  startBtn.addEventListener('click', async () => {
     if (!running) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
+        video.srcObject = stream;
+      } catch(e) {
+        alert('Camera access is required for monitoring.');
+        return;
+      }
       running = true;
       startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
       lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
@@ -417,7 +432,8 @@
 
   function stop() {
     running = false;
-    startBtn.innerHTML = '<i data-lucide="play"></i> Start';
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; video.srcObject = null; }
+    startBtn.innerHTML = '<i data-lucide="play"></i> Start Monitoring';
     lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
     startBtn.classList.remove('active');
     personPresent = false;
@@ -437,33 +453,132 @@
     timerEl.className = 'stopped';
   }
 
-  // Audio
+  // Audio helpers
+  function _tone(ctx, type, freq, gain, startOffset, duration) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, ctx.currentTime + startOffset);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + startOffset);
+    o.stop(ctx.currentTime + startOffset + duration + 0.05);
+  }
+  function _bell(ctx, freq, gain, duration, startOffset = 0) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(gain, ctx.currentTime + startOffset);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(ctx.currentTime + startOffset);
+    o.stop(ctx.currentTime + startOffset + duration + 0.05);
+  }
+  function _sweep(ctx, type, f0, f1, gain, duration) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(f0, ctx.currentTime);
+    o.frequency.linearRampToValueAtTime(f1, ctx.currentTime + duration);
+    g.gain.setValueAtTime(gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + duration + 0.05);
+  }
+  function _warble(ctx, baseFreq, depth, gain, duration) {
+    const o = ctx.createOscillator(), lfo = ctx.createOscillator();
+    const lfoG = ctx.createGain(), g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = baseFreq;
+    lfo.frequency.value = 10; lfoG.gain.value = depth;
+    lfo.connect(lfoG); lfoG.connect(o.frequency);
+    g.gain.setValueAtTime(gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    o.connect(g); g.connect(ctx.destination);
+    lfo.start(); o.start();
+    lfo.stop(ctx.currentTime + duration + 0.05);
+    o.stop(ctx.currentTime + duration + 0.05);
+  }
+
+  let activeAlarmSound = 0;
+  const ALARM_SOUNDS = [
+    { name: 'Classic Beep',    play: c => _tone(c,'square',880,0.3,0,0.3) },
+    { name: 'Double Beep',     play: c => { _tone(c,'square',880,0.3,0,0.2); _tone(c,'square',880,0.3,0.3,0.2); } },
+    { name: 'Triple Beep',     play: c => [0,0.28,0.56].forEach(t=>_tone(c,'square',880,0.3,t,0.2)) },
+    { name: 'Rising Tone',     play: c => _sweep(c,'sine',440,1200,0.3,0.45) },
+    { name: 'Falling Tone',    play: c => _sweep(c,'sine',1200,440,0.3,0.45) },
+    { name: 'Warble',          play: c => _warble(c,660,200,0.28,0.5) },
+    { name: 'Chime',           play: c => _bell(c,1047,0.3,0.7) },
+    { name: 'Low Drone',       play: c => _tone(c,'square',220,0.25,0,0.5) },
+    { name: 'High Ping',       play: c => _bell(c,1760,0.2,0.3) },
+    { name: 'Siren',           play: c => [0,0.1,0.2,0.3,0.4,0.5].forEach((t,i)=>_tone(c,'square',i%2?440:880,0.22,t,0.1)) },
+    { name: 'Soft Bell',       play: c => _bell(c,523,0.2,0.8) },
+    { name: 'Alert',           play: c => _tone(c,'sawtooth',1000,0.2,0,0.25) },
+    { name: 'Foghorn',         play: c => _tone(c,'sawtooth',110,0.3,0,0.65) },
+    { name: 'Bird Tweet',      play: c => _warble(c,1760,400,0.15,0.3) },
+    { name: 'Quick Blip',      play: c => _tone(c,'square',1200,0.3,0,0.08) },
+    { name: 'Ascending',       play: c => [523,659,784].forEach((f,i)=>_bell(c,f,0.25,0.3,i*0.18)) },
+    { name: 'Buzz',            play: c => _tone(c,'square',150,0.35,0,0.4) },
+    { name: 'Ding',            play: c => _bell(c,784,0.25,0.55) },
+    { name: 'Pulse',           play: c => [0,0.15,0.3,0.45].forEach(t=>_tone(c,'sine',660,0.22,t,0.12)) },
+    { name: 'Two Tone',        play: c => { _tone(c,'square',660,0.25,0,0.2); _tone(c,'square',880,0.25,0.25,0.2); } },
+  ];
+
   function playTone() {
     if (muted) return;
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 880;
-    gain.gain.value = 0.3;
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.3);
+    ALARM_SOUNDS[activeAlarmSound].play(audioCtx);
   }
 
-  // Camera
-  let stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
-  video.srcObject = stream;
-  let cameraOn = true;
+  function previewSound(index) {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    ALARM_SOUNDS[index].play(audioCtx);
+  }
 
-  const cameraBtn = document.getElementById('camera-btn');
+  // Alarm sound picker
+  const alarmSoundBtn = document.getElementById('alarm-sound-btn');
+  const alarmSoundModal = document.getElementById('alarm-sound-modal');
+  const alarmSoundList = document.getElementById('alarm-sound-list');
+  const alarmSoundClose = document.getElementById('alarm-sound-close');
+
+  ALARM_SOUNDS.forEach((s, i) => {
+    const item = document.createElement('div');
+    item.className = 'alarm-sound-item' + (i === activeAlarmSound ? ' selected' : '');
+    item.dataset.index = i;
+    item.innerHTML = `<span class="sound-dot"></span><span class="sound-name">${s.name}</span>`;
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'alarm-sound-preview';
+    previewBtn.textContent = '▶ Play';
+    previewBtn.addEventListener('click', (e) => { e.stopPropagation(); previewSound(i); });
+    item.appendChild(previewBtn);
+    item.addEventListener('click', () => {
+      alarmSoundList.querySelectorAll('.alarm-sound-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      previewSound(i);
+    });
+    alarmSoundList.appendChild(item);
+  });
+
+  alarmSoundBtn.addEventListener('click', () => {
+    alarmSoundList.querySelectorAll('.alarm-sound-item').forEach((el, i) => el.classList.toggle('selected', i === activeAlarmSound));
+    alarmSoundModal.classList.add('open');
+    settingsPanel.classList.remove('open');
+  });
+  alarmSoundClose.addEventListener('click', () => {
+    const sel = alarmSoundList.querySelector('.alarm-sound-item.selected');
+    if (sel) activeAlarmSound = parseInt(sel.dataset.index);
+    alarmSoundModal.classList.remove('open');
+  });
+  alarmSoundModal.addEventListener('click', (e) => {
+    if (e.target === alarmSoundModal) alarmSoundModal.classList.remove('open');
+  });
+
   const testBtn = document.getElementById('test-btn');
 
   // Test alarm button
-  testBtn.addEventListener('click', () => {
+  testBtn.addEventListener('click', async () => {
     if (!running) {
       // Auto-start if not running
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
+        video.srcObject = stream;
+      } catch(e) { /* camera optional for test */ }
       running = true;
       startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
       lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
@@ -484,23 +599,6 @@
     if (!handDetectTimeout) detectHand();
   });
 
-  cameraBtn.addEventListener('click', async () => {
-    if (cameraOn) {
-      stream.getTracks().forEach(t => t.stop());
-      video.srcObject = null;
-      cameraOn = false;
-      cameraBtn.innerHTML = '<i data-lucide="video-off"></i> Camera On';
-      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
-      video.style.opacity = '0.3';
-    } else {
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
-      video.srcObject = stream;
-      cameraOn = true;
-      cameraBtn.innerHTML = '<i data-lucide="video"></i> Camera Off';
-      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
-      video.style.opacity = '1';
-    }
-  });
 
   // Model
   const model = await cocoSsd.load();
@@ -515,25 +613,24 @@
   loadingEl.style.display = 'none';
   lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
 
-  // Check if hand is open (all fingers extended)
+  // Check if hand is open (fingers extended)
   function isOpenHand(hand) {
     const kp = hand.keypoints;
     if (kp.length < 21) return false;
 
-    // Keypoint indices: 0=wrist, 4=thumb tip, 8=index tip, 12=middle tip, 16=ring tip, 20=pinky tip
-    // MCP joints: 5=index, 9=middle, 13=ring, 17=pinky
     const wrist = kp[0];
+    // tip indices: thumb=4, index=8, middle=12, ring=16, pinky=20
+    // mcp/base indices: thumb=2, index=5, middle=9, ring=13, pinky=17
     const tips = [kp[4], kp[8], kp[12], kp[16], kp[20]];
-    const mcps = [kp[2], kp[5], kp[9], kp[13], kp[17]];
+    const bases = [kp[2], kp[5], kp[9], kp[13], kp[17]];
 
-    // Check that fingertips are further from wrist than MCP joints (fingers extended)
     let extendedCount = 0;
     for (let i = 0; i < 5; i++) {
       const tipDist = Math.hypot(tips[i].x - wrist.x, tips[i].y - wrist.y);
-      const mcpDist = Math.hypot(mcps[i].x - wrist.x, mcps[i].y - wrist.y);
-      if (tipDist > mcpDist * 1.1) extendedCount++;
+      const baseDist = Math.hypot(bases[i].x - wrist.x, bases[i].y - wrist.y);
+      if (tipDist > baseDist * 1.05) extendedCount++;
     }
-    return extendedCount >= 4; // At least 4 fingers extended
+    return extendedCount >= 3; // At least 3 fingers extended
   }
 
   // Hand detection for alarm dismissal
@@ -543,9 +640,26 @@
       return;
     }
 
+    // Wait for video to have frames
+    if (video.readyState < 2) {
+      handDetectTimeout = setTimeout(detectHand, 300);
+      return;
+    }
+
     try {
       const hands = await handModel.estimateHands(video);
       const hasOpenHand = hands.some(h => isOpenHand(h));
+
+      // Track palm center (average of wrist + middle finger base) for FX position
+      if (hands.length > 0) {
+        const kp = hands[0].keypoints;
+        const palmX = (kp[0].x + kp[9].x) / 2;
+        const palmY = (kp[0].y + kp[9].y) / 2;
+        const vw = video.videoWidth || 320;
+        const vh = video.videoHeight || 240;
+        handFxCx = palmX / vw;
+        handFxCy = palmY / vh;
+      }
 
       if (hasOpenHand) {
         if (!openHandStart) {
