@@ -589,6 +589,92 @@ timerReset.addEventListener('click', () => {
 
 // Practice Notes
 const NOTES_KEY = 'practiceNotes';
+const SESSION_COUNT_KEY = 'practiceSessionCount';
+const SESSION_DATE_KEY = 'practiceSessionDate';
+
+function getSessionCount() {
+  return parseInt(localStorage.getItem(SESSION_COUNT_KEY) || '0', 10);
+}
+
+function maybeIncrementSession() {
+  const today = new Date().toISOString().slice(0, 10);
+  const lastDate = localStorage.getItem(SESSION_DATE_KEY) || '';
+  const prev = getSessionCount();
+  if (lastDate !== today) {
+    const next = prev + 1;
+    localStorage.setItem(SESSION_COUNT_KEY, String(next));
+    localStorage.setItem(SESSION_DATE_KEY, today);
+    return { count: next, prev, isNew: true };
+  }
+  return { count: prev, prev, isNew: false };
+}
+
+const PRACTICE_QUOTES = [
+  '"An hour of practice is worth five hours of foot-shuffling." — Pancho Segovia',
+  '"To play a wrong note is insignificant; to play without passion is inexcusable." — Beethoven',
+  '"Practice is not the thing you do once you\'re good. It\'s the thing you do that makes you good." — Malcolm Gladwell',
+  '"Without music, life would be a mistake." — Nietzsche',
+  '"Music gives a soul to the universe, wings to the mind, flight to the imagination." — Plato',
+  '"Small daily improvements over time lead to stunning results." — Robin Sharma',
+  '"Every master was once a disaster." — T. Harv Eker',
+  '"It\'s not about being the best. It\'s about being better than you were yesterday."',
+  '"The secret of getting ahead is getting started." — Mark Twain',
+  '"Music can change the world because it can change people." — Bono',
+  '"Do something today that your future self will thank you for."',
+  '"The more you practice, the luckier you get." — Gary Player',
+  '"A year from now you may wish you had started today." — Karen Lamb',
+  '"Talent is cheaper than table salt. What separates the talented from the successful is hard work." — Stephen King',
+  '"In music, silence is more important than sound." — Miles Davis',
+];
+
+let currentModalQuote = '';
+
+function buildFlipClock(container, currCount, prevCount, animate) {
+  container.innerHTML = '';
+  const currStr = String(currCount);
+  const prevStr = String(prevCount);
+  const maxLen = Math.max(currStr.length, prevStr.length);
+  const curr = currStr.padStart(maxLen, '0');
+  const prev = prevStr.padStart(maxLen, '0');
+  const newDigits = currStr.length - prevStr.length; // how many leading digits are brand new
+
+  curr.split('').forEach((digit, i) => {
+    const prevDigit = prev[i];
+    const isNewCard = i < newDigits;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'flip-digit-wrapper';
+    const card = document.createElement('div');
+    card.className = 'flip-digit';
+    const fromDigit = isNewCard ? digit : prevDigit;
+    card.innerHTML =
+      `<div class="flip-top"><span>${digit}</span></div>` +
+      `<div class="flip-bottom"><span>${digit}</span></div>` +
+      `<div class="flip-flap-upper"><span>${fromDigit}</span></div>` +
+      `<div class="flip-flap-lower"><span>${digit}</span></div>`;
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+
+    if (!animate) return;
+
+    if (isNewCard) {
+      wrapper.classList.add('new-digit');
+      setTimeout(() => {
+        wrapper.classList.remove('new-digit');
+        wrapper.classList.add('slide-in');
+      }, 350 + i * 60);
+    } else if (digit !== prevDigit) {
+      const upper = card.querySelector('.flip-flap-upper');
+      const lower = card.querySelector('.flip-flap-lower');
+      setTimeout(() => {
+        upper.style.animation = 'flip-upper-fold 0.18s ease-in forwards';
+        setTimeout(() => {
+          lower.style.animation = 'flip-lower-unfold 0.18s ease-out forwards';
+        }, 155);
+      }, 350 + i * 60);
+    }
+  });
+}
 const notesPanel = document.getElementById('notesPanel');
 const notesList = document.getElementById('notesList');
 const noteInput = document.getElementById('noteInput');
@@ -755,6 +841,10 @@ function closeNotesPanel() {
 }
 
 function showNotesModal(onConfirm) {
+  const { count, prev, isNew } = maybeIncrementSession();
+  currentModalQuote = PRACTICE_QUOTES[Math.floor(Math.random() * PRACTICE_QUOTES.length)];
+  buildFlipClock(document.getElementById('notesModalFlipClock'), count, prev, isNew);
+  document.getElementById('notesModalQuote').textContent = currentModalQuote;
   renderNotesModal();
   notesModalBackdrop.classList.add('open');
   pendingTimerStart = onConfirm;
@@ -763,6 +853,7 @@ function showNotesModal(onConfirm) {
 function closeNotesModal() {
   notesModalBackdrop.classList.remove('open');
   pendingTimerStart = false;
+  currentModalQuote = '';
 }
 
 notesToggleBtn.addEventListener('click', () => {
@@ -897,8 +988,11 @@ function noteDateToISO(ts) {
 function backupNotes() {
   const notes = loadNotes();
   if (notes.length === 0) { alert('No notes to backup.'); return; }
-  const lines = notes.slice().reverse().map(n => `# ${noteDateToISO(n.id)}\n${n.text}`);
-  const content = lines.join('\n\n');
+  const sessionCount = getSessionCount();
+  const lastDate = localStorage.getItem(SESSION_DATE_KEY) || 'never';
+  const sessionBlock = `# Session Info\nSession: ${sessionCount}\nLast practiced: ${lastDate}`;
+  const noteLines = notes.slice().reverse().map(n => `# ${noteDateToISO(n.id)}\n${n.text}`);
+  const content = [sessionBlock, '---', ...noteLines].join('\n\n');
   const today = noteDateToISO(Date.now());
   const blob = new Blob([content], { type: 'text/markdown' });
   const url = URL.createObjectURL(blob);
@@ -967,6 +1061,7 @@ document.getElementById('notesImportInput').addEventListener('change', (e) => {
 
 // Changelog
 const CHANGELOG = [
+  { date: '2026-03-15', desc: 'Session counter (once per day) with per-digit flip clock animation in practice modal; random inspirational quote on each session; backup includes session info' },
   { date: '2026-03-15', desc: 'Notes dates now show date only (no time); added Backup (download .md) and Import (.md) buttons to notes panel' },
   { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
   { date: '2026-03-09', desc: 'Nav buttons updated with icons: color wheel for Theme, pencil for Practice Notes' },

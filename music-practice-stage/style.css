@@ -539,7 +539,33 @@ select:hover { border-color: var(--border-hi); }
 .notes-modal-empty { color: var(--muted); font-size: 12px; text-align: center; padding: 10px 0; }
 .btn-understood { background: var(--brass); color: var(--bg); width: 100%; font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; flex-shrink: 0; padding: 12px; }
 .btn-understood:hover { background: var(--brass-hi); }
-.modal-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 17px; font-style: italic; color: var(--cream); text-align: center; margin-top: 12px; line-height: 1.5; }
+
+/* ── Session banner ── */
+.notes-modal-session-banner { display: flex; flex-direction: column; align-items: center; padding: 4px 0 18px; margin-bottom: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.notes-modal-session-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+.notes-modal-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-style: italic; color: var(--cream-dim); text-align: center; margin: 12px 0 0; line-height: 1.5; }
+
+/* ── Flip clock ── */
+.flip-clock { display: flex; gap: 3px; align-items: center; }
+.flip-digit-wrapper { perspective: 160px; }
+.flip-digit { position: relative; width: 42px; height: 56px; }
+.flip-top, .flip-bottom, .flip-flap-upper, .flip-flap-lower {
+  position: absolute; left: 0; right: 0; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border-hi);
+  text-align: center; color: var(--brass);
+  font-family: 'DM Mono', monospace; font-size: 34px; font-weight: bold;
+}
+.flip-top, .flip-flap-upper { top: 0; height: 28px; border-radius: 6px 6px 0 0; border-bottom: 1px solid var(--bg); }
+.flip-bottom, .flip-flap-lower { top: 28px; height: 28px; border-radius: 0 0 6px 6px; border-top: none; }
+.flip-top span, .flip-bottom span, .flip-flap-upper span, .flip-flap-lower span { display: block; height: 56px; line-height: 56px; }
+.flip-bottom span, .flip-flap-lower span { margin-top: -28px; }
+.flip-flap-upper { transform-origin: bottom center; z-index: 2; }
+.flip-flap-lower { transform-origin: top center; transform: rotateX(90deg); z-index: 2; }
+@keyframes flip-upper-fold { from { transform: rotateX(0deg); } to { transform: rotateX(-90deg); } }
+@keyframes flip-lower-unfold { from { transform: rotateX(90deg); } to { transform: rotateX(0deg); } }
+.flip-digit-wrapper.new-digit { opacity: 0; }
+@keyframes flip-digit-slide-in { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.flip-digit-wrapper.slide-in { animation: flip-digit-slide-in 0.22s ease-out forwards; }
 
 /* ── Mobile ── */
 @media (max-width: 640px) {

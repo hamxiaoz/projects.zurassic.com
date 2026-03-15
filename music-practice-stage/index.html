@@ -170,6 +170,11 @@ window.dispatchEvent(new Event('mediapipe-ready'));
       <h2>Practice Notes</h2>
       <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note">+</button>
     </div>
+    <div class="notes-modal-session-banner">
+      <div class="notes-modal-session-label">practice session</div>
+      <div class="flip-clock" id="notesModalFlipClock"></div>
+      <p class="notes-modal-quote" id="notesModalQuote"></p>
+    </div>
     <div class="notes-modal-add-form hidden" id="notesModalAddForm">
       <textarea id="notesModalInput" placeholder="New note..."></textarea>
       <div class="notes-modal-add-actions">
@@ -179,7 +184,6 @@ window.dispatchEvent(new Event('mediapipe-ready'));
     </div>
     <div class="notes-modal-list" id="notesModalList"></div>
     <button class="btn-understood" id="notesUnderstoodBtn">ok, let's go</button>
-    <p class="modal-quote">"The musician who knows where they're going arrives faster."</p>
   </div>
 </div>
 
