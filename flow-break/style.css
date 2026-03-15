@@ -545,6 +545,10 @@
     color: #5a5a7a;
     line-height: 1.65;
   }
+  .landing-trust-row {
+    grid-template-columns: repeat(2, 1fr);
+    margin-bottom: 32px;
+  }
   #landing-cta {
     background: #16213e;
     border: 1px solid #4caf50;
@@ -558,11 +562,6 @@
     margin-bottom: 16px;
   }
   #landing-cta:hover { background: #4caf50; color: #1a1a2e; }
-  .landing-note {
-    font-size: 0.7rem;
-    color: #383858;
-    text-align: center;
-  }
   @media (max-width: 560px) {
     .landing-features { grid-template-columns: 1fr; }
     .landing-headline { font-size: 1.8rem; }

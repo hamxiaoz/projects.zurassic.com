@@ -30,6 +30,7 @@
 
   // Hand gesture dismissal
   let handModel = null;
+  let model = null;
   let openHandStart = null;
   const HAND_DISMISS_MS = 3000;
   let handDetectTimeout = null;
@@ -796,22 +797,22 @@
   });
 
 
-  // Model
-  const model = await cocoSsd.load();
-
-  // Load hand detection model
-  loadingEl.textContent = 'Loading hand model…';
-  handModel = await handPoseDetection.createDetector(
-    handPoseDetection.SupportedModels.MediaPipeHands,
-    { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands', modelType: 'lite' }
-  );
-
+  // Show landing immediately — models load on demand
   loadingEl.style.display = 'none';
   lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
 
-  // Landing page CTA — hides landing and starts monitoring
-  document.getElementById('landing-cta').addEventListener('click', () => {
+  // Landing page CTA — load models then start monitoring
+  document.getElementById('landing-cta').addEventListener('click', async () => {
     landingEl.classList.add('hidden');
+    loadingEl.textContent = 'Loading detection model…';
+    loadingEl.style.display = 'flex';
+    model = await cocoSsd.load();
+    loadingEl.textContent = 'Loading hand model…';
+    handModel = await handPoseDetection.createDetector(
+      handPoseDetection.SupportedModels.MediaPipeHands,
+      { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands', modelType: 'lite' }
+    );
+    loadingEl.style.display = 'none';
     startBtn.click();
   });
 
@@ -913,7 +914,7 @@
 
   // Detection loop
   async function detect() {
-    if (!running) return;
+    if (!running || !model) return;
     try {
       const predictions = await model.detect(video);
       const person = predictions.find(p => p.class === 'person' && p.score > 0.5);
