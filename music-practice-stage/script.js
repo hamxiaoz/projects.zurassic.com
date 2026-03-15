@@ -609,25 +609,6 @@ function maybeIncrementSession() {
   return { count: prev, prev, isNew: false };
 }
 
-const PRACTICE_QUOTES = [
-  '"An hour of practice is worth five hours of foot-shuffling." — Pancho Segovia',
-  '"To play a wrong note is insignificant; to play without passion is inexcusable." — Beethoven',
-  '"Practice is not the thing you do once you\'re good. It\'s the thing you do that makes you good." — Malcolm Gladwell',
-  '"Without music, life would be a mistake." — Nietzsche',
-  '"Music gives a soul to the universe, wings to the mind, flight to the imagination." — Plato',
-  '"Small daily improvements over time lead to stunning results." — Robin Sharma',
-  '"Every master was once a disaster." — T. Harv Eker',
-  '"It\'s not about being the best. It\'s about being better than you were yesterday."',
-  '"The secret of getting ahead is getting started." — Mark Twain',
-  '"Music can change the world because it can change people." — Bono',
-  '"Do something today that your future self will thank you for."',
-  '"The more you practice, the luckier you get." — Gary Player',
-  '"A year from now you may wish you had started today." — Karen Lamb',
-  '"Talent is cheaper than table salt. What separates the talented from the successful is hard work." — Stephen King',
-  '"In music, silence is more important than sound." — Miles Davis',
-];
-
-let currentModalQuote = '';
 
 function buildFlipClock(container, currCount, prevCount, animate) {
   container.innerHTML = '';
@@ -662,7 +643,7 @@ function buildFlipClock(container, currCount, prevCount, animate) {
       setTimeout(() => {
         wrapper.classList.remove('new-digit');
         wrapper.classList.add('slide-in');
-      }, 350 + i * 60);
+      }, 1000 + i * 60);
     } else if (digit !== prevDigit) {
       const upper = card.querySelector('.flip-flap-upper');
       const lower = card.querySelector('.flip-flap-lower');
@@ -671,7 +652,7 @@ function buildFlipClock(container, currCount, prevCount, animate) {
         setTimeout(() => {
           lower.style.animation = 'flip-lower-unfold 0.18s ease-out forwards';
         }, 155);
-      }, 350 + i * 60);
+      }, 1000 + i * 60);
     }
   });
 }
@@ -842,9 +823,7 @@ function closeNotesPanel() {
 
 function showNotesModal(onConfirm) {
   const { count, prev, isNew } = maybeIncrementSession();
-  currentModalQuote = PRACTICE_QUOTES[Math.floor(Math.random() * PRACTICE_QUOTES.length)];
   buildFlipClock(document.getElementById('notesModalFlipClock'), count, prev, isNew);
-  document.getElementById('notesModalQuote').textContent = currentModalQuote;
   renderNotesModal();
   notesModalBackdrop.classList.add('open');
   pendingTimerStart = onConfirm;
@@ -853,7 +832,6 @@ function showNotesModal(onConfirm) {
 function closeNotesModal() {
   notesModalBackdrop.classList.remove('open');
   pendingTimerStart = false;
-  currentModalQuote = '';
 }
 
 notesToggleBtn.addEventListener('click', () => {

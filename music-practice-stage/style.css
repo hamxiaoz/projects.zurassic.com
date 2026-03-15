@@ -543,7 +543,7 @@ select:hover { border-color: var(--border-hi); }
 /* ── Session banner ── */
 .notes-modal-session-banner { display: flex; flex-direction: column; align-items: center; padding: 4px 0 18px; margin-bottom: 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .notes-modal-session-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-.notes-modal-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; font-style: italic; color: var(--cream-dim); text-align: center; margin: 12px 0 0; line-height: 1.5; }
+.modal-quote { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 17px; font-style: italic; color: var(--cream); text-align: center; margin-top: 12px; line-height: 1.5; }
 
 /* ── Flip clock ── */
 .flip-clock { display: flex; gap: 3px; align-items: center; }
