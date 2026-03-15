@@ -7,7 +7,12 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="loading">Loading model…</div>
+<div id="loading" style="display:none">
+  <div id="loading-inner">
+    <div id="loading-text">Loading…</div>
+    <div id="loading-track"><div id="loading-bar"></div></div>
+  </div>
+</div>
 
 <div id="landing">
   <div class="landing-inner">
@@ -42,6 +47,15 @@
         <div class="feature-title">100% Private</div>
         <div class="feature-desc">Everything runs locally in your browser. No video is recorded, stored, or sent anywhere.</div>
       </div>
+    </div>
+    <div class="landing-how">
+      <div class="landing-how-title">How it works</div>
+      <ol class="landing-steps">
+        <li>Sit at your desk and click <strong>Start Monitoring</strong> — the camera detects your presence and starts the sit timer</li>
+        <li>Step away from the camera and the timer pauses automatically</li>
+        <li>When you've been sitting too long, the alarm fires — screen flashes and an alert sound plays</li>
+        <li>To dismiss: hold an <strong>open palm</strong> toward the camera for 3 seconds, or simply step out of frame</li>
+      </ol>
     </div>
     <button id="landing-cta">Start Monitoring</button>
   </div>

@@ -797,21 +797,44 @@
   });
 
 
-  // Show landing immediately — models load on demand
-  loadingEl.style.display = 'none';
   lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
 
-  // Landing page CTA — load models then start monitoring
+  const loadingText = document.getElementById('loading-text');
+  const loadingBar = document.getElementById('loading-bar');
+
+  // Animate progress bar toward a target using exponential creep
+  let _creepRAF = null;
+  function creepTo(target) {
+    if (_creepRAF) cancelAnimationFrame(_creepRAF);
+    function step() {
+      const cur = parseFloat(loadingBar.style.width) || 0;
+      const next = cur + (target - cur) * 0.035;
+      loadingBar.style.width = next + '%';
+      if (Math.abs(next - target) > 0.3) _creepRAF = requestAnimationFrame(step);
+    }
+    _creepRAF = requestAnimationFrame(step);
+  }
+
+  // Landing page CTA — load models with progress then start monitoring
   document.getElementById('landing-cta').addEventListener('click', async () => {
     landingEl.classList.add('hidden');
-    loadingEl.textContent = 'Loading detection model…';
+    loadingBar.style.width = '5%';
     loadingEl.style.display = 'flex';
+
+    loadingText.textContent = 'Loading detection model…';
+    creepTo(72);
     model = await cocoSsd.load();
-    loadingEl.textContent = 'Loading hand model…';
+
+    loadingBar.style.width = '80%';
+    loadingText.textContent = 'Loading hand model…';
+    creepTo(94);
     handModel = await handPoseDetection.createDetector(
       handPoseDetection.SupportedModels.MediaPipeHands,
       { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands', modelType: 'lite' }
     );
+
+    loadingBar.style.width = '100%';
+    await new Promise(r => setTimeout(r, 280));
     loadingEl.style.display = 'none';
     startBtn.click();
   });
