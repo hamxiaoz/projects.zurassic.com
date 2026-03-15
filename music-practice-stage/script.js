@@ -824,6 +824,7 @@ function closeNotesPanel() {
 function showNotesModal(onConfirm) {
   const { count, prev, isNew } = maybeIncrementSession();
   buildFlipClock(document.getElementById('notesModalFlipClock'), count, prev, isNew);
+  renderSessionBadge();
   renderNotesModal();
   notesModalBackdrop.classList.add('open');
   pendingTimerStart = onConfirm;
@@ -954,6 +955,58 @@ notesModalList.addEventListener('click', (e) => {
   }
 });
 
+// ── Session badge in notes panel ──
+function renderSessionBadge() {
+  const el = document.getElementById('notesPanelSession');
+  if (!el) return;
+  const n = getSessionCount();
+  el.textContent = n > 0 ? `#${n}` : '';
+}
+renderSessionBadge();
+
+// ── Settings popup ──
+const settingsBtn = document.getElementById('settingsBtn');
+const settingsPopup = document.getElementById('settingsPopup');
+const settingsPopupClose = document.getElementById('settingsPopupClose');
+const settingsSessionInput = document.getElementById('settingsSessionInput');
+const settingsSessionSave = document.getElementById('settingsSessionSave');
+const settingsSessionReset = document.getElementById('settingsSessionReset');
+
+function openSettingsPopup() {
+  settingsSessionInput.value = getSessionCount();
+  settingsPopup.classList.add('open');
+  settingsBtn.classList.add('active');
+}
+function closeSettingsPopup() {
+  settingsPopup.classList.remove('open');
+  settingsBtn.classList.remove('active');
+}
+
+settingsBtn.addEventListener('click', () => {
+  settingsPopup.classList.contains('open') ? closeSettingsPopup() : openSettingsPopup();
+});
+settingsPopupClose.addEventListener('click', closeSettingsPopup);
+document.addEventListener('click', (e) => {
+  if (settingsPopup.classList.contains('open') && !settingsPopup.contains(e.target) && e.target !== settingsBtn) {
+    closeSettingsPopup();
+  }
+});
+
+settingsSessionSave.addEventListener('click', () => {
+  const val = parseInt(settingsSessionInput.value, 10);
+  if (isNaN(val) || val < 0) return;
+  localStorage.setItem(SESSION_COUNT_KEY, String(val));
+  renderSessionBadge();
+  settingsSessionSave.textContent = 'Saved!';
+  setTimeout(() => { settingsSessionSave.textContent = 'Save'; }, 1200);
+});
+
+settingsSessionReset.addEventListener('click', () => {
+  localStorage.removeItem(SESSION_DATE_KEY);
+  settingsSessionReset.textContent = 'Done — animation will replay on next open';
+  setTimeout(() => { settingsSessionReset.textContent = 'Reset — replay animation next open'; }, 2000);
+});
+
 // ── Notes Backup & Import ──
 function noteDateToISO(ts) {
   const d = new Date(ts);
@@ -1039,7 +1092,8 @@ document.getElementById('notesImportInput').addEventListener('change', (e) => {
 
 // Changelog
 const CHANGELOG = [
-  { date: '2026-03-15', desc: 'Session counter (once per day) with per-digit flip clock animation in practice modal; random inspirational quote on each session; backup includes session info' },
+  { date: '2026-03-15', desc: 'Session count shown in notes panel header; gear settings button to manually set count or reset today\'s session to replay flip animation' },
+  { date: '2026-03-15', desc: 'Session counter (once per day) with per-digit flip clock animation in practice modal; backup includes session info' },
   { date: '2026-03-15', desc: 'Notes dates now show date only (no time); added Backup (download .md) and Import (.md) buttons to notes panel' },
   { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
   { date: '2026-03-09', desc: 'Nav buttons updated with icons: color wheel for Theme, pencil for Practice Notes' },

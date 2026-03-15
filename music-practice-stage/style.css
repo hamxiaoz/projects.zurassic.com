@@ -450,6 +450,27 @@ select:hover { border-color: var(--border-hi); }
 .theme-mode-opt:hover:not(.active) { color: var(--cream-dim); }
 .theme-popup-close { flex: none; }
 
+/* ── Settings popup ── */
+.settings-popup {
+  position: fixed; top: 58px; right: 16px; width: 280px;
+  background: var(--panel); border: 1px solid var(--border-hi);
+  border-radius: 12px; padding: 18px; z-index: 300;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.85); display: none;
+}
+.settings-popup.open { display: block; }
+.settings-popup-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.settings-popup-header span { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--cream-dim); }
+.settings-row { margin-bottom: 14px; }
+.settings-row:last-child { margin-bottom: 0; }
+.settings-label { display: block; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+.settings-input-row { display: flex; gap: 6px; }
+.settings-input-row input { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--cream); font-family: 'DM Mono', monospace; font-size: 13px; padding: 6px 10px; outline: none; transition: border-color 0.2s; width: 0; }
+.settings-input-row input:focus { border-color: var(--brass); }
+.settings-save-btn { background: var(--brass); color: var(--bg); border: none; border-radius: 5px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 6px 12px; cursor: pointer; transition: background 0.2s; flex: none; }
+.settings-save-btn:hover { background: var(--brass-hi); }
+.settings-reset-btn { background: var(--surface); color: var(--cream-dim); border: 1px solid var(--border); border-radius: 5px; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.5px; padding: 7px 10px; cursor: pointer; width: 100%; text-align: left; transition: border-color 0.2s, color 0.2s; }
+.settings-reset-btn:hover { border-color: var(--brass); color: var(--brass); }
+
 /* ── Notes panel ── */
 .notes-panel {
   position: fixed; top: 50px; right: 0; bottom: 34px; width: 340px;
@@ -470,6 +491,7 @@ select:hover { border-color: var(--border-hi); }
 }
 .notes-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px 6px; line-height: 1; flex: none; transition: color 0.2s; }
 .notes-close:hover { color: var(--cream); }
+.notes-panel-session { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--brass); flex: 1; text-align: right; padding-right: 8px; }
 .notes-list { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 .notes-list:empty::after { content: 'No notes yet.'; color: var(--muted); font-size: 11px; }
 .note-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; position: relative; }

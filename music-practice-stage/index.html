@@ -22,7 +22,26 @@ window.dispatchEvent(new Event('mediapipe-ready'));
   <span class="nav-logo"><em>Music</em> Practice Stage</span>
   <button class="nav-btn" id="themeBtn"><span class="color-wheel"></span> Theme</button>
   <button class="nav-btn" id="notesToggleBtn">✎ Practice Notes</button>
+  <button class="nav-btn" id="settingsBtn">⚙</button>
 </nav>
+
+<div class="settings-popup" id="settingsPopup">
+  <div class="settings-popup-header">
+    <span>Settings</span>
+    <button class="theme-popup-close" id="settingsPopupClose">&times;</button>
+  </div>
+  <div class="settings-row">
+    <label class="settings-label">Practice session count</label>
+    <div class="settings-input-row">
+      <input type="number" id="settingsSessionInput" min="0" step="1">
+      <button class="settings-save-btn" id="settingsSessionSave">Save</button>
+    </div>
+  </div>
+  <div class="settings-row">
+    <label class="settings-label">Today's session</label>
+    <button class="settings-reset-btn" id="settingsSessionReset">Reset — replay animation next open</button>
+  </div>
+</div>
 
 <div class="theme-popup" id="themePopup">
   <div class="theme-popup-header">
@@ -148,6 +167,7 @@ window.dispatchEvent(new Event('mediapipe-ready'));
 <div class="notes-panel" id="notesPanel">
   <div class="notes-panel-header">
     <h2>Practice Notes</h2>
+    <span class="notes-panel-session" id="notesPanelSession"></span>
     <button class="notes-close" id="notesPanelClose">&times;</button>
   </div>
   <div class="notes-list" id="notesList"></div>
