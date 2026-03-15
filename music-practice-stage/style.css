@@ -503,6 +503,9 @@ select:hover { border-color: var(--border-hi); }
 .notes-add textarea::placeholder { color: var(--muted); }
 .btn-add-note { background: var(--brass); color: var(--bg); width: 100%; font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1.5px; text-transform: uppercase; }
 .btn-add-note:hover { background: var(--brass-hi); }
+.notes-io-row { display: flex; gap: 8px; margin-top: 8px; }
+.btn-notes-io { flex: 1; background: var(--surface); color: var(--cream-dim); border: 1px solid var(--border); font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase; padding: 6px 0; border-radius: 5px; cursor: pointer; transition: border-color 0.2s, color 0.2s; }
+.btn-notes-io:hover { border-color: var(--brass); color: var(--brass); }
 
 /* ── Notes modal ── */
 .notes-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }

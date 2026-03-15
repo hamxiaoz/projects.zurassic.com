@@ -154,6 +154,11 @@ window.dispatchEvent(new Event('mediapipe-ready'));
   <div class="notes-add">
     <textarea id="noteInput" placeholder="Add a practice note…"></textarea>
     <button class="btn-add-note" id="addNoteBtn">Add Note</button>
+    <div class="notes-io-row">
+      <button class="btn-notes-io" id="notesBackupBtn" title="Download all notes as markdown">&#8595; Backup</button>
+      <button class="btn-notes-io" id="notesImportBtn" title="Import notes from markdown file">&#8593; Import</button>
+      <input type="file" id="notesImportInput" accept=".md,text/markdown,text/plain" style="display:none">
+    </div>
     <div class="notes-shortcut-hint">Press <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">N</kbd> to open &amp; focus · <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">Ctrl+Enter</kbd> to save</div>
   </div>
 </div>

@@ -615,7 +615,7 @@ function saveNotes(notes) {
 }
 
 function formatNoteDate(ts) {
-  return new Date(ts).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  return new Date(ts).toLocaleDateString(undefined, { dateStyle: 'medium' });
 }
 
 function renderNotesList() {
@@ -885,8 +885,89 @@ notesModalList.addEventListener('click', (e) => {
   }
 });
 
+// ── Notes Backup & Import ──
+function noteDateToISO(ts) {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function backupNotes() {
+  const notes = loadNotes();
+  if (notes.length === 0) { alert('No notes to backup.'); return; }
+  const lines = notes.slice().reverse().map(n => `# ${noteDateToISO(n.id)}\n${n.text}`);
+  const content = lines.join('\n\n');
+  const today = noteDateToISO(Date.now());
+  const blob = new Blob([content], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `music-notes-${today}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function parseNotesMarkdown(text) {
+  const results = [];
+  const lines = text.split('\n');
+  let currentDate = null;
+  let currentLines = [];
+  for (const line of lines) {
+    const header = line.match(/^#\s+(\d{4}-\d{2}-\d{2})\s*$/);
+    if (header) {
+      if (currentDate !== null) {
+        const noteText = currentLines.join('\n').trim();
+        if (noteText) results.push({ date: currentDate, text: noteText });
+      }
+      currentDate = header[1];
+      currentLines = [];
+    } else {
+      currentLines.push(line);
+    }
+  }
+  if (currentDate !== null) {
+    const noteText = currentLines.join('\n').trim();
+    if (noteText) results.push({ date: currentDate, text: noteText });
+  }
+  return results;
+}
+
+function importNotes(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const parsed = parseNotesMarkdown(e.target.result);
+    if (parsed.length === 0) { alert('No valid notes found in file.'); return; }
+    const existing = loadNotes();
+    const msg = existing.length > 0
+      ? `Import ${parsed.length} note(s)? This will ADD to your existing ${existing.length} note(s).\n\nNote: imported notes will use midnight of their date as timestamp.`
+      : `Import ${parsed.length} note(s)?`;
+    if (!confirm(msg)) return;
+    const imported = parsed.map(n => ({
+      id: new Date(n.date + 'T12:00:00').getTime(),
+      text: n.text
+    }));
+    const merged = [...existing, ...imported];
+    merged.sort((a, b) => a.id - b.id);
+    saveNotes(merged);
+    renderNotesList();
+    alert(`Imported ${parsed.length} note(s).`);
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('notesBackupBtn').addEventListener('click', backupNotes);
+document.getElementById('notesImportBtn').addEventListener('click', () => {
+  document.getElementById('notesImportInput').click();
+});
+document.getElementById('notesImportInput').addEventListener('change', (e) => {
+  if (e.target.files[0]) { importNotes(e.target.files[0]); e.target.value = ''; }
+});
+
 // Changelog
 const CHANGELOG = [
+  { date: '2026-03-15', desc: 'Notes dates now show date only (no time); added Backup (download .md) and Import (.md) buttons to notes panel' },
   { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
   { date: '2026-03-09', desc: 'Nav buttons updated with icons: color wheel for Theme, pencil for Practice Notes' },
   { date: '2026-03-09', desc: 'Timer duration select replaced with compact gear icon dropdown; fixes timer row overflow on narrow/iPad screens' },
