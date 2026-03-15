@@ -196,7 +196,7 @@
   let handFxCx = 0.5, handFxCy = 0.5; // normalized hand position (0-1)
   let handFxRAF = null;
   let handFxBurstTime = 0;
-  let activeHandFx = 0;
+  let activeHandFx = 2; // Lightning
 
   const HAND_FX_THEMES = [
     { name: 'Energy Charge', draw(ctx, w, h, p, t) {
@@ -657,7 +657,7 @@
     o.stop(ctx.currentTime + duration + 0.05);
   }
 
-  let activeAlarmSound = 0;
+  let activeAlarmSound = 15; // Ascending
   const ALARM_SOUNDS = [
     { name: 'Classic Beep',    play: c => _tone(c,'square',880,0.3,0,0.3) },
     { name: 'Double Beep',     play: c => { _tone(c,'square',880,0.3,0,0.2); _tone(c,'square',880,0.3,0.3,0.2); } },
