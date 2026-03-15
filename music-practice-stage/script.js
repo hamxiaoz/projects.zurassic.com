@@ -1092,9 +1092,9 @@ document.getElementById('notesImportInput').addEventListener('change', (e) => {
 
 // Changelog
 const CHANGELOG = [
-  { date: '2026-03-15', desc: 'Session count shown in notes panel header; gear settings button to manually set count or reset today\'s session to replay flip animation' },
-  { date: '2026-03-15', desc: 'Session counter (once per day) with per-digit flip clock animation in practice modal; backup includes session info' },
-  { date: '2026-03-15', desc: 'Notes dates now show date only (no time); added Backup (download .md) and Import (.md) buttons to notes panel' },
+  { date: '2026-03-15', desc: 'Per-digit flip clock animation (black & white) shows session number in practice modal; increments once per day; session count shown in notes panel header' },
+  { date: '2026-03-15', desc: 'Gear ⚙ settings button: manually set session count or reset today\'s session to replay the flip animation' },
+  { date: '2026-03-15', desc: 'Notes dates show date only; Backup (.md with session info) and Import buttons added to notes panel' },
   { date: '2026-03-09', desc: 'Mobile responsive layout: camera panel moves to bottom on small screens, navbar title truncates gracefully, footer sticks to bottom' },
   { date: '2026-03-09', desc: 'Nav buttons updated with icons: color wheel for Theme, pencil for Practice Notes' },
   { date: '2026-03-09', desc: 'Timer duration select replaced with compact gear icon dropdown; fixes timer row overflow on narrow/iPad screens' },
