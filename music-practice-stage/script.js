@@ -708,6 +708,7 @@ const notesPanelClose = document.getElementById('notesPanelClose');
 const notesModalBackdrop = document.getElementById('notesModalBackdrop');
 const notesModalList = document.getElementById('notesModalList');
 const notesUnderstoodBtn = document.getElementById('notesUnderstoodBtn');
+const notesModalDismissBtn = document.getElementById('notesModalDismissBtn');
 const notesModalAddBtn = document.getElementById('notesModalAddBtn');
 const notesModalAddForm = document.getElementById('notesModalAddForm');
 const notesModalInput = document.getElementById('notesModalInput');
@@ -933,6 +934,7 @@ notesUnderstoodBtn.addEventListener('click', () => {
   if (typeof cb === 'function') cb();
 });
 
+notesModalDismissBtn.addEventListener('click', closeNotesModal);
 notesModalBackdrop.addEventListener('click', (e) => {
   if (e.target === notesModalBackdrop) closeNotesModal();
 });

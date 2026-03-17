@@ -187,12 +187,14 @@ window.dispatchEvent(new Event('mediapipe-ready'));
 <div class="notes-modal-backdrop" id="notesModalBackdrop">
   <div class="notes-modal-box">
     <div class="notes-modal-header">
-      <h2>Practice Notes</h2>
-      <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></button>
+      <button class="notes-modal-dismiss-btn" id="notesModalDismissBtn" title="Dismiss"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
     <div class="notes-modal-session-banner">
       <div class="notes-modal-session-label">practice session</div>
       <div class="flip-clock" id="notesModalFlipClock"></div>
+    </div>
+    <div class="notes-modal-list-header">
+      <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></button>
     </div>
     <div class="notes-modal-add-form hidden" id="notesModalAddForm">
       <textarea id="notesModalInput" placeholder="New note..."></textarea>

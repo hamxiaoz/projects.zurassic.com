@@ -514,12 +514,15 @@ select:hover { border-color: var(--border-hi); }
   display: flex; flex-direction: column;
   box-shadow: 0 32px 80px rgba(0,0,0,0.8); border: 1px solid var(--border-hi);
 }
-.notes-modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-shrink: 0; }
+.notes-modal-header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 14px; flex-shrink: 0; }
 .notes-modal-header h2 {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 16px; font-style: italic; font-weight: 500;
   letter-spacing: 0.5px; color: var(--cream); margin-bottom: 0; flex: 1;
 }
+.notes-modal-dismiss-btn { background: none; border: none; color: var(--muted); cursor: pointer; padding: 2px; line-height: 1; transition: color 0.2s; flex: none; }
+.notes-modal-dismiss-btn:hover { color: var(--cream); }
+.notes-modal-list-header { display: flex; justify-content: flex-end; margin-bottom: 6px; flex-shrink: 0; }
 .notes-modal-add-btn { background: var(--brass); color: var(--bg); border: none; border-radius: 4px; width: 26px; height: 26px; min-width: 26px; max-width: 26px; font-size: 16px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none; transition: background 0.2s; padding: 0; }
 .notes-modal-add-btn:hover { background: var(--brass-hi); }
 
