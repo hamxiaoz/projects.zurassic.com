@@ -588,6 +588,8 @@ select:hover { border-color: var(--border-hi); }
     max-width: none;
     width: 100%;
     padding: 16px 14px;
+    justify-content: flex-start;
+    align-items: stretch;
   }
 
   .mirror-panel {
@@ -600,4 +602,13 @@ select:hover { border-color: var(--border-hi); }
   }
 
   .site-footer { height: auto; padding: 10px; }
+
+  .theme-popup {
+    left: 12px;
+    right: 12px;
+    width: auto;
+  }
+  .theme-grid { grid-template-columns: repeat(4, 1fr); }
+
+  .settings-popup { left: 12px; right: 12px; width: auto; }
 }
