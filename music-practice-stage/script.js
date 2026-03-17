@@ -1,3 +1,39 @@
+// ── Heroicons (outline, v2) ──
+function _hi(inner, size) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle">${inner}</svg>`;
+}
+function _p(d) { return `<path stroke-linecap="round" stroke-linejoin="round" d="${d}"/>`; }
+const _paths = {
+  swatch:       _p('M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z'),
+  pencilSq:     _p('M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10'),
+  pencil:       _p('M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487z'),
+  cog:          _p('M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z') + _p('M15 12a3 3 0 11-6 0 3 3 0 016 0z'),
+  xMark:        _p('M6 18L18 6M6 6l12 12'),
+  plus:         _p('M12 4.5v15m7.5-7.5h-15'),
+  arrowDown:    _p('M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3'),
+  arrowUp:      _p('M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5'),
+  play:         _p('M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z'),
+  pause:        _p('M15.75 5.25v13.5m-7.5-13.5v13.5'),
+  arrowPath:    _p('M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99'),
+  check:        _p('M4.5 12.75l6 6 9-13.5'),
+  trash:        _p('M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'),
+};
+const ICONS = {
+  swatch:    (s=16) => _hi(_paths.swatch,    s),
+  pencilSq:  (s=16) => _hi(_paths.pencilSq,  s),
+  pencil:    (s=14) => _hi(_paths.pencil,    s),
+  cog:       (s=16) => _hi(_paths.cog,       s),
+  xMark:     (s=16) => _hi(_paths.xMark,     s),
+  plus:      (s=16) => _hi(_paths.plus,      s),
+  arrowDown: (s=13) => _hi(_paths.arrowDown, s),
+  arrowUp:   (s=13) => _hi(_paths.arrowUp,   s),
+  play:      (s=15) => _hi(_paths.play,      s),
+  pause:     (s=15) => _hi(_paths.pause,     s),
+  arrowPath: (s=15) => _hi(_paths.arrowPath, s),
+  check:     (s=15) => _hi(_paths.check,     s),
+  trash:     (s=14) => _hi(_paths.trash,     s),
+};
+
 // Webcam setup
 const video = document.getElementById('webcam');
 const camMsg = document.getElementById('camMsg');
@@ -337,7 +373,7 @@ function startElapsed() {
   elapsedStart = Date.now();
   elapsedEl.textContent = '00:00';
   elapsedPauseBtn.disabled = false;
-  elapsedPauseBtn.textContent = '⏸';
+  elapsedPauseBtn.innerHTML = ICONS.pause();
   elapsedResetBtn.disabled = false;
   clearInterval(elapsedInterval);
   elapsedInterval = setInterval(updateElapsedDisplay, 1000);
@@ -350,7 +386,7 @@ function resetElapsed() {
   elapsedEverStarted = false;
   elapsedEl.textContent = '00:00';
   elapsedPauseBtn.disabled = true;
-  elapsedPauseBtn.textContent = '⏸';
+  elapsedPauseBtn.innerHTML = ICONS.pause();
   elapsedResetBtn.disabled = true;
 }
 
@@ -358,13 +394,13 @@ elapsedPauseBtn.addEventListener('click', () => {
   if (elapsedPaused) {
     elapsedStart = Date.now();
     elapsedPaused = false;
-    elapsedPauseBtn.textContent = '⏸';
+    elapsedPauseBtn.innerHTML = ICONS.pause();
     elapsedInterval = setInterval(updateElapsedDisplay, 1000);
   } else {
     elapsedAccum += Date.now() - elapsedStart;
     elapsedPaused = true;
     clearInterval(elapsedInterval);
-    elapsedPauseBtn.textContent = '▶';
+    elapsedPauseBtn.innerHTML = ICONS.play();
   }
 });
 
@@ -532,7 +568,7 @@ document.addEventListener('click', (e) => {
 function startTimer() {
   if (!elapsedEverStarted) startElapsed();
   timerRunning = true;
-  timerBtn.textContent = '⏸';
+  timerBtn.innerHTML = ICONS.pause();
   timerBtn.classList.add('running');
   timerInterval = setInterval(() => {
     if (timerRemaining > 0) {
@@ -549,7 +585,7 @@ function startTimer() {
 function stopTimer() {
   timerRunning = false;
   clearInterval(timerInterval);
-  timerBtn.textContent = timerRemaining === 0 ? '✓' : '▶';
+  timerBtn.innerHTML = timerRemaining === 0 ? ICONS.check() : ICONS.play();
   timerBtn.classList.remove('running');
 }
 
@@ -703,8 +739,8 @@ function renderNotesList() {
       <div class="note-entry-date">${formatNoteDate(note.id)}</div>
       <div class="note-entry-text">${escapeHtml(note.text)}</div>
       <div class="note-entry-actions">
-        <button class="edit-btn" title="Edit">&#9998;</button>
-        <button class="delete-btn" title="Delete">&times;</button>
+        <button class="edit-btn" title="Edit">${ICONS.pencil()}</button>
+        <button class="delete-btn" title="Delete">${ICONS.trash()}</button>
       </div>
     `;
     notesList.appendChild(entry);
@@ -765,8 +801,8 @@ function renderNotesModal() {
       <div class="notes-modal-entry-date">${formatNoteDate(note.id)}</div>
       <div class="notes-modal-entry-text">${escapeHtml(note.text)}</div>
       <div class="note-entry-actions">
-        <button class="edit-btn" title="Edit">&#9998;</button>
-        <button class="delete-btn" title="Delete">&times;</button>
+        <button class="edit-btn" title="Edit">${ICONS.pencil()}</button>
+        <button class="delete-btn" title="Delete">${ICONS.trash()}</button>
       </div>
     `;
     notesModalList.appendChild(entry);
@@ -994,7 +1030,7 @@ settingsBtn.addEventListener('click', () => {
 });
 settingsPopupClose.addEventListener('click', closeSettingsPopup);
 document.addEventListener('click', (e) => {
-  if (settingsPopup.classList.contains('open') && !settingsPopup.contains(e.target) && e.target !== settingsBtn) {
+  if (settingsPopup.classList.contains('open') && !settingsPopup.contains(e.target) && !settingsBtn.contains(e.target)) {
     closeSettingsPopup();
   }
 });

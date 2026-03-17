@@ -77,30 +77,6 @@ body {
   flex: none;
 }
 .nav-btn:hover { border-color: var(--brass); color: var(--brass); }
-.color-wheel {
-  display: inline-block;
-  width: 13px; height: 13px;
-  border-radius: 50%;
-  background:
-    conic-gradient(from -90deg,
-      hsl(0,100%,50%),
-      hsl(30,100%,50%),
-      hsl(60,100%,50%),
-      hsl(90,100%,50%),
-      hsl(120,100%,50%),
-      hsl(150,100%,50%),
-      hsl(180,100%,50%),
-      hsl(210,100%,50%),
-      hsl(240,100%,50%),
-      hsl(270,100%,50%),
-      hsl(300,100%,50%),
-      hsl(330,100%,50%),
-      hsl(360,100%,50%)
-    );
-  vertical-align: middle;
-  flex-shrink: 0;
-  position: relative; top: -1px;
-}
 .nav-btn.active { border-color: var(--brass); color: var(--brass); background: var(--brass-glow); }
 
 /* ── Layout ── */

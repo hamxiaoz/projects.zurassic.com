@@ -20,15 +20,15 @@ window.dispatchEvent(new Event('mediapipe-ready'));
 
 <nav class="navbar">
   <span class="nav-logo"><em>Music</em> Practice Stage</span>
-  <button class="nav-btn" id="themeBtn"><span class="color-wheel"></span><span class="nav-btn-label"> Theme</span></button>
-  <button class="nav-btn" id="notesToggleBtn">✎<span class="nav-btn-label"> Practice Notes</span></button>
-  <button class="nav-btn" id="settingsBtn">⚙<span class="nav-btn-label"> Settings</span></button>
+  <button class="nav-btn" id="themeBtn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"/></svg><span class="nav-btn-label"> Theme</span></button>
+  <button class="nav-btn" id="notesToggleBtn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/></svg><span class="nav-btn-label"> Practice Notes</span></button>
+  <button class="nav-btn" id="settingsBtn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span class="nav-btn-label"> Settings</span></button>
 </nav>
 
 <div class="settings-popup" id="settingsPopup">
   <div class="settings-popup-header">
     <span>Settings</span>
-    <button class="theme-popup-close" id="settingsPopupClose">&times;</button>
+    <button class="theme-popup-close" id="settingsPopupClose"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
   </div>
   <div class="settings-row">
     <label class="settings-label">Practice session count</label>
@@ -51,7 +51,7 @@ window.dispatchEvent(new Event('mediapipe-ready'));
         <button class="theme-mode-opt" data-mode="dark">Dark</button>
         <button class="theme-mode-opt active" data-mode="light">Light</button>
       </div>
-      <button class="theme-popup-close" id="themePopupClose">&times;</button>
+      <button class="theme-popup-close" id="themePopupClose"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
   </div>
   <div class="theme-grid" id="themeGrid"></div>
@@ -100,7 +100,7 @@ window.dispatchEvent(new Event('mediapipe-ready'));
       <span class="row-section-label">Timer</span>
       <div class="lcd-wrap"><span class="lcd-ghost">88:88</span><div class="timer-display" id="timerDisplay">30:00</div></div>
       <div class="timer-preset-wrap" id="timerPresetWrap">
-        <button class="row-icon-btn" id="timerPresetBtn" title="Set duration">⚙</button>
+        <button class="row-icon-btn" id="timerPresetBtn" title="Set duration"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg></button>
         <div class="timer-preset-menu hidden" id="timerPresetMenu">
           <button data-value="1">1 min</button>
           <button data-value="5">5 min</button>
@@ -115,14 +115,14 @@ window.dispatchEvent(new Event('mediapipe-ready'));
           <button data-value="90">90 min</button>
         </div>
       </div>
-      <button class="row-icon-btn" id="timerBtn" title="Start / Pause">▶</button>
-      <button class="row-icon-btn" id="timerReset" title="Reset">↺</button>
+      <button class="row-icon-btn" id="timerBtn" title="Start / Pause"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z"/></svg></button>
+      <button class="row-icon-btn" id="timerReset" title="Reset"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg></button>
     </div>
     <div class="row-section">
       <span class="row-section-label">Elapsed</span>
       <div class="lcd-wrap"><span class="lcd-ghost">88:88</span><div class="elapsed-display" id="elapsed">00:00</div></div>
-      <button class="row-icon-btn" id="elapsedPauseBtn" title="Pause / Resume" disabled>⏸</button>
-      <button class="row-icon-btn" id="elapsedResetBtn" title="Reset" disabled>↺</button>
+      <button class="row-icon-btn" id="elapsedPauseBtn" title="Pause / Resume" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5"/></svg></button>
+      <button class="row-icon-btn" id="elapsedResetBtn" title="Reset" disabled><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="15" height="15" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg></button>
     </div>
   </div>
 </div>
@@ -168,15 +168,15 @@ window.dispatchEvent(new Event('mediapipe-ready'));
   <div class="notes-panel-header">
     <h2>Practice Notes</h2>
     <span class="notes-panel-session" id="notesPanelSession"></span>
-    <button class="notes-close" id="notesPanelClose">&times;</button>
+    <button class="notes-close" id="notesPanelClose"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="18" height="18" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
   </div>
   <div class="notes-list" id="notesList"></div>
   <div class="notes-add">
     <textarea id="noteInput" placeholder="Add a practice note…"></textarea>
     <button class="btn-add-note" id="addNoteBtn">Add Note</button>
     <div class="notes-io-row">
-      <button class="btn-notes-io" id="notesBackupBtn" title="Download all notes as markdown">&#8595; Backup</button>
-      <button class="btn-notes-io" id="notesImportBtn" title="Import notes from markdown file">&#8593; Import</button>
+      <button class="btn-notes-io" id="notesBackupBtn" title="Download all notes as markdown"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="13" height="13" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg> Backup</button>
+      <button class="btn-notes-io" id="notesImportBtn" title="Import notes from markdown file"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="13" height="13" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg> Import</button>
       <input type="file" id="notesImportInput" accept=".md,text/markdown,text/plain" style="display:none">
     </div>
     <div class="notes-shortcut-hint">Press <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">N</kbd> to open &amp; focus · <kbd style="background:#1e2d50;padding:1px 5px;border-radius:3px;font-size:11px">Ctrl+Enter</kbd> to save</div>
@@ -188,7 +188,7 @@ window.dispatchEvent(new Event('mediapipe-ready'));
   <div class="notes-modal-box">
     <div class="notes-modal-header">
       <h2>Practice Notes</h2>
-      <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note">+</button>
+      <button class="notes-modal-add-btn" id="notesModalAddBtn" title="Add note"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="16" height="16" style="display:inline-block;vertical-align:middle"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg></button>
     </div>
     <div class="notes-modal-session-banner">
       <div class="notes-modal-session-label">practice session</div>
