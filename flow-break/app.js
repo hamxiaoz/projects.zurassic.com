@@ -1,8 +1,3 @@
-import { VIDEO_FX } from './video-fx.js';
-import { HAND_FX_THEMES } from './hand-fx.js';
-import { BREATH_THEMES } from './breath-themes.js';
-import { initStats, initStatsModal, onPresenceGained, onPresenceLost, closeAllOpenSessions, cancelAlarmAwayTimer, refreshTodayStats } from './stats.js';
-
 (async function() {
   const video = document.getElementById('camera-preview');
   const timerEl = document.getElementById('timer');

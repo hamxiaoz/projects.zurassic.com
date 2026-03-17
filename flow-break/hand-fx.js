@@ -1,4 +1,4 @@
-export const HAND_FX_THEMES = [
+const HAND_FX_THEMES = [
   { name: 'Energy Charge', draw(ctx, w, h, p, t) {
     const cx = w/2, cy = h/2;
     // Aura

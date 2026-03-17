@@ -30,7 +30,7 @@ const _predatorPalette = (() => {
   return lut;
 })();
 
-export const VIDEO_FX = [
+const VIDEO_FX = [
   { name: 'None' },
   { name: 'Terminator', apply(d) {
     const p = d.data, w = d.width;

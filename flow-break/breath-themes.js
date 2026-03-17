@@ -1,4 +1,4 @@
-export const BREATH_THEMES = [
+const BREATH_THEMES = [
   { name: 'Pulse Circle', draw(ctx, w, h, p) {
     const u = w/120;
     const r = 8*u + p * (w/2 - 12*u);
