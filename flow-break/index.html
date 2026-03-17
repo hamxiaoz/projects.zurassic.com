@@ -33,7 +33,7 @@
       <div class="feature-card">
         <div class="feature-icon">🎬</div>
         <div class="feature-title">Movie-Inspired FX</div>
-        <div class="feature-desc">10 real-time video filters — Terminator HUD, Predator thermal, Night Vision, Matrix tint, Glitch and more. Pick your vibe.</div>
+        <div class="feature-desc">13 real-time video filters — Terminator HUD, Predator thermal, Night Vision, Amber CRT, Apple II and more. Pick your vibe.</div>
       </div>
     </div>
     <div class="landing-features landing-trust-row">
@@ -64,6 +64,7 @@
 <div id="top-bar">
   <div id="nav-title">Flow Break</div>
   <div id="controls">
+    <button id="stats-btn"><i data-lucide="bar-chart-2"></i></button>
     <button id="settings-btn"><i data-lucide="settings"></i></button>
   </div>
 </div>
@@ -119,6 +120,14 @@
   <button id="start-btn"><i data-lucide="play"></i> Start Monitoring</button>
 </div>
 
+<div id="today-stats" style="display:none">
+  <div class="today-stats-inner">
+    <div class="today-stats-header"><span>Today</span><span class="today-stats-summary" id="today-stats-summary"></span></div>
+    <canvas id="today-timeline" width="320" height="50"></canvas>
+    <div id="today-session-list"></div>
+  </div>
+</div>
+
 <div id="breath-section">
   <div id="breath-overlay">
     <canvas id="breath-canvas" width="600" height="600"></canvas>
@@ -140,8 +149,10 @@
 
 <div id="videofx-modal">
   <div id="videofx-modal-inner">
-    <h2>Choose Video FX</h2>
-    <canvas id="videofx-preview" width="280" height="210"></canvas>
+    <div id="videofx-sticky">
+      <h2>Choose Video FX</h2>
+      <canvas id="videofx-preview" width="280" height="210"></canvas>
+    </div>
     <div id="videofx-list"></div>
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
       <button id="videofx-close">Done</button>
@@ -157,6 +168,21 @@
     <div style="display:flex;justify-content:flex-end;margin-top:16px">
       <button id="handfx-close">Select</button>
     </div>
+  </div>
+</div>
+
+<div id="stats-modal">
+  <div id="stats-modal-inner">
+    <div id="stats-header">
+      <h2>This Week</h2>
+      <button id="stats-close"><i data-lucide="x"></i></button>
+    </div>
+    <canvas id="week-chart" width="320" height="180"></canvas>
+    <div class="stats-legend">
+      <span class="stats-legend-sit">● Sitting</span>
+      <span class="stats-legend-break">● Break</span>
+    </div>
+    <p id="stats-summary"></p>
   </div>
 </div>
 

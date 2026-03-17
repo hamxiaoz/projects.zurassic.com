@@ -106,6 +106,27 @@
   <h1>Changelog</h1>
 
   <div class="release">
+    <div class="release-date">2026-03-16 — v6</div>
+    <h2>Added</h2>
+    <ul>
+      <li>Session history — sitting and break sessions are recorded automatically to IndexedDB</li>
+      <li>Today's stats panel: inline timeline and session list showing the current day's activity</li>
+      <li>"This Week" stats modal with bar chart accessible via toolbar button</li>
+      <li>Crash recovery: open sessions are checkpointed to localStorage and restored after a page reload or browser crash</li>
+      <li>3 new video FX filters (13 total): Predator thermal (FLIR-style palette), Terminator Mk II, 80s VHS</li>
+      <li>Alarm-away grace period: if alarm is sounding and person walks away, waits 15 s before recording it as a real break</li>
+    </ul>
+    <h2>Changed</h2>
+    <ul>
+      <li>Camera feed is now mirrored for a natural selfie view</li>
+      <li>Video FX and Hand FX selections now persist across sessions via localStorage</li>
+      <li>Video FX picker header is sticky while scrolling the filter list</li>
+    </ul>
+  </div>
+
+  <hr class="divider">
+
+  <div class="release">
     <div class="release-date">2026-03-15 — v5</div>
     <h2>Fixed</h2>
     <ul>

@@ -28,6 +28,140 @@
   let tickInterval = null;
   let stream = null;
 
+  // ── Session history (IndexedDB) ───────────────────────────────────────────
+  let statsDb = null;
+  let openSitSession = null;  // { date, start } — written to DB on close
+  let breakStart = null;      // timestamp when person left; written when they return or app stops
+  let alarmAwayTimer = null;  // fires if person stays away 15s during alarm → real break
+  const ALARM_AWAY_MS = 15000;
+
+  (function initStatsDb() {
+    const req = indexedDB.open('flowBreakDB', 1);
+    req.onupgradeneeded = e => {
+      const store = e.target.result.createObjectStore('sessions', { keyPath: 'id', autoIncrement: true });
+      store.createIndex('date', 'date', { unique: false });
+    };
+    req.onsuccess = e => { statsDb = e.target.result; recoverStaleSession(); refreshTodayStats(); };
+  })();
+
+  function saveCheckpoint() {
+    if (openSitSession) {
+      localStorage.setItem('flowBreakSession', JSON.stringify({ type: 'sit', date: openSitSession.date, start: openSitSession.start }));
+    } else if (breakStart) {
+      localStorage.setItem('flowBreakSession', JSON.stringify({ type: 'break', date: todayKey(), start: breakStart }));
+    }
+  }
+
+  function clearCheckpoint() {
+    localStorage.removeItem('flowBreakSession');
+  }
+
+  function recoverStaleSession() {
+    const raw = localStorage.getItem('flowBreakSession');
+    if (!raw) return;
+    try {
+      const s = JSON.parse(raw);
+      if (s.end) writeRecord({ date: s.date, type: s.type, start: s.start, end: s.end, durationMin: s.durationMin });
+    } catch(e) {}
+    clearCheckpoint();
+  }
+
+  async function refreshTodayStats() {
+    const el = document.getElementById('today-stats');
+    if (!el) return;
+    let sessions = await fetchDaySessions(todayKey());
+    // Append any in-progress session so the view reflects current state
+    const now = Date.now();
+    if (openSitSession && openSitSession.date === todayKey()) {
+      sessions = [...sessions, { type: 'sit', date: openSitSession.date, start: openSitSession.start, end: now, durationMin: (now - openSitSession.start) / 60000 }];
+    } else if (breakStart) {
+      sessions = [...sessions, { type: 'break', date: todayKey(), start: breakStart, end: now, durationMin: (now - breakStart) / 60000 }];
+    }
+    if (sessions.length === 0) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    const totalSitMin = sessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
+    const summaryEl = document.getElementById('today-stats-summary');
+    if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' sitting' : '';
+    renderDayTimeline(document.getElementById('today-timeline'), sessions);
+    const list = document.getElementById('today-session-list');
+    list.innerHTML = '';
+    sessions.forEach(s => {
+      const row = document.createElement('div');
+      row.className = `stats-row stats-row-${s.type}`;
+      row.innerHTML = `<span class="stats-row-label">${s.type === 'sit' ? '● Sitting' : '○ Break'}</span>`
+        + `<span class="stats-row-time">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>`
+        + `<span class="stats-row-dur">${fmtMin(s.durationMin)}</span>`;
+      list.appendChild(row);
+    });
+    list.scrollTop = list.scrollHeight;
+  }
+
+  function todayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function writeRecord(rec) {
+    if (!statsDb) return;
+    const req = statsDb.transaction('sessions', 'readwrite').objectStore('sessions').add(rec);
+    req.onsuccess = () => refreshTodayStats();
+  }
+
+  function closeSitSession() {
+    if (!openSitSession) return;
+    const now = Date.now();
+    writeRecord({ date: openSitSession.date, type: 'sit', start: openSitSession.start, end: now, durationMin: (now - openSitSession.start) / 60000 });
+    openSitSession = null;
+    clearCheckpoint();
+  }
+
+  function closeBreakSession(endTime) {
+    if (!breakStart) return;
+    writeRecord({ date: todayKey(), type: 'break', start: breakStart, end: endTime, durationMin: (endTime - breakStart) / 60000 });
+    breakStart = null;
+    clearCheckpoint();
+  }
+
+  function onPresenceGained() {
+    if (alarmAwayTimer) { clearTimeout(alarmAwayTimer); alarmAwayTimer = null; }
+    closeBreakSession(Date.now());
+    openSitSession = { date: todayKey(), start: Date.now() };
+    saveCheckpoint();
+    refreshTodayStats();
+  }
+
+  function onPresenceLost() {
+    if (isWarning) {
+      // Don't dismiss immediately — give ALARM_AWAY_MS before treating it as a real break
+      alarmAwayTimer = setTimeout(() => {
+        alarmAwayTimer = null;
+        dismissAlarm();
+        closeSitSession();
+        breakStart = Date.now();
+        saveCheckpoint();
+      }, ALARM_AWAY_MS);
+    } else {
+      closeSitSession();
+      breakStart = Date.now();
+      saveCheckpoint();
+    }
+  }
+
+  function closeAllOpenSessions() {
+    closeSitSession();
+    closeBreakSession(Date.now());
+  }
+
+  window.addEventListener('beforeunload', () => {
+    const now = Date.now();
+    if (openSitSession) {
+      localStorage.setItem('flowBreakSession', JSON.stringify({ type: 'sit', date: openSitSession.date, start: openSitSession.start, end: now, durationMin: (now - openSitSession.start) / 60000 }));
+    } else if (breakStart) {
+      localStorage.setItem('flowBreakSession', JSON.stringify({ type: 'break', date: todayKey(), start: breakStart, end: now, durationMin: (now - breakStart) / 60000 }));
+    }
+    closeAllOpenSessions(); // best-effort async fallback
+  });
+
   // Hand gesture dismissal
   let handModel = null;
   let model = null;
@@ -39,17 +173,519 @@
   const cameraCanvas = document.getElementById('camera-canvas');
   const cameraCtx = cameraCanvas.getContext('2d');
   let videoFxRAF = null;
-  let activeVideoFx = 0;
+  let activeVideoFx = localStorage.getItem('fbVideoFx') !== null ? Number(localStorage.getItem('fbVideoFx')) : 0;
   let lastDetectedBbox = null; // [x, y, w, h] in video native coords
+
+  // Predator thermal palette: maps 0-255 luma to FLIR-style heat colors
+  // cold (dark) → deep blue → teal → green → yellow → orange → red → white-hot
+  const _predatorPalette = (() => {
+    const lut = new Uint8Array(256 * 3);
+    const stops = [
+      [0,   0,  0,  18],  // black-blue
+      [40,  0,  0,  80],  // deep indigo
+      [80,  0, 20, 140],  // dark blue
+      [110, 0, 80, 180],  // blue
+      [140, 0,160, 160],  // teal
+      [165, 0,200,  80],  // cyan-green
+      [185, 80,210,  0],  // green
+      [205,200,200,  0],  // yellow
+      [225,255,100,  0],  // orange
+      [240,255, 20,  0],  // red-orange
+      [250,255,  0,  0],  // red
+      [255,255,255,220],  // white-hot
+    ];
+    for (let v = 0; v < 256; v++) {
+      let lo = stops[0], hi = stops[stops.length-1];
+      for (let s = 0; s < stops.length-1; s++) {
+        if (v >= stops[s][0] && v <= stops[s+1][0]) { lo = stops[s]; hi = stops[s+1]; break; }
+      }
+      const span = hi[0] - lo[0] || 1;
+      const t = (v - lo[0]) / span;
+      lut[v*3]   = Math.round(lo[1] + (hi[1]-lo[1]) * t);
+      lut[v*3+1] = Math.round(lo[2] + (hi[2]-lo[2]) * t);
+      lut[v*3+2] = Math.round(lo[3] + (hi[3]-lo[3]) * t);
+    }
+    return lut;
+  })();
 
   const VIDEO_FX = [
     { name: 'None' },
+    { name: 'Terminator', apply(d) {
+      const p = d.data, w = d.width;
+      for (let i = 0; i < p.length; i += 4) {
+        const row = Math.floor(i/4/w);
+        const sl = row % 3 === 0 ? 0.65 : 1;
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        p[i]   = Math.min(255, g * 1.5 * sl);
+        p[i+1] = Math.min(255, g * 0.12 * sl);
+        p[i+2] = Math.min(255, g * 0.08 * sl);
+      }
+    }, overlay: (() => {
+      let scanX = null, scanY = null, targetX = null, targetY = null, lastT = 0;
+      const SPEED = 8.4; // px/s (slowed 30% from 12)
+      return function(ctx, cw, ch) {
+        const t = performance.now();
+        const dt = lastT ? Math.min(50, t - lastT) : 0;
+        lastT = t;
+        // Scanning grid in top-right corner
+        const gw = Math.round(cw * 0.28), gh = Math.round(ch * 0.28);
+        const gx = cw - 12 - gw, gy = 12;
+        const cols = 8, rows = 6;
+        const cellW = gw / cols, cellH = gh / rows;
+        // Init scan and target positions
+        if (scanX === null) { scanX = Math.random() * gw; scanY = Math.random() * gh; }
+        if (targetX === null) { targetX = Math.random() * gw; targetY = Math.random() * gh; }
+        // Move cross toward target
+        const dx = targetX - scanX, dy = targetY - scanY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const step = SPEED * dt / 1000;
+        if (dist < step + 0.5) {
+          scanX = targetX; scanY = targetY;
+          targetX = Math.random() * gw; targetY = Math.random() * gh;
+        } else {
+          scanX += (dx / dist) * step;
+          scanY += (dy / dist) * step;
+        }
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,55,0,0.65)';
+        ctx.lineWidth = 0.8;
+        ctx.shadowColor = 'rgba(255,60,0,0.4)';
+        ctx.shadowBlur = 3;
+        for (let i = 0; i <= cols; i++) {
+          ctx.beginPath(); ctx.moveTo(gx + i*cellW, gy); ctx.lineTo(gx + i*cellW, gy + gh); ctx.stroke();
+        }
+        for (let j = 0; j <= rows; j++) {
+          ctx.beginPath(); ctx.moveTo(gx, gy + j*cellH); ctx.lineTo(gx + gw, gy + j*cellH); ctx.stroke();
+        }
+        // Cross lines converging on target point
+        ctx.strokeStyle = 'rgba(255,130,40,0.95)';
+        ctx.lineWidth = 1.5;
+        ctx.shadowBlur = 6;
+        ctx.beginPath(); ctx.moveTo(gx + scanX, gy); ctx.lineTo(gx + scanX, gy + gh); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(gx, gy + scanY); ctx.lineTo(gx + gw, gy + scanY); ctx.stroke();
+        ctx.restore();
+      };
+    })()},
+    { name: 'Terminator Mk II', apply(d) {
+      // Red tint: preserve luminance detail, push heavily to red with vignette + scanlines
+      const p = d.data, w = d.width, h = d.height;
+      for (let i = 0; i < p.length; i += 4) {
+        const x = (i/4) % w, y = Math.floor(i/4/w);
+        const lum = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const nx = (x / w - 0.5) * 2, ny = (y / h - 0.5) * 2;
+        const vig = Math.max(0.25, 1 - (nx*nx + ny*ny) * 0.5);
+        const scan = y % 3 === 0 ? 0.6 : 1.0;
+        const v = lum * vig * scan;
+        // Tinted red: blend original red channel with luminance boost, suppress others
+        p[i]   = Math.min(255, p[i] * 0.45 * vig * scan + v * 1.1);
+        p[i+1] = Math.min(255, p[i+1] * 0.08 * vig * scan);
+        p[i+2] = Math.min(255, p[i+2] * 0.06 * vig * scan);
+      }
+    }, overlay(ctx, cw, ch) {
+      // Full-width red scanning bar bouncing up and down
+      const t = performance.now();
+      let pos = (t * 0.09) % (ch * 2);
+      if (pos > ch) pos = ch * 2 - pos;
+      const barH = 18;
+      const grad = ctx.createLinearGradient(0, pos - barH, 0, pos + barH);
+      grad.addColorStop(0,   'rgba(255,0,0,0)');
+      grad.addColorStop(0.3, 'rgba(255,30,0,0.55)');
+      grad.addColorStop(0.5, 'rgba(255,60,0,0.9)');
+      grad.addColorStop(0.7, 'rgba(255,30,0,0.55)');
+      grad.addColorStop(1,   'rgba(255,0,0,0)');
+      ctx.save();
+      ctx.shadowColor = 'rgba(255,0,0,0.6)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, pos - barH, cw, barH * 2);
+      ctx.restore();
+    }},
+    { name: 'Game Boy', apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      const bs = 7;
+      for (let by = 0; by < h; by += bs) {
+        for (let bx = 0; bx < w; bx += bs) {
+          let r=0, g=0, b=0, cnt=0;
+          for (let dy = 0; dy < bs && by+dy < h; dy++)
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              r += p[i]; g += p[i+1]; b += p[i+2]; cnt++;
+            }
+          r/=cnt; g/=cnt; b/=cnt;
+          const nr = Math.min(255, r * 0.88 + 12);
+          const ng = Math.min(255, g * 0.92 + 8);
+          const nb = Math.min(255, b * 0.70);
+          for (let dy = 0; dy < bs && by+dy < h; dy++)
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              const isGrid = dy === bs-1 || dx === bs-1;
+              p[i]   = isGrid ? nr * 0.25 : nr;
+              p[i+1] = isGrid ? ng * 0.25 : ng;
+              p[i+2] = isGrid ? nb * 0.25 : nb;
+            }
+        }
+      }
+    }},
+    { name: 'Apple Lisa', apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      const bs = 3;
+      for (let by = 0; by < h; by += bs) {
+        for (let bx = 0; bx < w; bx += bs) {
+          let lum = 0, cnt = 0;
+          for (let dy = 0; dy < bs && by+dy < h; dy++)
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              lum += 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; cnt++;
+            }
+          lum /= cnt;
+          const v = lum > 128 ? Math.min(255, lum * 1.3 + 20) : Math.max(0, lum * 0.5);
+          for (let dy = 0; dy < bs && by+dy < h; dy++)
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              p[i] = p[i+1] = Math.round(v);
+              p[i+2] = Math.round(Math.min(255, v * 1.02 + 5));
+            }
+        }
+      }
+    }},
+    { name: 'Predator', apply(d) {
+      const p = d.data, lut = _predatorPalette;
+      for (let i = 0; i < p.length; i += 4) {
+        // Boost contrast before palette lookup so background reads cold, body reads hot
+        const raw = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const v = Math.min(255, Math.max(0, (raw - 60) * 1.45));
+        const vi = Math.round(v) * 3;
+        p[i]   = lut[vi];
+        p[i+1] = lut[vi+1];
+        p[i+2] = lut[vi+2];
+      }
+    }, overlay(ctx, cw, ch) {
+      const alpha = (Math.sin(performance.now() * 0.0015) + 1) / 2; // slow pulse ~0.24Hz
+      if (alpha < 0.02) return;
+      const margin = 18;
+      const R = Math.min(cw, ch) * 0.11;
+      const r = R * 0.52;
+      const cx = cw - margin - R * 0.9, cy = margin + R;
+      ctx.save();
+      ctx.strokeStyle = `rgba(210,40,80,${alpha * 0.95})`;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = `rgba(255,60,100,${alpha})`;
+      ctx.shadowBlur = 12;
+      // Outer triangle pointing up
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - R);
+      ctx.lineTo(cx + R * 0.866, cy + R * 0.5);
+      ctx.lineTo(cx - R * 0.866, cy + R * 0.5);
+      ctx.closePath();
+      ctx.stroke();
+      // Inner triangle pointing down (inverted)
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + r);
+      ctx.lineTo(cx + r * 0.866, cy - r * 0.5);
+      ctx.lineTo(cx - r * 0.866, cy - r * 0.5);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.restore();
+    }},
+    { name: 'Matrix', apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      const bs = 5;
+      for (let by = 0; by < h; by += bs) {
+        for (let bx = 0; bx < w; bx += bs) {
+          let lum = 0, cnt = 0;
+          for (let dy = 0; dy < bs && by+dy < h; dy++)
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              lum += 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; cnt++;
+            }
+          lum /= cnt;
+          const v = Math.min(255, lum * 1.35);
+          for (let dy = 0; dy < bs && by+dy < h; dy++) {
+            const scan = (by+dy) % 2 === 0 ? 0.6 : 1.0;
+            for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+              const i = ((by+dy)*w + (bx+dx)) * 4;
+              p[i]   = Math.round(v * 0.07 * scan);
+              p[i+1] = Math.round(v * scan);
+              p[i+2] = Math.round(v * 0.10 * scan);
+            }
+          }
+        }
+      }
+    }, overlay: (() => {
+      const CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF';
+      const randomChar = () => CHARS[Math.floor(Math.random() * CHARS.length)];
+      let cols = [], lastT = 0, lastCw = -1;
+      return function(ctx, cw, ch) {
+        const t = performance.now();
+        const dt = lastT ? Math.min(50, t - lastT) : 0;
+        lastT = t;
+        const FS = 11, OW = Math.round(cw * 0.22), OH = Math.round(ch * 0.70);
+        const OX = cw - OW, OY = 0;
+        const numCols = Math.floor(OW / FS), numRows = Math.ceil(OH / FS) + 2;
+        // Init or resize
+        if (lastCw !== cw || cols.length !== numCols) {
+          lastCw = cw;
+          cols = Array.from({ length: numCols }, (_, i) => ({
+            x: OX + i * FS,
+            y: -(1 + Math.random() * numRows) * FS,
+            speed: 55 + Math.random() * 95,
+            chars: Array.from({ length: numRows }, randomChar),
+            mutateTimer: Math.random() * 120
+          }));
+        }
+        // Update
+        for (const col of cols) {
+          col.y += col.speed * dt / 1000;
+          col.mutateTimer -= dt;
+          if (col.mutateTimer <= 0) {
+            col.chars[Math.floor(Math.random() * numRows)] = randomChar();
+            col.mutateTimer = 40 + Math.random() * 80;
+          }
+          if (col.y - numRows * FS > OH) {
+            col.y = -(2 + Math.random() * numRows) * FS;
+            col.speed = 55 + Math.random() * 95;
+          }
+        }
+        // Draw
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(OX, OY, OW, OH);
+        ctx.clip();
+        ctx.font = `bold ${FS}px monospace`;
+        ctx.textBaseline = 'top';
+        const trailLen = numRows * 0.55;
+        for (const col of cols) {
+          const headRow = Math.floor(col.y / FS);
+          for (let r = headRow; r >= headRow - numRows; r--) {
+            const charY = OY + r * FS;
+            if (charY + FS < OY || charY > OY + OH) continue;
+            const dist = headRow - r;
+            const char = col.chars[((r % numRows) + numRows) % numRows];
+            if (dist === 0) {
+              ctx.shadowColor = 'rgba(180,255,180,0.9)';
+              ctx.shadowBlur = 6;
+              ctx.fillStyle = 'rgba(255,255,255,1.0)';
+            } else {
+              const fade = Math.max(0, 1 - dist / trailLen);
+              if (fade < 0.03) continue;
+              ctx.shadowBlur = 0;
+              ctx.fillStyle = `rgba(0,${Math.round(180 + fade * 75)},40,${fade.toFixed(2)})`;
+            }
+            ctx.fillText(char, col.x, charY);
+          }
+        }
+        ctx.restore();
+      };
+    })()},
+    { name: 'RoboCop', apply(d) {
+      // 80s VHS: chroma bleed, noise, scanlines, washed-out green cast
+      const p = d.data, w = d.width, h = d.height;
+      const bleed = 6; // chroma horizontal offset
+      // First pass: desaturate + VHS color cast
+      for (let i = 0; i < p.length; i += 4) {
+        const r = p[i], g = p[i+1], b = p[i+2];
+        const lum = 0.299*r + 0.587*g + 0.114*b;
+        // Blend toward lum (desaturate ~40%) then tint green-cast
+        p[i]   = Math.min(255, lum * 0.4 + r * 0.6) * 0.82;
+        p[i+1] = Math.min(255, lum * 0.4 + g * 0.6) * 0.96;
+        p[i+2] = Math.min(255, lum * 0.4 + b * 0.6) * 0.70;
+      }
+      // Second pass: chroma bleed — shift green channel right, blue channel left
+      const copy = new Uint8ClampedArray(p);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4;
+          const gi = (y * w + Math.min(w - 1, x + bleed)) * 4;
+          const bi = (y * w + Math.max(0, x - bleed)) * 4;
+          p[i+1] = copy[gi+1];
+          p[i+2] = copy[bi+2];
+        }
+      }
+      // Third pass: scanlines + noise
+      for (let i = 0; i < p.length; i += 4) {
+        const row = Math.floor(i / 4 / w);
+        const sl = row % 2 === 0 ? 0.78 : 1.0;
+        const noise = (Math.random() - 0.5) * 18;
+        p[i]   = Math.min(255, Math.max(0, p[i]   * sl + noise));
+        p[i+1] = Math.min(255, Math.max(0, p[i+1] * sl + noise));
+        p[i+2] = Math.min(255, Math.max(0, p[i+2] * sl + noise));
+      }
+    }, overlay: (() => {
+      let scanX = null, scanY = null, targetX = null, targetY = null, lastT = 0;
+      const SPEED = 8.4; // px/s — matches Terminator grid speed
+      return function(ctx, cw, ch) {
+        const t = performance.now();
+        const dt = lastT ? Math.min(50, t - lastT) : 0;
+        lastT = t;
+        // Full-frame greenish grid
+        const cols = 10, rows = 7;
+        const cellW = cw / cols, cellH = ch / rows;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(60,220,80,0.22)';
+        ctx.lineWidth = 0.7;
+        ctx.shadowColor = 'rgba(60,220,80,0.3)';
+        ctx.shadowBlur = 2;
+        for (let i = 0; i <= cols; i++) {
+          ctx.beginPath(); ctx.moveTo(i * cellW, 0); ctx.lineTo(i * cellW, ch); ctx.stroke();
+        }
+        for (let j = 0; j <= rows; j++) {
+          ctx.beginPath(); ctx.moveTo(0, j * cellH); ctx.lineTo(cw, j * cellH); ctx.stroke();
+        }
+        // Moving crosshair converging on a target — full-frame
+        if (scanX === null) { scanX = Math.random() * cw; scanY = Math.random() * ch; }
+        if (targetX === null) { targetX = Math.random() * cw; targetY = Math.random() * ch; }
+        const dx = targetX - scanX, dy = targetY - scanY;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const step = SPEED * dt / 1000;
+        if (dist < step + 0.5) {
+          scanX = targetX; scanY = targetY;
+          targetX = Math.random() * cw; targetY = Math.random() * ch;
+        } else {
+          scanX += (dx / dist) * step;
+          scanY += (dy / dist) * step;
+        }
+        ctx.strokeStyle = 'rgba(80,255,100,0.85)';
+        ctx.lineWidth = 1.2;
+        ctx.shadowColor = 'rgba(60,220,80,0.6)';
+        ctx.shadowBlur = 5;
+        ctx.beginPath(); ctx.moveTo(scanX, 0); ctx.lineTo(scanX, ch); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, scanY); ctx.lineTo(cw, scanY); ctx.stroke();
+        ctx.restore();
+      };
+    })()},
+    { name: 'CRT', apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      for (let i = 0; i < p.length; i += 4) {
+        const x = (i/4) % w, y = Math.floor(i/4/w);
+        const scan = y % 2 === 0 ? 0.72 : 1.0;
+        const nx = (x / w - 0.5) * 2, ny = (y / h - 0.5) * 2;
+        const vig = Math.max(0.3, 1 - (nx*nx + ny*ny) * 0.55);
+        const dim = scan * vig;
+        p[i]   = Math.min(255, p[i]   * dim);
+        p[i+1] = Math.min(255, p[i+1] * dim);
+        p[i+2] = Math.min(255, p[i+2] * dim + 10);
+      }
+    }, overlay(ctx, cw, ch) {
+      const t = performance.now();
+      // Full-frame horizontal scan line
+      let pos = (t * 0.08) % (ch * 2);
+      if (pos > ch) pos = ch * 2 - pos;
+      const grad = ctx.createLinearGradient(0, pos - 12, 0, pos + 12);
+      grad.addColorStop(0, 'rgba(160,210,255,0)');
+      grad.addColorStop(0.5, 'rgba(180,220,255,0.7)');
+      grad.addColorStop(1, 'rgba(160,210,255,0)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, pos - 12, cw, 24);
+      // Pulsing corner triangle
+      const alpha = (Math.sin(t * 0.0015) + 1) / 2;
+      if (alpha < 0.02) return;
+      const size = Math.min(cw, ch) * 0.09;
+      const margin = 14;
+      ctx.save();
+      ctx.fillStyle = `rgba(180,220,255,${alpha * 0.85})`;
+      ctx.shadowColor = `rgba(160,210,255,${alpha})`;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.moveTo(cw - margin, margin);
+      ctx.lineTo(cw - margin - size, margin);
+      ctx.lineTo(cw - margin, margin + size);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }},
+    { name: 'How flies see you', apply(d) {
+      // Compound-eye hexagonal mosaic — flat-top hex grid via axial coordinates
+      const p = d.data, w = d.width, h = d.height;
+      const s = 5; // hex circumradius in pixels
+      const sq3 = Math.sqrt(3);
+
+      function hexKey(px, py) {
+        const qf = (2 / 3 * px) / s;
+        const rf = (-px / 3 + sq3 / 3 * py) / s;
+        let x = qf, z = rf, y = -x - z;
+        let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+        const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+        if (dx > dy && dx > dz) rx = -ry - rz;
+        else if (dy > dz) ry = -rx - rz;
+        else rz = -rx - ry;
+        return rx * 100000 + rz;
+      }
+
+      // Pass 1: assign pixels to hex cells, accumulate color sums
+      const hexIdx = new Int32Array(w * h);
+      const hexColors = new Map();
+      for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+          const key = hexKey(px, py);
+          hexIdx[py * w + px] = key;
+          const i = (py * w + px) * 4;
+          let c = hexColors.get(key);
+          if (!c) { c = [0, 0, 0, 0]; hexColors.set(key, c); }
+          c[0] += p[i]; c[1] += p[i+1]; c[2] += p[i+2]; c[3]++;
+        }
+      }
+      hexColors.forEach(c => { c[0] /= c[3]; c[1] /= c[3]; c[2] /= c[3]; });
+
+      // Pass 2: write averaged hex color; darken pixels on cell boundaries
+      for (let py = 0; py < h; py++) {
+        for (let px = 0; px < w; px++) {
+          const idx = py * w + px;
+          const i = idx * 4;
+          const key = hexIdx[idx];
+          const border =
+            (px > 0   && hexIdx[idx - 1] !== key) ||
+            (px < w-1 && hexIdx[idx + 1] !== key) ||
+            (py > 0   && hexIdx[idx - w] !== key) ||
+            (py < h-1 && hexIdx[idx + w] !== key);
+          if (border) {
+            p[i] = p[i+1] = p[i+2] = 25;
+          } else {
+            const c = hexColors.get(key);
+            p[i] = c[0]; p[i+1] = c[1]; p[i+2] = c[2];
+          }
+        }
+      }
+    }},
+    { name: 'Glitch', apply(d) {
+      const p = d.data, w = d.width;
+      const off = 10;
+      for (let i = 0; i < p.length; i += 4) {
+        const x = (i/4) % w;
+        const y = Math.floor(i/4/w);
+        const ri = (y * w + Math.min(w-1, x+off)) * 4;
+        const bi = (y * w + Math.max(0, x-off)) * 4;
+        p[i]   = p[ri];
+        p[i+2] = p[bi+2];
+      }
+    }},
     { name: 'Anime', apply(d) {
       const p = d.data;
       for (let i = 0; i < p.length; i += 4) {
         p[i]   = Math.round(p[i]   / 64) * 64;
         p[i+1] = Math.round(p[i+1] / 64) * 64;
         p[i+2] = Math.round(p[i+2] / 64) * 64;
+      }
+    }},
+    { name: 'Night Vision', apply(d) {
+      const p = d.data;
+      for (let i = 0; i < p.length; i += 4) {
+        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+        const bright = Math.min(255, g * 1.6 + (Math.random()-0.5)*25);
+        p[i]=0; p[i+1]=Math.max(0,Math.min(255,bright)); p[i+2]=0;
+      }
+    }},
+    { name: 'Amber CRT', apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      for (let i = 0; i < p.length; i += 4) {
+        const x = (i/4) % w, y = Math.floor(i/4/w);
+        const scan = y % 2 === 0 ? 0.62 : 1.0;
+        const nx = (x / w - 0.5) * 2, ny = (y / h - 0.5) * 2;
+        const vig = Math.max(0.3, 1 - (nx*nx + ny*ny) * 0.5);
+        const lum = (0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]) / 255;
+        const v = Math.min(1, lum * 1.5 * scan * vig);
+        p[i]   = Math.round(Math.min(255, v * 280));
+        p[i+1] = Math.round(v * 155);
+        p[i+2] = 0;
       }
     }},
     { name: 'Heatmap', apply(d) {
@@ -63,34 +699,6 @@
         else               { p[i]=255; p[i+1]=Math.round((1-t)*4*255); p[i+2]=0; }
       }
     }},
-    { name: 'Predator', apply(d) {
-      const p = d.data;
-      for (let i = 0; i < p.length; i += 4) {
-        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
-        p[i]   = Math.min(255, g * 0.25);
-        p[i+1] = Math.min(255, g * 1.3);
-        p[i+2] = Math.min(255, g * 0.45);
-      }
-    }},
-    { name: 'Night Vision', apply(d) {
-      const p = d.data;
-      for (let i = 0; i < p.length; i += 4) {
-        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
-        const bright = Math.min(255, g * 1.6 + (Math.random()-0.5)*25);
-        p[i]=0; p[i+1]=Math.max(0,Math.min(255,bright)); p[i+2]=0;
-      }
-    }},
-    { name: 'Terminator', apply(d) {
-      const p = d.data, w = d.width;
-      for (let i = 0; i < p.length; i += 4) {
-        const row = Math.floor(i/4/w);
-        const sl = row % 3 === 0 ? 0.65 : 1;
-        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
-        p[i]   = Math.min(255, g * 1.5 * sl);
-        p[i+1] = Math.min(255, g * 0.12 * sl);
-        p[i+2] = Math.min(255, g * 0.08 * sl);
-      }
-    }},
     { name: 'X-Ray', apply(d) {
       const p = d.data;
       for (let i = 0; i < p.length; i += 4) {
@@ -99,33 +707,12 @@
         p[i] = p[i+1] = p[i+2] = v;
       }
     }},
-    { name: 'Matrix', apply(d) {
-      const p = d.data, w = d.width;
-      for (let i = 0; i < p.length; i += 4) {
-        const row = Math.floor(i/4/w);
-        const sl = row % 2 === 0 ? 0.8 : 1;
-        const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
-        p[i]=0; p[i+1]=Math.min(255, g * 1.4 * sl); p[i+2]=0;
-      }
-    }},
     { name: 'Noir', apply(d) {
       const p = d.data;
       for (let i = 0; i < p.length; i += 4) {
         const g = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
         const v = Math.min(255, Math.max(0, (g - 128) * 1.9 + 128));
         p[i] = p[i+1] = p[i+2] = v;
-      }
-    }},
-    { name: 'Glitch', apply(d) {
-      const p = d.data, w = d.width;
-      const off = 10;
-      for (let i = 0; i < p.length; i += 4) {
-        const x = (i/4) % w;
-        const y = Math.floor(i/4/w);
-        const ri = (y * w + Math.min(w-1, x+off)) * 4;
-        const bi = (y * w + Math.max(0, x-off)) * 4;
-        p[i]   = p[ri];
-        p[i+2] = p[bi+2];
       }
     }},
     { name: 'Infrared', apply(d) {
@@ -167,10 +754,11 @@
     if (video.readyState >= 2) {
       const cw = cameraCanvas.width, ch = cameraCanvas.height;
       if (activeVideoFx > 0) {
-        cameraCtx.drawImage(video, 0, 0, cw, ch);
+        cameraCtx.save(); cameraCtx.scale(-1, 1); cameraCtx.drawImage(video, -cw, 0, cw, ch); cameraCtx.restore();
         const imgData = cameraCtx.getImageData(0, 0, cw, ch);
         VIDEO_FX[activeVideoFx].apply(imgData);
         cameraCtx.putImageData(imgData, 0, 0);
+        if (VIDEO_FX[activeVideoFx].overlay) VIDEO_FX[activeVideoFx].overlay(cameraCtx, cw, ch);
       } else {
         cameraCtx.clearRect(0, 0, cw, ch);
       }
@@ -182,7 +770,7 @@
         if (activeVideoFx > 0) {
           videofxPreviewCtx.drawImage(cameraCanvas, 0, 0, pw, ph);
         } else {
-          videofxPreviewCtx.drawImage(video, 0, 0, pw, ph);
+          videofxPreviewCtx.save(); videofxPreviewCtx.scale(-1, 1); videofxPreviewCtx.drawImage(video, -pw, 0, pw, ph); videofxPreviewCtx.restore();
           drawTrackingBrackets(videofxPreviewCtx, pw, ph);
         }
       }
@@ -196,7 +784,7 @@
   let handFxCx = 0.5, handFxCy = 0.5; // normalized hand position (0-1)
   let handFxRAF = null;
   let handFxBurstTime = 0;
-  let activeHandFx = 2; // Lightning
+  let activeHandFx = localStorage.getItem('fbHandFx') !== null ? Number(localStorage.getItem('fbHandFx')) : 2;
 
   const HAND_FX_THEMES = [
     { name: 'Energy Charge', draw(ctx, w, h, p, t) {
@@ -520,7 +1108,7 @@
 
   handFxClose.addEventListener('click', () => {
     const sel = handFxGrid.querySelector('.handfx-card.selected');
-    if (sel) activeHandFx = parseInt(sel.dataset.index);
+    if (sel) { activeHandFx = parseInt(sel.dataset.index); localStorage.setItem('fbHandFx', activeHandFx); }
     handFxModal.classList.remove('open');
   });
 
@@ -606,8 +1194,10 @@
     if (detectTimeout) { clearTimeout(detectTimeout); detectTimeout = null; }
     if (tickInterval) { clearInterval(tickInterval); tickInterval = null; }
     if (handDetectTimeout) { clearTimeout(handDetectTimeout); handDetectTimeout = null; }
+    if (alarmAwayTimer) { clearTimeout(alarmAwayTimer); alarmAwayTimer = null; }
     if (handFxRAF) { cancelAnimationFrame(handFxRAF); handFxRAF = null; }
     handFxCtx.clearRect(0, 0, handFxCanvas.width, handFxCanvas.height);
+    closeAllOpenSessions();
     statusEl.textContent = 'Stopped';
     statusEl.className = 'stopped';
     timerEl.textContent = '00:00';
@@ -657,7 +1247,7 @@
     o.stop(ctx.currentTime + duration + 0.05);
   }
 
-  let activeAlarmSound = 15; // Ascending
+  let activeAlarmSound = localStorage.getItem('fbAlarmSound') !== null ? Number(localStorage.getItem('fbAlarmSound')) : 15;
   const ALARM_SOUNDS = [
     { name: 'Classic Beep',    play: c => _tone(c,'square',880,0.3,0,0.3) },
     { name: 'Double Beep',     play: c => { _tone(c,'square',880,0.3,0,0.2); _tone(c,'square',880,0.3,0.3,0.2); } },
@@ -723,7 +1313,7 @@
   });
   alarmSoundClose.addEventListener('click', () => {
     const sel = alarmSoundList.querySelector('.alarm-sound-item.selected');
-    if (sel) activeAlarmSound = parseInt(sel.dataset.index);
+    if (sel) { activeAlarmSound = parseInt(sel.dataset.index); localStorage.setItem('fbAlarmSound', activeAlarmSound); }
     alarmSoundModal.classList.remove('open');
   });
   alarmSoundModal.addEventListener('click', (e) => {
@@ -745,6 +1335,7 @@
       videofxList.querySelectorAll('.alarm-sound-item').forEach(el => el.classList.remove('selected'));
       item.classList.add('selected');
       activeVideoFx = i;
+      localStorage.setItem('fbVideoFx', i);
     });
     videofxList.appendChild(item);
   });
@@ -917,6 +1508,7 @@
   }
 
   function dismissAlarm() {
+    if (alarmAwayTimer) { clearTimeout(alarmAwayTimer); alarmAwayTimer = null; }
     isWarning = false;
     sittingSec = 0;
     openHandStart = null;
@@ -945,9 +1537,10 @@
       if (trackPerson) lastDetectedBbox = trackPerson.bbox;
       if (person) {
         lastSeenTime = Date.now();
-        personPresent = true;
+        if (!personPresent) { personPresent = true; onPresenceGained(); }
       } else if (personPresent && Date.now() - lastSeenTime > GRACE_MS) {
         personPresent = false;
+        onPresenceLost();
       }
     } catch(e) { /* skip frame */ }
     detectTimeout = setTimeout(detect, 1000);
@@ -964,7 +1557,7 @@
   const breathLabel = document.getElementById('breath-label');
   const breathOverlay = document.getElementById('breath-overlay');
 
-  let activeBreath = -1;
+  let activeBreath = localStorage.getItem('fbBreath') !== null ? Number(localStorage.getItem('fbBreath')) : -1;
   let breathRAF = null;
 
   // breathe cycle: 4s in, 4s out = 8s total
@@ -1970,6 +2563,7 @@
     const sel = breathGrid.querySelector('.breath-card.selected');
     if (sel) {
       activeBreath = parseInt(sel.dataset.index);
+      localStorage.setItem('fbBreath', activeBreath);
       breathLabel.textContent = BREATH_THEMES[activeBreath].name;
       breathOverlay.style.display = '';
       breathPlaceholder.style.display = 'none';
@@ -1980,6 +2574,7 @@
 
   breathNone.addEventListener('click', () => {
     activeBreath = -1;
+    localStorage.setItem('fbBreath', -1);
     breathOverlay.style.display = 'none';
     breathPlaceholder.style.display = '';
     if (breathRAF) { cancelAnimationFrame(breathRAF); breathRAF = null; }
@@ -2012,9 +2607,191 @@
 
   breathOverlay.style.display = 'none';
 
+  // ── Stats modal ───────────────────────────────────────────────────────────
+  const statsBtn      = document.getElementById('stats-btn');
+  const statsModal    = document.getElementById('stats-modal');
+  const statsClose    = document.getElementById('stats-close');
+  const weekChartCvs  = document.getElementById('week-chart');
+  const statsSummary  = document.getElementById('stats-summary');
+
+  let weekChartMeta = null; // { dayKeys, colX, colW } for click mapping
+
+  statsBtn.addEventListener('click', () => { statsModal.classList.add('open'); showWeekView(); });
+  statsClose.addEventListener('click', () => statsModal.classList.remove('open'));
+  statsModal.addEventListener('click', e => { if (e.target === statsModal) statsModal.classList.remove('open'); });
+
+  function last7DayKeys() {
+    const keys = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      keys.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+    }
+    return keys;
+  }
+
+  function fetchDailyTotals(days) {
+    return new Promise(resolve => {
+      if (!statsDb) { resolve({}); return; }
+      const result = {};
+      days.forEach(d => result[d] = { sitMin: 0, breakMin: 0, count: 0 });
+      const tx = statsDb.transaction('sessions', 'readonly');
+      let pending = days.length;
+      days.forEach(date => {
+        const req = tx.objectStore('sessions').index('date').getAll(date);
+        req.onsuccess = e => {
+          e.target.result.forEach(r => {
+            if (r.type === 'sit') { result[date].sitMin += r.durationMin; result[date].count++; }
+            else { result[date].breakMin += r.durationMin; }
+          });
+          if (--pending === 0) resolve(result);
+        };
+        req.onerror = () => { if (--pending === 0) resolve(result); };
+      });
+    });
+  }
+
+  function fetchDaySessions(dateKey) {
+    return new Promise(resolve => {
+      if (!statsDb) { resolve([]); return; }
+      const tx = statsDb.transaction('sessions', 'readonly');
+      const req = tx.objectStore('sessions').index('date').getAll(dateKey);
+      req.onsuccess = e => resolve(e.target.result.sort((a, b) => a.start - b.start));
+      req.onerror = () => resolve([]);
+    });
+  }
+
+  function fmtMin(min) {
+    const h = Math.floor(min / 60), m = Math.round(min % 60);
+    if (h === 0) return `${m}m`;
+    return m === 0 ? `${h}h` : `${h}h ${m}m`;
+  }
+
+  function fmtTime(ts) {
+    const d = new Date(ts);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  }
+
+  function dayLabel(dateKey) {
+    const [y, mo, d] = dateKey.split('-').map(Number);
+    const date = new Date(y, mo-1, d);
+    const today = new Date(); today.setHours(0,0,0,0);
+    const diff = Math.round((today - date) / 86400000);
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Yesterday';
+    return date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
+  }
+
+  function shortDayLabel(dateKey) {
+    const [y, mo, d] = dateKey.split('-').map(Number);
+    const date = new Date(y, mo-1, d);
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (Math.round((today - date) / 86400000) === 0) return 'Today';
+    return date.toLocaleDateString('en', { weekday: 'short' });
+  }
+
+  async function showWeekView() {
+    const days = last7DayKeys();
+    const data = await fetchDailyTotals(days);
+    renderWeekChart(weekChartCvs, days, data);
+    const totalSitMin = days.reduce((s, d) => s + data[d].sitMin, 0);
+    const totalCount  = days.reduce((s, d) => s + data[d].count, 0);
+    statsSummary.textContent = totalCount > 0
+      ? `${totalCount} session${totalCount !== 1 ? 's' : ''} · ${fmtMin(totalSitMin)} total sitting`
+      : 'No data yet — start monitoring to track your sitting history.';
+  }
+
+  function renderWeekChart(canvas, days, data) {
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    const ML = 36, MR = 8, MT = 10, MB = 28;
+    const cw = W - ML - MR, ch = H - MT - MB;
+
+    let maxMin = 0;
+    days.forEach(d => maxMin = Math.max(maxMin, data[d].sitMin + data[d].breakMin));
+    if (maxMin === 0) maxMin = 60;
+    const ySteps = [30, 60, 90, 120, 180, 240, 300, 360, 480];
+    const yMax = ySteps.find(s => s >= maxMin) || Math.ceil(maxMin / 60) * 60;
+
+    // Horizontal grid lines
+    ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75, 1].forEach(t => {
+      const y = MT + ch * (1 - t);
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath(); ctx.moveTo(ML, y); ctx.lineTo(ML + cw, y); ctx.stroke();
+      ctx.fillStyle = '#555';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(fmtMin(yMax * t), ML - 4, y + 3);
+    });
+
+    const colW = cw / 7;
+    const barW = Math.max(4, Math.floor(colW * 0.28));
+    const gap  = Math.max(2, Math.floor(colW * 0.06));
+    const colX = days.map((_, i) => ML + i * colW);
+    weekChartMeta = { dayKeys: days, colX, colW };
+
+    days.forEach((dateKey, i) => {
+      const d = data[dateKey];
+      const xBase = colX[i] + (colW - barW * 2 - gap) / 2;
+      const yBase = MT + ch;
+
+      const sitH = (d.sitMin / yMax) * ch;
+      ctx.fillStyle = '#4caf50';
+      ctx.fillRect(xBase, yBase - sitH, barW, sitH);
+
+      const breakH = (d.breakMin / yMax) * ch;
+      ctx.fillStyle = '#4a4a6a';
+      ctx.fillRect(xBase + barW + gap, yBase - breakH, barW, breakH);
+
+      ctx.fillStyle = '#555';
+      ctx.font = '10px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(shortDayLabel(dateKey), colX[i] + colW / 2, H - 6);
+    });
+  }
+
+
+  function renderDayTimeline(canvas, sessions) {
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+    if (sessions.length === 0) {
+      ctx.fillStyle = '#555';
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('No data', W / 2, H / 2 + 4);
+      return;
+    }
+    const first = sessions[0].start;
+    const last  = sessions[sessions.length - 1].end;
+    const span  = last - first || 1;
+    const PL = 4, PR = 4, PT = 4, PB = 20;
+    const tw = W - PL - PR;
+    const barH = H - PT - PB;
+
+    sessions.forEach(s => {
+      const x = PL + ((s.start - first) / span) * tw;
+      const w = Math.max(2, ((s.end - s.start) / span) * tw);
+      ctx.fillStyle = s.type === 'sit' ? '#4caf50' : '#4a4a6a';
+      ctx.fillRect(x, PT, w, barH);
+    });
+
+    ctx.fillStyle = '#555';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(fmtTime(first), PL, H - 4);
+    ctx.textAlign = 'right';
+    ctx.fillText(fmtTime(last), W - PR, H - 4);
+  }
+
+  let tickCount = 0;
+
   // Timer tick
   function tick() {
     if (!running) return;
+    if (++tickCount % 10 === 0) refreshTodayStats();
     if (personPresent) {
       if (!isWarning) sittingSec++;
       if (sittingSec >= thresholdSec && !isWarning) {
@@ -2035,15 +2812,13 @@
         timerEl.className = 'sitting';
       }
     } else {
-      if (isWarning) {
-        isWarning = false;
-        sittingSec = 0;
-        document.body.classList.remove('warning');
-        if (warnInterval) { clearInterval(warnInterval); warnInterval = null; }
+      if (!isWarning) {
+        statusEl.textContent = 'Away';
+        statusEl.className = 'away';
+        timerEl.className = 'away';
       }
-      statusEl.textContent = 'Away';
-      statusEl.className = 'away';
-      timerEl.className = 'away';
+      // isWarning + !personPresent: alarm keeps ringing until ALARM_AWAY_MS elapses
+      // (alarmAwayTimer handles the delayed dismissal — nothing to do here)
     }
     const m = String(Math.floor(sittingSec / 60)).padStart(2, '0');
     const s = String(sittingSec % 60).padStart(2, '0');
