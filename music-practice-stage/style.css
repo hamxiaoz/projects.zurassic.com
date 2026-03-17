@@ -602,6 +602,7 @@ select:hover { border-color: var(--border-hi); }
     min-width: 0;
   }
   .nav-btn { padding: 6px 10px; font-size: 9px; letter-spacing: 1px; white-space: nowrap; flex: none; }
+  .nav-btn-label { display: none; }
 
   .main-content { flex-direction: column; overflow: visible; }
 
