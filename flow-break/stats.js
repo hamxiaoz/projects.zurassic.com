@@ -47,8 +47,14 @@
     } else if (breakStart) {
       sessions = [...sessions, { type: 'break', date: todayKey(), start: breakStart, end: now, durationMin: (now - breakStart) / 60000 }];
     }
-    if (sessions.length === 0) { el.style.display = 'none'; return; }
+    const breathSection = document.getElementById('breath-section');
+    if (sessions.length === 0) {
+      el.style.display = 'none';
+      if (breathSection) breathSection.style.display = '';
+      return;
+    }
     el.style.display = 'flex';
+    if (breathSection) breathSection.style.display = 'none';
     const totalSitMin = sessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
     const summaryEl = document.getElementById('today-stats-summary');
     if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' sitting' : '';
