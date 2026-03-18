@@ -61,6 +61,7 @@
   </div>
 </div>
 
+<div id="app-wrapper">
 <div id="top-bar">
   <div id="nav-title">Flow Break</div>
   <div id="controls">
@@ -107,23 +108,37 @@
 </div>
 
 <div id="main-section">
-  <div id="camera-container">
-    <video id="camera-preview" autoplay playsinline muted></video>
-    <canvas id="camera-canvas" width="280" height="210"></canvas>
-    <canvas id="hand-fx" width="280" height="210"></canvas>
+  <div id="main-row">
+    <div id="camera-col">
+      <div id="camera-wrap">
+        <div id="camera-container">
+          <video id="camera-preview" autoplay playsinline muted></video>
+          <canvas id="camera-canvas"></canvas>
+          <canvas id="hand-fx"></canvas>
+        </div>
+        <div id="fx-bar">
+          <span id="fx-label">FX</span>
+          <button id="fx-prev"><i data-lucide="chevron-left"></i></button>
+          <span id="fx-name">None</span>
+          <button id="fx-next"><i data-lucide="chevron-right"></i></button>
+          <button id="fx-gear"><i data-lucide="settings-2"></i></button>
+        </div>
+      </div>
+    </div>
+    <div id="timer-col">
+      <div id="timer-section">
+        <div id="status" class="stopped">Stopped</div>
+        <div id="timer">00:00</div>
+        <div id="threshold-display">Alarm after sitting 20 min</div>
+      </div>
+      <button id="start-btn"><i data-lucide="play"></i> Start</button>
+    </div>
   </div>
-  <div id="timer-section">
-    <div id="status" class="stopped">Stopped</div>
-    <div id="timer">00:00</div>
-    <div id="threshold-display">Alarm after sitting 20 min</div>
-  </div>
-  <button id="start-btn"><i data-lucide="play"></i> Start Monitoring</button>
-</div>
-
-<div id="today-stats" style="display:none">
-  <div class="today-stats-inner">
-    <div class="today-stats-header"><span>Today</span><span class="today-stats-summary" id="today-stats-summary"></span></div>
-    <canvas id="today-timeline" width="320" height="50"></canvas>
+  <div id="today-stats" style="display:none">
+    <div class="today-stats-inner">
+      <div class="today-stats-header"><span>Today</span><span class="today-stats-summary" id="today-stats-summary"></span></div>
+      <canvas id="today-timeline" width="320" height="50"></canvas>
+    </div>
     <div id="today-session-list"></div>
   </div>
 </div>
@@ -135,6 +150,7 @@
   </div>
   <div id="breath-placeholder"></div>
 </div>
+</div><!-- #app-wrapper -->
 
 <div id="alarm-sound-modal">
   <div id="alarm-sound-modal-inner">

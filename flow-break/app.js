@@ -11,6 +11,10 @@
   const landingEl = document.getElementById('landing');
   const startBtn = document.getElementById('start-btn');
   const muteBtn = document.getElementById('mute-btn');
+  const fxPrevBtn = document.getElementById('fx-prev');
+  const fxNextBtn = document.getElementById('fx-next');
+  const fxGearBtn = document.getElementById('fx-gear');
+  const fxNameEl = document.getElementById('fx-name');
   const presetBtns = document.querySelectorAll('.quick-presets button');
   const breathPlaceholder = document.getElementById('breath-placeholder');
 
@@ -36,6 +40,8 @@
   let openHandStart = null;
   const HAND_DISMISS_MS = 3000;
   let handDetectTimeout = null;
+
+  const cameraContainer = document.getElementById('camera-wrap');
 
   // Camera canvas — tracking overlay + video FX
   const cameraCanvas = document.getElementById('camera-canvas');
@@ -240,7 +246,7 @@
   muteBtn.addEventListener('click', () => {
     muted = !muted;
     muteBtn.innerHTML = muted ? '<i data-lucide="volume-x"></i> Muted' : '<i data-lucide="volume-2"></i> Sound On';
-    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
     muteBtn.classList.toggle('muted', muted);
     if (muted && warnInterval) {
       clearInterval(warnInterval);
@@ -252,19 +258,35 @@
     }
   });
 
+  async function startCamera() {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+    video.srcObject = s;
+    await new Promise(resolve => {
+      if (video.videoWidth) return resolve();
+      video.addEventListener('loadedmetadata', resolve, { once: true });
+    });
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+cameraContainer.style.aspectRatio = `${w} / ${h}`;
+    cameraCanvas.width = w;
+    cameraCanvas.height = h;
+    handFxCanvas.width = w;
+    handFxCanvas.height = h;
+    return s;
+  }
+
   // Start / Stop
   startBtn.addEventListener('click', async () => {
     if (!running) {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
-        video.srcObject = stream;
+        stream = await startCamera();
       } catch(e) {
         alert('Camera access is required for monitoring.');
         return;
       }
       running = true;
       startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
-      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
       startBtn.classList.add('active');
       sittingSec = 0;
       isWarning = false;
@@ -283,8 +305,8 @@
     if (videoFxRAF) { cancelAnimationFrame(videoFxRAF); videoFxRAF = null; }
     cameraCtx.clearRect(0, 0, cameraCanvas.width, cameraCanvas.height);
     lastDetectedBbox = null;
-    startBtn.innerHTML = '<i data-lucide="play"></i> Start Monitoring';
-    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+    startBtn.innerHTML = '<i data-lucide="play"></i> Start';
+    lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
     startBtn.classList.remove('active');
     personPresent = false;
     isWarning = false;
@@ -454,8 +476,40 @@
       videofxPreviewCtx.fillText('Start monitoring to preview', videofxPreviewCanvas.width/2, videofxPreviewCanvas.height/2);
     }
   });
-  videofxClose.addEventListener('click', () => videofxModal.classList.remove('open'));
+  function updateFxDisplay() {
+    fxNameEl.textContent = VIDEO_FX[activeVideoFx].name;
+  }
+
+  videofxClose.addEventListener('click', () => {
+    videofxModal.classList.remove('open');
+    updateFxDisplay();
+  });
   videofxModal.addEventListener('click', (e) => { if (e.target === videofxModal) videofxModal.classList.remove('open'); });
+
+  // FX bar: prev/next cycle, gear opens modal
+  fxPrevBtn.addEventListener('click', () => {
+    activeVideoFx = (activeVideoFx - 1 + VIDEO_FX.length) % VIDEO_FX.length;
+    localStorage.setItem('fbVideoFx', activeVideoFx);
+    updateFxDisplay();
+  });
+  fxNextBtn.addEventListener('click', () => {
+    activeVideoFx = (activeVideoFx + 1) % VIDEO_FX.length;
+    localStorage.setItem('fbVideoFx', activeVideoFx);
+    updateFxDisplay();
+  });
+  fxGearBtn.addEventListener('click', () => {
+    videofxList.querySelectorAll('.alarm-sound-item').forEach((el, i) => el.classList.toggle('selected', i === activeVideoFx));
+    videofxModal.classList.add('open');
+    settingsPanel.classList.remove('open');
+    if (!running) {
+      videofxPreviewCtx.fillStyle = '#0a0a15';
+      videofxPreviewCtx.fillRect(0, 0, videofxPreviewCanvas.width, videofxPreviewCanvas.height);
+      videofxPreviewCtx.fillStyle = '#444';
+      videofxPreviewCtx.font = '13px sans-serif';
+      videofxPreviewCtx.textAlign = 'center';
+      videofxPreviewCtx.fillText('Start monitoring to preview', videofxPreviewCanvas.width/2, videofxPreviewCanvas.height/2);
+    }
+  });
 
   const testBtn = document.getElementById('test-btn');
 
@@ -464,12 +518,11 @@
     if (!running) {
       // Auto-start if not running
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 320, height: 240 } });
-        video.srcObject = stream;
+        stream = await startCamera();
       } catch(e) { /* camera optional for test */ }
       running = true;
       startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
-      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+      lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
       startBtn.classList.add('active');
       personPresent = true;
       detect();
@@ -489,7 +542,8 @@
   });
 
 
-  lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 16, height: 16}});
+  lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
+  updateFxDisplay();
 
   const loadingText = document.getElementById('loading-text');
   const loadingBar = document.getElementById('loading-bar');
