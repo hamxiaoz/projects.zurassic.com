@@ -16,3 +16,19 @@ This is a **public GitHub repository**. Apply the following rules at all times:
 - The GitHub repo: `hamxiaoz/projects.zurassic.com`
 - The domain: `projects.zurassic.com`
 - The Vercel project name: `projects.zurassic.com`
+
+## Google Analytics
+
+All projects in this repo use GA4 measurement ID `G-HK044STX6K`.
+Every new project's HTML file must include the gtag snippet in `<head>`:
+
+```html
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HK044STX6K"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-HK044STX6K');
+</script>
+```
