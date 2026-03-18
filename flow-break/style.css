@@ -132,6 +132,8 @@
   }
   .stats-row-sit   { background: rgba(76,175,80,0.08); }
   .stats-row-break { background: rgba(74,74,106,0.15); }
+  .stats-row-sit.session-highlighted   { background: rgba(76,175,80,0.28); outline: 1px solid rgba(76,175,80,0.5); }
+  .stats-row-break.session-highlighted { background: rgba(74,74,106,0.40); outline: 1px solid rgba(140,140,200,0.4); }
   .stats-row-label { width: 72px; flex-shrink: 0; }
   .stats-row-sit .stats-row-label   { color: #4caf50; }
   .stats-row-break .stats-row-label { color: #6b6b9a; }

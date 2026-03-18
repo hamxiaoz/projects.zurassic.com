@@ -58,15 +58,34 @@
     const totalSitMin = sessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
     const summaryEl = document.getElementById('today-stats-summary');
     if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' sitting' : '';
-    renderDayTimeline(document.getElementById('today-timeline'), sessions);
+    currentSessions = sessions;
+    activeHighlight = -1;
+    const canvas = document.getElementById('today-timeline');
+    renderDayTimeline(canvas, sessions);
+    canvas.style.cursor = 'pointer';
+    canvas.onclick = function(e) {
+      const rect = canvas.getBoundingClientRect();
+      const lx = e.clientX - rect.left;
+      let hit = -1;
+      for (let i = 0; i < timelineSegments.length; i++) {
+        const seg = timelineSegments[i];
+        const hitX = seg.x - Math.max(0, (8 - seg.w) / 2);
+        const hitW = Math.max(8, seg.w);
+        if (lx >= hitX && lx <= hitX + hitW) { hit = i; break; }
+      }
+      if (hit === activeHighlight) { highlightSession(-1); return; }
+      highlightSession(hit);
+    };
     const list = document.getElementById('today-session-list');
     list.innerHTML = '';
-    sessions.forEach(s => {
+    sessions.forEach((s, idx) => {
       const row = document.createElement('div');
       row.className = `stats-row stats-row-${s.type}`;
+      row.style.cursor = 'pointer';
       row.innerHTML = `<span class="stats-row-label">${s.type === 'sit' ? '● Sitting' : '○ Break'}</span>`
         + `<span class="stats-row-time">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>`
         + `<span class="stats-row-dur">${fmtMin(s.durationMin)}</span>`;
+      row.onclick = () => highlightSession(idx === activeHighlight ? -1 : idx);
       list.appendChild(row);
     });
     list.scrollTop = list.scrollHeight;
@@ -204,6 +223,20 @@
     return date.toLocaleDateString('en', { weekday: 'short' });
   }
 
+  // ── Cross-highlight state ────────────────────────────────────────────────────
+  let timelineSegments = []; // [{x, w}] parallel to sessions array
+  let currentSessions  = []; // last rendered sessions, for re-highlight on click
+  let activeHighlight  = -1;
+
+  function highlightSession(idx) {
+    activeHighlight = idx;
+    const rows = document.querySelectorAll('#today-session-list .stats-row');
+    rows.forEach((r, i) => r.classList.toggle('session-highlighted', i === idx));
+    if (idx !== -1 && rows[idx]) rows[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const canvas = document.getElementById('today-timeline');
+    if (canvas) renderDayTimeline(canvas, currentSessions, idx);
+  }
+
   // ── Chart rendering ─────────────────────────────────────────────────────────
   function renderWeekChart(canvas, days, data) {
     const W = canvas.width, H = canvas.height;
@@ -256,7 +289,7 @@
     });
   }
 
-  function renderDayTimeline(canvas, sessions) {
+  function renderDayTimeline(canvas, sessions, highlightIdx = -1) {
     const dpr = window.devicePixelRatio || 1;
     const displayW = canvas.clientWidth || 320;
     const displayH = canvas.clientHeight || 50;
@@ -280,12 +313,23 @@
     const tw = W - PL - PR;
     const barH = H - PT - PB;
 
-    sessions.forEach(s => {
+    timelineSegments = [];
+    sessions.forEach((s, i) => {
       const x = PL + ((s.start - first) / span) * tw;
       const w = Math.max(2, ((s.end - s.start) / span) * tw);
+      timelineSegments.push({ x, w });
+      const isHighlighted = highlightIdx !== -1 && i === highlightIdx;
+      ctx.globalAlpha = (highlightIdx === -1 || isHighlighted) ? 1.0 : 0.3;
       ctx.fillStyle = s.type === 'sit' ? '#4caf50' : '#4a4a6a';
       ctx.fillRect(x, PT, w, barH);
+      if (isHighlighted) {
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x + 0.75, PT + 0.75, w - 1.5, barH - 1.5);
+      }
     });
+    ctx.globalAlpha = 1;
 
     ctx.fillStyle = '#555';
     ctx.font = '10px sans-serif';

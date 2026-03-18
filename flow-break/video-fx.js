@@ -558,6 +558,33 @@ const VIDEO_FX = [
       }
     }
   }},
+  { name: 'How bees see you', apply(d) {
+    // Bees are UV/blue/green trichromats — they cannot see red at all.
+    // Red objects appear nearly black; blue shifts toward UV (false-colored violet).
+    // Lower spatial resolution than humans simulated via block averaging.
+    const p = d.data, w = d.width, h = d.height;
+    const bs = 7;
+    for (let by = 0; by < h; by += bs) {
+      for (let bx = 0; bx < w; bx += bs) {
+        let r = 0, g = 0, b = 0, cnt = 0;
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            r += p[i]; g += p[i+1]; b += p[i+2]; cnt++;
+          }
+        r /= cnt; g /= cnt; b /= cnt;
+        // Red → invisible (suppress entirely); blue → UV false-color (violet); green → preserved
+        const nr = Math.min(255, b * 0.55);
+        const ng = Math.min(255, g * 0.85);
+        const nb = Math.min(255, b * 0.90 + g * 0.15);
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            p[i] = Math.round(nr); p[i+1] = Math.round(ng); p[i+2] = Math.round(nb);
+          }
+      }
+    }
+  }},
   { name: 'Glitch', apply(d) {
     const p = d.data, w = d.width;
     const off = 10;
