@@ -257,8 +257,14 @@
   }
 
   function renderDayTimeline(canvas, sessions) {
-    const W = canvas.width, H = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
+    const displayW = canvas.clientWidth || 320;
+    const displayH = canvas.clientHeight || 50;
+    canvas.width  = displayW * dpr;
+    canvas.height = displayH * dpr;
     const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const W = displayW, H = displayH;
     ctx.clearRect(0, 0, W, H);
     if (sessions.length === 0) {
       ctx.fillStyle = '#555';

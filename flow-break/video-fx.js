@@ -170,6 +170,30 @@ const VIDEO_FX = [
       }
     }
   }},
+  { name: 'Apple Lisa -', apply(d) {
+    // Inverted Apple Lisa: bright areas render dark, dark areas render bright
+    const p = d.data, w = d.width, h = d.height;
+    const bs = 3;
+    for (let by = 0; by < h; by += bs) {
+      for (let bx = 0; bx < w; bx += bs) {
+        let lum = 0, cnt = 0;
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            lum += 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; cnt++;
+          }
+        lum /= cnt;
+        const li = 255 - lum; // invert luma
+        const v = li > 128 ? Math.min(255, li * 1.3 + 20) : Math.max(0, li * 0.5);
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            p[i] = p[i+1] = Math.round(v);
+            p[i+2] = Math.round(Math.min(255, v * 1.02 + 5));
+          }
+      }
+    }
+  }},
   { name: 'Predator', apply(d) {
     const p = d.data, lut = _predatorPalette;
     for (let i = 0; i < p.length; i += 4) {
@@ -201,6 +225,43 @@ const VIDEO_FX = [
     ctx.closePath();
     ctx.stroke();
     // Inner triangle pointing down (inverted)
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + r);
+    ctx.lineTo(cx + r * 0.866, cy - r * 0.5);
+    ctx.lineTo(cx - r * 0.866, cy - r * 0.5);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }},
+  { name: 'Predator -', apply(d) {
+    // Inverted Predator: cold areas render as hot colors, hot areas as cold
+    const p = d.data, lut = _predatorPalette;
+    for (let i = 0; i < p.length; i += 4) {
+      const raw = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+      const v = Math.min(255, Math.max(0, (raw - 60) * 1.45));
+      const vi = (255 - Math.round(v)) * 3; // invert palette index
+      p[i]   = lut[vi];
+      p[i+1] = lut[vi+1];
+      p[i+2] = lut[vi+2];
+    }
+  }, overlay(ctx, cw, ch) {
+    const alpha = (Math.sin(performance.now() * 0.0015) + 1) / 2;
+    if (alpha < 0.02) return;
+    const margin = 18;
+    const R = Math.min(cw, ch) * 0.11;
+    const r = R * 0.52;
+    const cx = cw - margin - R * 0.9, cy = margin + R;
+    ctx.save();
+    ctx.strokeStyle = `rgba(40,160,210,${alpha * 0.95})`;
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = `rgba(60,180,255,${alpha})`;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - R);
+    ctx.lineTo(cx + R * 0.866, cy + R * 0.5);
+    ctx.lineTo(cx - R * 0.866, cy + R * 0.5);
+    ctx.closePath();
+    ctx.stroke();
     ctx.beginPath();
     ctx.moveTo(cx, cy + r);
     ctx.lineTo(cx + r * 0.866, cy - r * 0.5);
@@ -334,7 +395,7 @@ const VIDEO_FX = [
     }
   }, overlay: (() => {
     let scanX = null, scanY = null, targetX = null, targetY = null, lastT = 0;
-    const SPEED = 8.4; // px/s — matches Terminator grid speed
+    const SPEED = 10.9; // px/s (30% faster than Terminator grid speed)
     return function(ctx, cw, ch) {
       const t = performance.now();
       const dt = lastT ? Math.min(50, t - lastT) : 0;
@@ -414,6 +475,35 @@ const VIDEO_FX = [
     ctx.closePath();
     ctx.fill();
     ctx.restore();
+  }},
+  { name: 'Nokia', apply(d) {
+    // Nokia 3310-style monochrome LCD: dark olive on lime-green with pixel gaps
+    const p = d.data, w = d.width, h = d.height;
+    const bs = 3; // block size simulating low-res pixel
+    const LIGHT = [139, 172, 15]; // screen background ("off" pixel)
+    const DARK  = [15,  56,  15]; // active ("on") pixel
+    const GAP   = [100, 130, 10]; // 1px border between blocks
+    for (let by = 0; by < h; by += bs) {
+      for (let bx = 0; bx < w; bx += bs) {
+        let lum = 0, cnt = 0;
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            lum += 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2]; cnt++;
+          }
+        lum /= cnt;
+        const col = lum > 120 ? LIGHT : DARK;
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            const isBorder = dy === 0 || dx === 0;
+            const c = isBorder ? GAP : col;
+            p[i]   = c[0];
+            p[i+1] = c[1];
+            p[i+2] = c[2];
+          }
+      }
+    }
   }},
   { name: 'How flies see you', apply(d) {
     // Compound-eye hexagonal mosaic — flat-top hex grid via axial coordinates
