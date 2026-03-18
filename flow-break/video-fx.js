@@ -32,6 +32,120 @@ const _predatorPalette = (() => {
 
 const VIDEO_FX = [
   { name: 'None' },
+  { name: 'HAL 9000',
+    apply(d) {
+      const p = d.data, w = d.width, h = d.height;
+      const cx = w / 2, cy = h / 2;
+      const lensR = Math.min(w, h) * 0.42;
+      for (let i = 0; i < p.length; i += 4) {
+        const px = (i / 4) % w, py = Math.floor(i / 4 / w);
+        const dx = px - cx, dy = py - cy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist > lensR) {
+          p[i]   = p[i]   * 0.06;
+          p[i+1] = p[i+1] * 0.06;
+          p[i+2] = p[i+2] * 0.06;
+        } else {
+          const t = dist / lensR;
+          const vignette = 1 - t * t * 0.6;
+          const r = p[i], g = p[i+1], b = p[i+2];
+          const luma = 0.299*r + 0.587*g + 0.114*b;
+          p[i]   = Math.min(255, (luma * 0.5 + r * 0.5) * vignette * 1.3);
+          p[i+1] = Math.min(255, g * 0.35 * vignette);
+          p[i+2] = Math.min(255, b * 0.25 * vignette);
+        }
+      }
+    },
+    overlay(ctx, cw, ch) {
+      const cx = cw / 2, cy = ch / 2;
+      const lensR = Math.min(cw, ch) * 0.42;
+      const t = performance.now() / 1000;
+      const pulse = (Math.sin(t * 2.5) + 1) / 2;
+
+      ctx.save();
+
+      // Metallic outer rim
+      const rimGrad = ctx.createRadialGradient(cx, cy, lensR * 0.93, cx, cy, lensR * 1.07);
+      rimGrad.addColorStop(0,    'rgba(10,10,10,1)');
+      rimGrad.addColorStop(0.2,  'rgba(55,55,58,1)');
+      rimGrad.addColorStop(0.45, 'rgba(90,90,95,1)');
+      rimGrad.addColorStop(0.7,  'rgba(55,55,58,1)');
+      rimGrad.addColorStop(1,    'rgba(8,8,8,1)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, lensR * 1.07, 0, Math.PI * 2);
+      ctx.arc(cx, cy, lensR * 0.93, 0, Math.PI * 2, true);
+      ctx.fillStyle = rimGrad;
+      ctx.fill('evenodd');
+
+      // Fill outside rim with solid black
+      ctx.beginPath();
+      ctx.rect(0, 0, cw, ch);
+      ctx.arc(cx, cy, lensR * 1.07, 0, Math.PI * 2, true);
+      ctx.fillStyle = '#000';
+      ctx.fill('evenodd');
+
+      // Inner concentric lens rings
+      const ringRadii = [0.88, 0.72, 0.52, 0.35];
+      for (const rf of ringRadii) {
+        ctx.beginPath();
+        ctx.arc(cx, cy, lensR * rf, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineWidth = lensR * 0.015;
+        ctx.shadowBlur = 0;
+        ctx.stroke();
+      }
+
+      // Central glowing orb
+      const orbR = lensR * (0.08 + pulse * 0.025);
+      const orbGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, orbR * 2.2);
+      orbGrad.addColorStop(0,    `rgba(255,240,140,${0.95 + pulse * 0.05})`);
+      orbGrad.addColorStop(0.2,  'rgba(255,160,20,0.9)');
+      orbGrad.addColorStop(0.55, 'rgba(200,30,10,0.75)');
+      orbGrad.addColorStop(0.85, 'rgba(140,10,0,0.3)');
+      orbGrad.addColorStop(1,    'rgba(80,0,0,0)');
+      ctx.beginPath();
+      ctx.arc(cx, cy, orbR * 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = orbGrad;
+      ctx.shadowColor = `rgba(255,120,0,${0.6 + pulse * 0.3})`;
+      ctx.shadowBlur = 30 + pulse * 20;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Bright core
+      ctx.beginPath();
+      ctx.arc(cx, cy, orbR * 0.4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,200,${0.9 + pulse * 0.1})`;
+      ctx.fill();
+
+      // Lens flare highlights
+      ctx.globalAlpha = 0.18;
+      ctx.strokeStyle = 'rgba(255,255,255,1)';
+      ctx.lineWidth = lensR * 0.018;
+      ctx.beginPath();
+      ctx.arc(cx - lensR * 0.08, cy - lensR * 0.05, lensR * 0.6, -1.4, -0.3);
+      ctx.stroke();
+      ctx.lineWidth = lensR * 0.01;
+      ctx.globalAlpha = 0.10;
+      ctx.beginPath();
+      ctx.arc(cx - lensR * 0.1, cy - lensR * 0.08, lensR * 0.45, -1.3, -0.5);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      // Bracket element (lower-right of iris)
+      const bx = cx + lensR * 0.38, by = cy + lensR * 0.32;
+      const bw = lensR * 0.14, bh = lensR * 0.09;
+      ctx.fillStyle = 'rgba(90,65,55,0.85)';
+      ctx.beginPath();
+      ctx.moveTo(bx,      by - bh * 0.5);
+      ctx.lineTo(bx + bw, by - bh);
+      ctx.lineTo(bx + bw, by + bh * 0.5);
+      ctx.lineTo(bx,      by + bh);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+    }
+  },
   { name: 'Terminator', apply(d) {
     const p = d.data, w = d.width;
     for (let i = 0; i < p.length; i += 4) {

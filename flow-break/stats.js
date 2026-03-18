@@ -36,6 +36,35 @@
     clearCheckpoint();
   }
 
+  const MERGE_GAP_MS = 3 * 60 * 1000; // 3 minutes
+
+  function mergeSessions(sessions) {
+    const merged = [];
+    let i = 0;
+    while (i < sessions.length) {
+      const s = sessions[i];
+      if (s.type !== 'sit') { merged.push(s); i++; continue; }
+      // Scan forward: absorb any sessions (sit or tiny break) within the gap threshold
+      let end = s.end;
+      let j = i + 1;
+      while (j < sessions.length) {
+        const next = sessions[j];
+        if (next.type === 'sit' && next.start - end <= MERGE_GAP_MS) {
+          end = next.end;
+          j++;
+        } else if (next.type === 'break' && next.end - next.start < MERGE_GAP_MS) {
+          // Small break sandwiched between sits — absorb and keep scanning
+          j++;
+        } else {
+          break;
+        }
+      }
+      merged.push({ ...s, end, durationMin: (end - s.start) / 60000 });
+      i = j;
+    }
+    return merged;
+  }
+
   async function refreshTodayStats() {
     const el = document.getElementById('today-stats');
     if (!el) return;
@@ -55,13 +84,14 @@
     }
     el.style.display = 'flex';
     if (breathSection) breathSection.style.display = 'none';
-    const totalSitMin = sessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
+    const displaySessions = mergeSessions(sessions);
+    const totalSitMin = displaySessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
     const summaryEl = document.getElementById('today-stats-summary');
     if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' sitting' : '';
-    currentSessions = sessions;
+    currentSessions = displaySessions;
     activeHighlight = -1;
     const canvas = document.getElementById('today-timeline');
-    renderDayTimeline(canvas, sessions);
+    renderDayTimeline(canvas, displaySessions);
     canvas.style.cursor = 'pointer';
     canvas.onclick = function(e) {
       const rect = canvas.getBoundingClientRect();
@@ -78,7 +108,7 @@
     };
     const list = document.getElementById('today-session-list');
     list.innerHTML = '';
-    sessions.forEach((s, idx) => {
+    displaySessions.forEach((s, idx) => {
       const row = document.createElement('div');
       row.className = `stats-row stats-row-${s.type}`;
       row.style.cursor = 'pointer';
