@@ -508,7 +508,7 @@ const VIDEO_FX = [
   { name: 'How flies see you', apply(d) {
     // Compound-eye hexagonal mosaic — flat-top hex grid via axial coordinates
     const p = d.data, w = d.width, h = d.height;
-    const s = 5; // hex circumradius in pixels
+    const s = 10; // hex circumradius in pixels
     const sq3 = Math.sqrt(3);
 
     function hexKey(px, py) {

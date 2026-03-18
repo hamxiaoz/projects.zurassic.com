@@ -459,6 +459,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
       item.classList.add('selected');
       activeVideoFx = i;
       localStorage.setItem('fbVideoFx', i);
+      updateFxDisplay();
     });
     videofxList.appendChild(item);
   });
@@ -484,7 +485,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     videofxModal.classList.remove('open');
     updateFxDisplay();
   });
-  videofxModal.addEventListener('click', (e) => { if (e.target === videofxModal) videofxModal.classList.remove('open'); });
+  videofxModal.addEventListener('click', (e) => { if (e.target === videofxModal) { videofxModal.classList.remove('open'); updateFxDisplay(); } });
 
   // FX bar: prev/next cycle, gear opens modal
   fxPrevBtn.addEventListener('click', () => {
