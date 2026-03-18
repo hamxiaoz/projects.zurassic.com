@@ -341,21 +341,18 @@
     background: #16213e;
     border: 1px solid #333;
     border-radius: 12px;
-    padding: 24px;
     width: 380px;
     max-width: 94vw;
     max-height: 85vh;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
-  #videofx-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: #16213e;
-    padding-bottom: 12px;
-    margin-bottom: 2px;
+  #videofx-header {
+    flex-shrink: 0;
+    padding: 24px 24px 12px;
   }
-  #videofx-sticky h2 { margin-bottom: 12px; font-weight: 500; font-size: 1.2rem; }
+  #videofx-header h2 { margin-bottom: 12px; font-weight: 500; font-size: 1.2rem; }
   #videofx-preview {
     display: block;
     width: 100%;
@@ -364,9 +361,15 @@
     border-radius: 8px;
     border: 1px solid #333;
     background: #000;
-    margin: 0 auto 0;
+    margin: 0 auto;
   }
-  #videofx-list { display: flex; flex-direction: column; gap: 4px; }
+  #videofx-list { flex: 1; overflow-y: auto; padding: 0 24px; display: flex; flex-direction: column; gap: 4px; }
+  #videofx-footer {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 24px;
+  }
   #videofx-close {
     background: #1a2744;
     border: 1px solid #333;
