@@ -10,6 +10,7 @@
   const loadingEl = document.getElementById('loading');
   const landingEl = document.getElementById('landing');
   const startBtn = document.getElementById('start-btn');
+  const dismissBtn = document.getElementById('dismiss-btn');
   const muteBtn = document.getElementById('mute-btn');
   const fxPrevBtn = document.getElementById('fx-prev');
   const fxNextBtn = document.getElementById('fx-next');
@@ -291,6 +292,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
       sittingSec = 0;
       isWarning = false;
       document.body.classList.remove('warning');
+      playStartSound();
       detect();
       tickInterval = setInterval(tick, 1000);
       if (!videoFxRAF) videoFxRAF = requestAnimationFrame(renderCameraLoop);
@@ -308,6 +310,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     startBtn.innerHTML = '<i data-lucide="play"></i> Start';
     lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
     startBtn.classList.remove('active');
+    dismissBtn.style.display = 'none';
     personPresent = false;
     isWarning = false;
     sittingSec = 0;
@@ -393,6 +396,13 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     { name: 'Pulse',           play: c => [0,0.15,0.3,0.45].forEach(t=>_tone(c,'sine',660,0.22,t,0.12)) },
     { name: 'Two Tone',        play: c => { _tone(c,'square',660,0.25,0,0.2); _tone(c,'square',880,0.25,0.25,0.2); } },
   ];
+
+  function playStartSound() {
+    if (muted) return;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Ascending: C5 → E5 → G5
+    [523, 659, 784].forEach((f, i) => _bell(audioCtx, f, 0.25, 0.3, i * 0.18));
+  }
 
   function playTone() {
     if (muted) return;
@@ -533,6 +543,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     // Trigger warning state immediately
     isWarning = true;
     document.body.classList.add('warning');
+    dismissBtn.style.display = '';
     playTone();
     if (!muted && !warnInterval) warnInterval = setInterval(playTone, 3000);
     statusEl.textContent = 'WARNING — Stand up!';
@@ -663,12 +674,15 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     handDetectTimeout = setTimeout(detectHand, 200);
   }
 
+  dismissBtn.addEventListener('click', () => dismissAlarm());
+
   function dismissAlarm() {
     cancelAlarmAwayTimer();
     isWarning = false;
     sittingSec = 0;
     openHandStart = null;
     document.body.classList.remove('warning');
+    dismissBtn.style.display = 'none';
     if (warnInterval) { clearInterval(warnInterval); warnInterval = null; }
     if (handDetectTimeout) { clearTimeout(handDetectTimeout); handDetectTimeout = null; }
     statusEl.textContent = 'Sitting';
@@ -841,6 +855,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
       if (sittingSec >= thresholdSec && !isWarning) {
         isWarning = true;
         document.body.classList.add('warning');
+        dismissBtn.style.display = '';
         playTone();
         if (!muted) warnInterval = setInterval(playTone, 3000);
         // Start hand detection for dismissal

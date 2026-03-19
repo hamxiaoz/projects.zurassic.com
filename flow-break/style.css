@@ -431,6 +431,23 @@
   #start-btn:hover { background: #1a2744; border-color: #66bb6a; }
   #start-btn.active { border-color: #ff5252; color: #ff5252; }
   #start-btn.active:hover { border-color: #ff7070; }
+  #dismiss-btn {
+    background: #16213e;
+    border: 1px solid #ff9800;
+    color: #ff9800;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  #dismiss-btn svg { width: 16px; height: 16px; }
+  #dismiss-btn:hover { background: #1a2744; border-color: #ffb74d; }
 
   /* Settings panel */
   #settings-panel {
