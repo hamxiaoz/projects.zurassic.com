@@ -400,8 +400,8 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
   function playStartSound() {
     if (muted) return;
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    // Ascending: C5 → E5 → G5
-    [523, 659, 784].forEach((f, i) => _bell(audioCtx, f, 0.25, 0.3, i * 0.18));
+    _bell(audioCtx, 1047, 0.3, 0.7, 0);
+    _bell(audioCtx, 1047, 0.3, 0.7, 0.8);
   }
 
   function playTone() {
