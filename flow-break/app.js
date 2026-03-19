@@ -286,7 +286,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
         return;
       }
       running = true;
-      startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
+      startBtn.innerHTML = '<i data-lucide="square"></i> Stop Monitoring';
       lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
       startBtn.classList.add('active');
       sittingSec = 0;
@@ -532,7 +532,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
         stream = await startCamera();
       } catch(e) { /* camera optional for test */ }
       running = true;
-      startBtn.innerHTML = '<i data-lucide="square"></i> Stop';
+      startBtn.innerHTML = '<i data-lucide="square"></i> Stop Monitoring';
       lucide.createIcons({nameAttr: 'data-lucide', attrs: {width: 14, height: 14}});
       startBtn.classList.add('active');
       personPresent = true;
