@@ -30,6 +30,40 @@ const _predatorPalette = (() => {
   return lut;
 })();
 
+// Van Gogh "Starry Night" palette: maps 0-255 luma to 6 posterization bands
+// Prussian blue shadows → deep cobalt sky → indigo swirls → teal hills → ochre halos → chrome yellow star cores
+const _vanGoghLut = (() => {
+  const lut = new Uint8Array(256 * 3);
+  // 6 bands: [minLuma, r, g, b]
+  const bands = [
+    [  0, 0x0d, 0x1b, 0x4b],  // 0–42:   near-black Prussian (deep shadow silhouettes)
+    [ 43, 0x1a, 0x23, 0x7e],  // 43–84:  deep Prussian blue (main sky body)
+    [ 85, 0x39, 0x49, 0xab],  // 85–127: cobalt/indigo (lighter sky swirls)
+    [128, 0x26, 0xa6, 0x9a],  // 128–169: teal-green (cypress/hill mid-tones)
+    [170, 0xf9, 0xa8, 0x25],  // 170–211: ochre/amber (moon halos, warm edges)
+    [212, 0xf5, 0xc8, 0x42],  // 212–255: chrome yellow (star cores, brightest halos)
+  ];
+  for (let v = 0; v < 256; v++) {
+    // Find which band this luma value falls in
+    let bi = bands.length - 1;
+    for (let b = 0; b < bands.length - 1; b++) {
+      if (v < bands[b + 1][0]) { bi = b; break; }
+    }
+    const band = bands[bi];
+    // 15% intra-band feathering toward next band to avoid hard digital banding
+    const nextBand = bands[Math.min(bi + 1, bands.length - 1)];
+    const bandEnd = (bi < bands.length - 1) ? bands[bi + 1][0] : 256;
+    const bandSpan = bandEnd - band[0];
+    const posInBand = v - band[0];
+    const featherStart = bandSpan * 0.85;
+    const blend = posInBand > featherStart ? (posInBand - featherStart) / (bandSpan - featherStart) : 0;
+    lut[v*3]   = Math.round(band[1] + (nextBand[1] - band[1]) * blend);
+    lut[v*3+1] = Math.round(band[2] + (nextBand[2] - band[2]) * blend);
+    lut[v*3+2] = Math.round(band[3] + (nextBand[3] - band[3]) * blend);
+  }
+  return lut;
+})();
+
 const VIDEO_FX = [
   { name: 'None' },
   { name: 'HAL 9000',
@@ -1016,4 +1050,149 @@ const VIDEO_FX = [
       p[i+2] = Math.min(255, (255-b) * 0.7 + r * 0.3);
     }
   }},
+  { name: 'Van Gogh',
+    apply(d) {
+      const p = d.data, lut = _vanGoghLut;
+      for (let i = 0; i < p.length; i += 4) {
+        // Integer luma (no floats, no branches in hot loop)
+        const luma = (p[i]*77 + p[i+1]*150 + p[i+2]*29) >> 8;
+        p[i]   = lut[luma*3];
+        p[i+1] = lut[luma*3+1];
+        p[i+2] = lut[luma*3+2];
+      }
+    },
+    overlay: (() => {
+      // Animated Van Gogh swirling brush strokes + vignette
+      // Draws a flow-field grid of short quadratic-curve strokes
+      const SPACING = 14;   // grid spacing px
+      const STROKE_LEN = 20; // stroke half-length px
+      // Alternating light/dark per cell — value contrast makes strokes legible
+      // regardless of underlying posterized zone color
+      function strokeColor(normY, cellParity) {
+        if (normY < 0.40) {
+          // Upper 40%: sky — pale lavender vs deep navy
+          return cellParity
+            ? 'rgba(210,220,255,0.95)'   // pale blue-white (light)
+            : 'rgba(10,15,80,0.95)';     // deep navy (dark)
+        }
+        if (normY < 0.60) {
+          // Mid 20%: transition — pale mint vs deep teal
+          return cellParity
+            ? 'rgba(200,255,240,0.95)'   // pale mint (light)
+            : 'rgba(0,70,65,0.95)';      // dark teal (dark)
+        }
+        // Lower 40%: foreground — bright cream vs dark amber
+        return cellParity
+          ? 'rgba(255,248,180,0.95)'     // bright pale yellow (light)
+          : 'rgba(100,45,0,0.95)';       // dark amber-brown (dark)
+      }
+      return function(ctx, w, h, t) {
+        ctx.save();
+        ctx.globalAlpha = 0.82;
+        ctx.lineWidth = 3.8;
+        ctx.lineCap = 'round';
+
+        // Draw swirling brush strokes on flow-field grid
+        for (let gy = SPACING / 2; gy < h; gy += SPACING) {
+          for (let gx = SPACING / 2; gx < w; gx += SPACING) {
+            // Flow-field angle: incommensurable rates ensure no visible repeat
+            const angle = (Math.sin(gx * 0.012 + t * 0.7)
+                        + Math.sin(gy * 0.018 - t * 0.5)
+                        + Math.sin((gx + gy) * 0.009 + t * 0.3)
+                        + Math.cos(gx * 0.015 - gy * 0.010 + t)) * 0.8;
+
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+
+            // Stroke endpoints
+            const x1 = gx - cos * STROKE_LEN;
+            const y1 = gy - sin * STROKE_LEN;
+            const x2 = gx + cos * STROKE_LEN;
+            const y2 = gy + sin * STROKE_LEN;
+
+            // Control point: perpendicular bow for organic impasto feel
+            const perpScale = 8;
+            const cx = (x1 + x2) / 2 - sin * perpScale;
+            const cy = (y1 + y2) / 2 + cos * perpScale;
+
+            const cellParity = (Math.floor(gx / 14) + Math.floor(gy / 14)) % 2;
+            ctx.strokeStyle = strokeColor(gy / h, cellParity);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.quadraticCurveTo(cx, cy, x2, y2);
+            ctx.stroke();
+          }
+        }
+
+        // Vignette: single radial gradient darkens edges (painting-like frame)
+        ctx.globalAlpha = 1.0;
+        const vig = ctx.createRadialGradient(w/2, h/2, Math.min(w,h)*0.3, w/2, h/2, Math.max(w,h)*0.75);
+        vig.addColorStop(0, 'rgba(0,0,0,0)');
+        vig.addColorStop(1, 'rgba(5,10,40,0.62)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.restore();
+      };
+    })(),
+  },
+  { name: 'Mondrian',
+    apply: (() => {
+      const PALETTE = [
+        [212,   9,  32],  // Red
+        [ 19,  86, 162],  // Blue
+        [245, 190,   1],  // Yellow
+        [255, 255, 255],  // White
+        [ 20,  20,  20],  // Near-black
+      ];
+      const BS = 28; // block size in pixels
+      function snapColor(r, g, b) {
+        let best = 0, bestDist = Infinity;
+        for (let i = 0; i < PALETTE.length; i++) {
+          const dr = r - PALETTE[i][0], dg = g - PALETTE[i][1], db = b - PALETTE[i][2];
+          const dist = dr*dr + dg*dg + db*db;
+          if (dist < bestDist) { bestDist = dist; best = i; }
+        }
+        return PALETTE[best];
+      }
+      return function(d) {
+        const p = d.data, w = d.width, h = d.height;
+        for (let by = 0; by < h; by += BS) {
+          for (let bx = 0; bx < w; bx += BS) {
+            let r=0, g=0, b=0, cnt=0;
+            for (let dy = 0; dy < BS && by+dy < h; dy++)
+              for (let dx = 0; dx < BS && bx+dx < w; dx++) {
+                const i = ((by+dy)*w + (bx+dx)) * 4;
+                r += p[i]; g += p[i+1]; b += p[i+2]; cnt++;
+              }
+            if (!cnt) continue;
+            const [sr, sg, sb] = snapColor(r/cnt, g/cnt, b/cnt);
+            for (let dy = 0; dy < BS && by+dy < h; dy++)
+              for (let dx = 0; dx < BS && bx+dx < w; dx++) {
+                const i = ((by+dy)*w + (bx+dx)) * 4;
+                p[i] = sr; p[i+1] = sg; p[i+2] = sb;
+              }
+          }
+        }
+      };
+    })(),
+    overlay: (() => {
+      const BS = 28;
+      return function(ctx, w, h) {
+        ctx.save();
+        ctx.strokeStyle = '#141414';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'square';
+        ctx.beginPath();
+        for (let x = BS; x < w; x += BS) {
+          ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        }
+        for (let y = BS; y < h; y += BS) {
+          ctx.moveTo(0, y); ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+      };
+    })(),
+  },
 ];
