@@ -672,6 +672,56 @@ const VIDEO_FX = [
       }
     }
   }},
+  { name: 'How baby flies see you', apply(d) {
+    const p = d.data, w = d.width, h = d.height;
+    const s = 20;
+    const sq3 = Math.sqrt(3);
+
+    function hexKey(px, py) {
+      const qf = (2 / 3 * px) / s;
+      const rf = (-px / 3 + sq3 / 3 * py) / s;
+      let x = qf, z = rf, y = -x - z;
+      let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+      const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+      if (dx > dy && dx > dz) rx = -ry - rz;
+      else if (dy > dz) ry = -rx - rz;
+      else rz = -rx - ry;
+      return rx * 100000 + rz;
+    }
+
+    const hexIdx = new Int32Array(w * h);
+    const hexColors = new Map();
+    for (let py = 0; py < h; py++) {
+      for (let px = 0; px < w; px++) {
+        const key = hexKey(px, py);
+        hexIdx[py * w + px] = key;
+        const i = (py * w + px) * 4;
+        let c = hexColors.get(key);
+        if (!c) { c = [0, 0, 0, 0]; hexColors.set(key, c); }
+        c[0] += p[i]; c[1] += p[i+1]; c[2] += p[i+2]; c[3]++;
+      }
+    }
+    hexColors.forEach(c => { c[0] /= c[3]; c[1] /= c[3]; c[2] /= c[3]; });
+
+    for (let py = 0; py < h; py++) {
+      for (let px = 0; px < w; px++) {
+        const idx = py * w + px;
+        const i = idx * 4;
+        const key = hexIdx[idx];
+        const border =
+          (px > 0   && hexIdx[idx - 1] !== key) ||
+          (px < w-1 && hexIdx[idx + 1] !== key) ||
+          (py > 0   && hexIdx[idx - w] !== key) ||
+          (py < h-1 && hexIdx[idx + w] !== key);
+        if (border) {
+          p[i] = p[i+1] = p[i+2] = 25;
+        } else {
+          const c = hexColors.get(key);
+          p[i] = c[0]; p[i+1] = c[1]; p[i+2] = c[2];
+        }
+      }
+    }
+  }},
   { name: 'How bees see you', apply(d) {
     // Bees are UV/blue/green trichromats — they cannot see red at all.
     // Red objects appear nearly black; blue shifts toward UV (false-colored violet).
@@ -699,6 +749,195 @@ const VIDEO_FX = [
       }
     }
   }},
+  { name: 'How baby bees see you', apply(d) {
+    const p = d.data, w = d.width, h = d.height;
+    const bs = 28;
+    for (let by = 0; by < h; by += bs) {
+      for (let bx = 0; bx < w; bx += bs) {
+        let r = 0, g = 0, b = 0, cnt = 0;
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            r += p[i]; g += p[i+1]; b += p[i+2]; cnt++;
+          }
+        r /= cnt; g /= cnt; b /= cnt;
+        const nr = Math.min(255, b * 0.55);
+        const ng = Math.min(255, g * 0.85);
+        const nb = Math.min(255, b * 0.90 + g * 0.15);
+        for (let dy = 0; dy < bs && by+dy < h; dy++)
+          for (let dx = 0; dx < bs && bx+dx < w; dx++) {
+            const i = ((by+dy)*w + (bx+dx)) * 4;
+            p[i] = Math.round(nr); p[i+1] = Math.round(ng); p[i+2] = Math.round(nb);
+          }
+      }
+    }
+  }},
+  (() => {
+    const CHAR_W = 10, CHAR_H = 18;
+    const CHARS = ' .:!/r(l1Z4H9W8$@#';
+    const lut = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) lut[i] = Math.floor(i / 255 * (CHARS.length - 1));
+    const state = { grid: null, cols: 0, rows: 0, frame: 0 };
+    return {
+      name: 'ASCII',
+      apply(imgData) {
+        state.frame++;
+        const { data, width, height } = imgData;
+        if (state.frame % 2 === 0) {
+          const cols = Math.floor(width / CHAR_W);
+          const rows = Math.floor(height / CHAR_H);
+          state.cols = cols; state.rows = rows;
+          if (!state.grid || state.grid.length !== cols * rows) state.grid = new Array(cols * rows);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const px = (row * CHAR_H * width + col * CHAR_W) * 4;
+              const lum = (data[px] * 77 + data[px+1] * 150 + data[px+2] * 29) >> 8;
+              state.grid[row * cols + col] = CHARS[lut[lum]];
+            }
+          }
+        }
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
+      },
+      overlay(ctx) {
+        if (!state.grid) return;
+        ctx.font = `${CHAR_H}px monospace`;
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#00ff41';
+        const { cols, rows, grid } = state;
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            ctx.fillText(grid[row * cols + col], col * CHAR_W, row * CHAR_H);
+          }
+        }
+      },
+    };
+  })(),
+  (() => {
+    const CHAR_W = 10, CHAR_H = 18;
+    const CHARS = ' .:!/r(l1Z4H9W8$@#';
+    const lut = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) lut[i] = Math.floor(i / 255 * (CHARS.length - 1));
+    const state = { grid: null, cols: 0, rows: 0, frame: 0 };
+    return {
+      name: 'ASCII Amber',
+      apply(imgData) {
+        state.frame++;
+        const { data, width, height } = imgData;
+        if (state.frame % 2 === 0) {
+          const cols = Math.floor(width / CHAR_W);
+          const rows = Math.floor(height / CHAR_H);
+          state.cols = cols; state.rows = rows;
+          if (!state.grid || state.grid.length !== cols * rows) state.grid = new Array(cols * rows);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const px = (row * CHAR_H * width + col * CHAR_W) * 4;
+              const lum = (data[px] * 77 + data[px+1] * 150 + data[px+2] * 29) >> 8;
+              state.grid[row * cols + col] = CHARS[lut[lum]];
+            }
+          }
+        }
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
+      },
+      overlay(ctx) {
+        if (!state.grid) return;
+        ctx.font = `${CHAR_H}px monospace`;
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ffb000';
+        const { cols, rows, grid } = state;
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            ctx.fillText(grid[row * cols + col], col * CHAR_W, row * CHAR_H);
+          }
+        }
+      },
+    };
+  })(),
+  (() => {
+    const CHAR_W = 10, CHAR_H = 18;
+    const CHARS = ' .:!/r(l1Z4H9W8$@#';
+    const lut = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) lut[i] = Math.floor(i / 255 * (CHARS.length - 1));
+    const state = { grid: null, cols: 0, rows: 0, frame: 0 };
+    return {
+      name: 'ASCII Monochrome',
+      apply(imgData) {
+        state.frame++;
+        const { data, width, height } = imgData;
+        if (state.frame % 2 === 0) {
+          const cols = Math.floor(width / CHAR_W);
+          const rows = Math.floor(height / CHAR_H);
+          state.cols = cols; state.rows = rows;
+          if (!state.grid || state.grid.length !== cols * rows) state.grid = new Array(cols * rows);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const px = (row * CHAR_H * width + col * CHAR_W) * 4;
+              const lum = (data[px] * 77 + data[px+1] * 150 + data[px+2] * 29) >> 8;
+              state.grid[row * cols + col] = CHARS[lut[lum]];
+            }
+          }
+        }
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
+      },
+      overlay(ctx) {
+        if (!state.grid) return;
+        ctx.font = `${CHAR_H}px monospace`;
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ffffff';
+        const { cols, rows, grid } = state;
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            ctx.fillText(grid[row * cols + col], col * CHAR_W, row * CHAR_H);
+          }
+        }
+      },
+    };
+  })(),
+  (() => {
+    const CHAR_W = 10, CHAR_H = 18;
+    const CHARS = ' .:!/r(l1Z4H9W8$@#';
+    const lut = new Uint8Array(256);
+    for (let i = 0; i < 256; i++) lut[i] = Math.floor(i / 255 * (CHARS.length - 1));
+    const state = { grid: null, cols: 0, rows: 0, frame: 0 };
+    return {
+      name: 'ASCII Color',
+      apply(imgData) {
+        state.frame++;
+        const { data, width, height } = imgData;
+        if (state.frame % 2 === 0) {
+          const cols = Math.floor(width / CHAR_W);
+          const rows = Math.floor(height / CHAR_H);
+          state.cols = cols; state.rows = rows;
+          if (!state.grid || state.grid.length !== cols * rows) state.grid = new Array(cols * rows);
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const px = (row * CHAR_H * width + col * CHAR_W) * 4;
+              const r = data[px], g = data[px+1], b = data[px+2];
+              const lum = (r * 77 + g * 150 + b * 29) >> 8;
+              state.grid[row * cols + col] = { ch: CHARS[lut[lum]], r, g, b };
+            }
+          }
+        }
+        data.fill(0);
+        for (let i = 3; i < data.length; i += 4) data[i] = 255;
+      },
+      overlay(ctx) {
+        if (!state.grid) return;
+        ctx.font = `${CHAR_H}px monospace`;
+        ctx.textBaseline = 'top';
+        const { cols, rows, grid } = state;
+        for (let row = 0; row < rows; row++) {
+          for (let col = 0; col < cols; col++) {
+            const cell = grid[row * cols + col];
+            ctx.fillStyle = `rgb(${cell.r},${cell.g},${cell.b})`;
+            ctx.fillText(cell.ch, col * CHAR_W, row * CHAR_H);
+          }
+        }
+      },
+    };
+  })(),
   { name: 'Glitch', apply(d) {
     const p = d.data, w = d.width;
     const off = 10;

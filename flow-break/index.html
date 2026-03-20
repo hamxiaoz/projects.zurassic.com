@@ -15,13 +15,6 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="loading" style="display:none">
-  <div id="loading-inner">
-    <div id="loading-text">Loading…</div>
-    <div id="loading-track"><div id="loading-bar"></div></div>
-  </div>
-</div>
-
 <div id="landing">
   <div class="landing-inner">
     <div class="landing-tag">Flow Break</div>
@@ -65,161 +58,7 @@
         <li><span>To dismiss: hold an <strong>open palm</strong> toward the camera for 3 seconds, or simply step out of frame</span></li>
       </ol>
     </div>
-    <button id="landing-cta">Start Monitoring</button>
-  </div>
-</div>
-
-<div id="app-wrapper">
-<div id="top-bar">
-  <div id="nav-title">Flow Break</div>
-  <div id="controls">
-    <button id="stats-btn"><i data-lucide="bar-chart-2"></i></button>
-    <button id="settings-btn"><i data-lucide="settings"></i></button>
-  </div>
-</div>
-
-<div id="settings-panel">
-  <div class="settings-group">
-    <div class="settings-group-label">Time</div>
-    <label>Alarm after sitting <span id="threshold-val">20</span> min</label>
-    <input type="range" id="threshold-range" min="1" max="60" value="20">
-    <div class="quick-presets">
-      <button data-min="10">10m</button>
-      <button data-min="15">15m</button>
-      <button data-min="20" class="selected">20m</button>
-      <button data-min="30">30m</button>
-    </div>
-  </div>
-  <div class="settings-group">
-    <div class="settings-group-label">Sound</div>
-    <div class="settings-actions">
-      <button id="mute-btn"><i data-lucide="volume-2"></i> Sound On</button>
-      <button id="alarm-sound-btn"><i data-lucide="music"></i> Alarm Sound</button>
-    </div>
-  </div>
-  <div class="settings-group">
-    <div class="settings-group-label">FX</div>
-    <div class="settings-actions">
-      <button id="videofx-btn"><i data-lucide="camera"></i> Video FX</button>
-      <button id="handfx-btn"><i data-lucide="sparkles"></i> Hand FX</button>
-    </div>
-    <div class="settings-actions" style="margin-top:8px">
-      <button id="test-btn"><i data-lucide="zap"></i> Test Alarm</button>
-    </div>
-  </div>
-  <div class="settings-group">
-    <div class="settings-group-label">Breathe</div>
-    <div class="settings-actions">
-      <button id="breath-btn" disabled><i data-lucide="wind"></i> Breathe</button>
-    </div>
-  </div>
-</div>
-
-<div id="main-section">
-  <div id="main-row">
-    <div id="camera-col">
-      <div id="camera-wrap">
-        <div id="camera-container">
-          <video id="camera-preview" autoplay playsinline muted></video>
-          <canvas id="camera-canvas"></canvas>
-          <canvas id="hand-fx"></canvas>
-        </div>
-        <div id="fx-bar">
-          <span id="fx-label">FX</span>
-          <button id="fx-prev"><i data-lucide="chevron-left"></i></button>
-          <span id="fx-name">None</span>
-          <button id="fx-next"><i data-lucide="chevron-right"></i></button>
-          <button id="fx-gear"><i data-lucide="settings-2"></i></button>
-        </div>
-      </div>
-    </div>
-    <div id="timer-col">
-      <div id="timer-section">
-        <div id="status" class="stopped">Stopped</div>
-        <div id="timer">00:00</div>
-        <div id="threshold-display">Alarm after sitting 20 min</div>
-      </div>
-      <button id="start-btn"><i data-lucide="play"></i> Start</button>
-      <button id="dismiss-btn" style="display:none"><i data-lucide="x"></i> Dismiss</button>
-    </div>
-  </div>
-  <div id="today-stats" style="display:none">
-    <div class="today-stats-inner">
-      <div class="today-stats-header"><span>Today</span><span class="today-stats-summary" id="today-stats-summary"></span></div>
-      <canvas id="today-timeline" width="320" height="50"></canvas>
-    </div>
-    <div id="today-session-list"></div>
-  </div>
-</div>
-
-<div id="breath-section">
-  <div id="breath-overlay">
-    <canvas id="breath-canvas" width="600" height="600"></canvas>
-    <div id="breath-label"></div>
-  </div>
-  <div id="breath-placeholder"></div>
-</div>
-</div><!-- #app-wrapper -->
-
-<div id="alarm-sound-modal">
-  <div id="alarm-sound-modal-inner">
-    <h2>Choose Alarm Sound</h2>
-    <p>Select a sound and preview it before confirming</p>
-    <div id="alarm-sound-list"></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <button id="alarm-sound-close">Select</button>
-    </div>
-  </div>
-</div>
-
-<div id="videofx-modal">
-  <div id="videofx-modal-inner">
-    <div id="videofx-header">
-      <h2>Choose Video FX</h2>
-      <canvas id="videofx-preview" width="280" height="210"></canvas>
-    </div>
-    <div id="videofx-list"></div>
-    <div id="videofx-footer">
-      <button id="videofx-close">Done</button>
-    </div>
-  </div>
-</div>
-
-<div id="handfx-modal">
-  <div id="handfx-modal-inner">
-    <h2>Choose Hand Dismiss Effect</h2>
-    <p>Select an anime effect for when you hold your palm to dismiss the alarm</p>
-    <div class="handfx-grid" id="handfx-grid"></div>
-    <div style="display:flex;justify-content:flex-end;margin-top:16px">
-      <button id="handfx-close">Select</button>
-    </div>
-  </div>
-</div>
-
-<div id="stats-modal">
-  <div id="stats-modal-inner">
-    <div id="stats-header">
-      <h2>This Week</h2>
-      <button id="stats-close"><i data-lucide="x"></i></button>
-    </div>
-    <canvas id="week-chart" width="320" height="180"></canvas>
-    <div class="stats-legend">
-      <span class="stats-legend-sit">● Sitting</span>
-      <span class="stats-legend-break">● Break</span>
-    </div>
-    <p id="stats-summary"></p>
-  </div>
-</div>
-
-<div id="breath-modal">
-  <div id="breath-modal-inner">
-    <h2>Choose a Breath Animation</h2>
-    <p>Select one to display while sitting as a breathing reminder</p>
-    <div class="breath-grid" id="breath-grid"></div>
-    <div style="display:flex;justify-content:flex-end">
-      <button id="breath-none">None</button>
-      <button id="breath-close">Select</button>
-    </div>
+    <a id="landing-cta" href="app.html">Start Monitoring</a>
   </div>
 </div>
 
@@ -228,16 +67,5 @@
   <span class="sep">&middot;</span>
   <a href="changelog.html">Changelog</a>
 </footer>
-
-<script src="https://unpkg.com/lucide@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
-<script src="video-fx.js"></script>
-<script src="hand-fx.js"></script>
-<script src="breath-themes.js"></script>
-<script src="stats.js"></script>
-<script src="app.js"></script>
 </body>
 </html>

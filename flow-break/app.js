@@ -8,7 +8,6 @@
   const thresholdVal = document.getElementById('threshold-val');
   const thresholdDisplay = document.getElementById('threshold-display');
   const loadingEl = document.getElementById('loading');
-  const landingEl = document.getElementById('landing');
   const startBtn = document.getElementById('start-btn');
   const dismissBtn = document.getElementById('dismiss-btn');
   const muteBtn = document.getElementById('mute-btn');
@@ -279,6 +278,23 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
   // Start / Stop
   startBtn.addEventListener('click', async () => {
     if (!running) {
+      if (!model) {
+        loadingBar.style.width = '5%';
+        loadingEl.style.display = 'flex';
+        loadingText.textContent = 'Loading detection model…';
+        creepTo(72);
+        model = await cocoSsd.load();
+        loadingBar.style.width = '80%';
+        loadingText.textContent = 'Loading hand model…';
+        creepTo(94);
+        handModel = await handPoseDetection.createDetector(
+          handPoseDetection.SupportedModels.MediaPipeHands,
+          { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands', modelType: 'lite' }
+        );
+        loadingBar.style.width = '100%';
+        await new Promise(r => setTimeout(r, 280));
+        loadingEl.style.display = 'none';
+      }
       try {
         stream = await startCamera();
       } catch(e) {
@@ -573,29 +589,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     _creepRAF = requestAnimationFrame(step);
   }
 
-  // Landing page CTA — load models with progress then start monitoring
-  document.getElementById('landing-cta').addEventListener('click', async () => {
-    landingEl.classList.add('hidden');
-    loadingBar.style.width = '5%';
-    loadingEl.style.display = 'flex';
-
-    loadingText.textContent = 'Loading detection model…';
-    creepTo(72);
-    model = await cocoSsd.load();
-
-    loadingBar.style.width = '80%';
-    loadingText.textContent = 'Loading hand model…';
-    creepTo(94);
-    handModel = await handPoseDetection.createDetector(
-      handPoseDetection.SupportedModels.MediaPipeHands,
-      { runtime: 'mediapipe', solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands', modelType: 'lite' }
-    );
-
-    loadingBar.style.width = '100%';
-    await new Promise(r => setTimeout(r, 280));
-    loadingEl.style.display = 'none';
-    startBtn.click();
-  });
+  startBtn.click();
 
   // Check if hand is open (fingers extended)
   function isOpenHand(hand) {
