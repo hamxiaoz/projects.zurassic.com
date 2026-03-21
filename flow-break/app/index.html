@@ -35,7 +35,7 @@
 <div id="settings-panel">
   <div class="settings-group">
     <div class="settings-group-label">Time</div>
-    <label>Alarm after sitting <span id="threshold-val">20</span> min</label>
+    <label>Alarm after <span id="threshold-val">20</span> min at desk</label>
     <input type="range" id="threshold-range" min="1" max="60" value="20">
     <div class="quick-presets">
       <button data-min="10">10m</button>
@@ -91,7 +91,7 @@
       <div id="timer-section">
         <div id="status" class="stopped">Stopped</div>
         <div id="timer">00:00</div>
-        <div id="threshold-display">Alarm after sitting 20 min</div>
+        <div id="threshold-display">Alarm after 20 min at desk</div>
       </div>
       <button id="start-btn"><i data-lucide="play"></i> Start</button>
       <button id="dismiss-btn" style="display:none"><i data-lucide="x"></i> Dismiss</button>
@@ -158,7 +158,7 @@
     </div>
     <canvas id="week-chart" width="320" height="180"></canvas>
     <div class="stats-legend">
-      <span class="stats-legend-sit">● Sitting</span>
+      <span class="stats-legend-sit">● At desk</span>
       <span class="stats-legend-break">● Break</span>
     </div>
     <p id="stats-summary"></p>
@@ -168,7 +168,7 @@
 <div id="breath-modal">
   <div id="breath-modal-inner">
     <h2>Choose a Breath Animation</h2>
-    <p>Select one to display while sitting as a breathing reminder</p>
+    <p>Select one to display while at your desk as a breathing reminder</p>
     <div class="breath-grid" id="breath-grid"></div>
     <div style="display:flex;justify-content:flex-end">
       <button id="breath-none">None</button>

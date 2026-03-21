@@ -87,7 +87,7 @@
     const displaySessions = mergeSessions(sessions);
     const totalSitMin = displaySessions.filter(s => s.type === 'sit').reduce((acc, s) => acc + s.durationMin, 0);
     const summaryEl = document.getElementById('today-stats-summary');
-    if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' sitting' : '';
+    if (summaryEl) summaryEl.textContent = totalSitMin >= 0.5 ? fmtMin(totalSitMin) + ' at desk' : '';
     currentSessions = displaySessions;
     activeHighlight = -1;
     const canvas = document.getElementById('today-timeline');
@@ -112,7 +112,7 @@
       const row = document.createElement('div');
       row.className = `stats-row stats-row-${s.type}`;
       row.style.cursor = 'pointer';
-      row.innerHTML = `<span class="stats-row-label">${s.type === 'sit' ? '● Sitting' : '○ Break'}</span>`
+      row.innerHTML = `<span class="stats-row-label">${s.type === 'sit' ? '● At desk' : '○ Break'}</span>`
         + `<span class="stats-row-time">${fmtTime(s.start)} – ${fmtTime(s.end)}</span>`
         + `<span class="stats-row-dur">${fmtMin(s.durationMin)}</span>`;
       row.onclick = () => highlightSession(idx === activeHighlight ? -1 : idx);
@@ -390,8 +390,8 @@
       const totalSitMin = days.reduce((s, d) => s + data[d].sitMin, 0);
       const totalCount  = days.reduce((s, d) => s + data[d].count, 0);
       statsSummary.textContent = totalCount > 0
-        ? `${totalCount} session${totalCount !== 1 ? 's' : ''} · ${fmtMin(totalSitMin)} total sitting`
-        : 'No data yet — start monitoring to track your sitting history.';
+        ? `${totalCount} session${totalCount !== 1 ? 's' : ''} · ${fmtMin(totalSitMin)} total desk time`
+        : 'No data yet — start monitoring to track your desk history.';
     }
   }
 

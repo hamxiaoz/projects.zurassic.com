@@ -767,7 +767,7 @@
     text-align: center;
     line-height: 1.75;
     max-width: 520px;
-    margin-bottom: 52px;
+    margin-bottom: 28px;
   }
   .landing-features {
     display: grid;
@@ -797,12 +797,24 @@
   }
   .feature-desc {
     font-size: 0.78rem;
-    color: #5a5a7a;
+    color: #7070a0;
     line-height: 1.65;
   }
   .landing-trust-row {
     grid-template-columns: repeat(2, 1fr);
     margin-bottom: 32px;
+  }
+  .landing-trust-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #9090b0;
+    margin-bottom: 28px;
+  }
+  .trust-sep {
+    color: #3a3a58;
   }
   #landing-cta {
     display: inline-block;
@@ -816,7 +828,7 @@
     cursor: pointer;
     letter-spacing: 0.05em;
     transition: background 0.2s, color 0.2s;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
   #landing-cta:hover { background: #4caf50; color: #1a1a2e; }
   .back-app {
@@ -827,10 +839,212 @@
     transition: color 0.2s;
   }
   .back-app:hover { color: #888; }
-  @media (max-width: 560px) {
-    .landing-features { grid-template-columns: 1fr; }
+  /* Showcase bento grid */
+  .landing-showcase {
+    display: grid;
+    grid-template-columns: 1fr 0.5fr;
+    gap: 10px;
+    width: min(900px, 92vw);
+    margin-bottom: 36px;
+    align-items: stretch;
+  }
+  .showcase-stats-row {
+    grid-column: 1 / -1;
+  }
+  .showcase-stats-row .showcase-side-frame {
+    height: 170px;
+    flex: none;
+  }
+  .showcase-panel {
+    background: #0b1022;
+    border: 1px solid #1c2040;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .showcase-panel.side {
+    flex: 1;
+  }
+  .showcase-side-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .showcase-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .showcase-panel-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #9898c8;
+  }
+  .showcase-panel-desc {
+    font-size: 0.73rem;
+    color: #8080a8;
+    line-height: 1.6;
+    flex-shrink: 0;
+    height: calc(0.73rem * 1.6 * 2);
+    overflow: hidden;
+  }
+  .showcase-panel-badge {
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #4caf50;
+    background: #0d1f12;
+    border: 1px solid #1e3d24;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  /* Main FX preview frame */
+  .showcase-main-frame {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: #06090f;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .showcase-main-frame::before {
+    content: '';
+    position: absolute;
+    inset: 8px;
+    border: 1px dashed #141830;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .showcase-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 8px;
+    z-index: 1;
+    transition: opacity 0.2s;
+  }
+  .showcase-fx-name {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(6, 9, 20, 0.72);
+    color: #9090b8;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* FX grid (video + gesture) */
+  .showcase-fx-grid {
+    display: grid;
+    gap: 6px;
+    flex: 1;
+    width: 100%;
+    align-content: start;
+  }
+  .gesture-fx-grid {
+    grid-template-rows: repeat(2, 1fr);
+  }
+  .gesture-fx-grid .fx-grid-item {
+    height: 100%;
+  }
+  .gesture-fx-grid .fx-grid-frame {
+    aspect-ratio: auto;
+    flex: 1;
+    min-height: 0;
+  }
+  .video-fx-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px 12px;
+  }
+  .gesture-fx-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .hand-fx-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 6px;
+    flex: none;
+    margin-top: auto;
+  }
+  .hand-fx-grid .fx-grid-item {
+    gap: 0;
+  }
+  .fx-grid-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fx-grid-frame {
+    aspect-ratio: 4 / 3;
+    background: #06090f;
+    border: 1px solid #1c2040;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+  }
+  .fx-grid-frame::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 1px dashed #111628;
+    border-radius: 3px;
+    pointer-events: none;
+  }
+  .fx-grid-frame img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .fx-grid-item span {
+    font-size: 0.58rem;
+    color: #8080a8;
+    text-align: center;
+    letter-spacing: 0.03em;
+    line-height: 1;
+  }
+  /* Side frames (gesture + stats) — fill remaining space */
+  .showcase-side-frame {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    background: #06090f;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .showcase-side-frame::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed #141830;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .showcase-side-frame .showcase-img {
+    border-radius: 8px;
+  }
+
+  @media (max-width: 640px) {
     .landing-headline { font-size: 1.8rem; }
     .landing-inner { padding: 48px 20px 60px; }
+    .landing-showcase { grid-template-columns: 1fr; }
+    .video-fx-grid { grid-template-columns: repeat(3, 1fr); }
+    .gesture-fx-grid { grid-template-columns: repeat(3, 1fr); }
   }
 
   #loading {
@@ -879,7 +1093,7 @@
     font-size: 0.65rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: #3a3a5a;
+    color: #7070a0;
     margin-bottom: 14px;
     font-weight: 600;
   }
@@ -895,7 +1109,7 @@
     display: flex;
     gap: 12px;
     font-size: 0.82rem;
-    color: #5a5a80;
+    color: #7878a0;
     line-height: 1.6;
   }
   .landing-steps li::before {

@@ -25,6 +25,8 @@
   const GRACE_MS = 5000;
   let isWarning = false;
   let audioCtx = null;
+  let chargingOscNode = null;
+  let chargingGainNode = null;
   let warnInterval = null;
   let running = false;
   let muted = false;
@@ -233,7 +235,7 @@
     thresholdSec = minutes * 60;
     thresholdVal.textContent = minutes;
     thresholdRange.value = minutes;
-    thresholdDisplay.textContent = `Alarm after sitting ${minutes} min`;
+    thresholdDisplay.textContent = `Alarm after ${minutes} min at desk`;
     presetBtns.forEach(b => b.classList.toggle('selected', parseInt(b.dataset.min) === minutes));
   }
 
@@ -431,6 +433,48 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     ALARM_SOUNDS[index].play(audioCtx);
   }
 
+  function playChargingSound() {
+    if (muted) return;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    stopChargingSound();
+
+    const ctx = audioCtx;
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0.18, ctx.currentTime);
+    gainNode.connect(ctx.destination);
+
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(660, ctx.currentTime);
+
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.setValueAtTime(10, ctx.currentTime);
+    lfoGain.gain.setValueAtTime(150, ctx.currentTime);
+    lfo.connect(lfoGain);
+    lfoGain.connect(osc.frequency);
+
+    osc.connect(gainNode);
+    osc.start(ctx.currentTime);
+    lfo.start(ctx.currentTime);
+
+    const endTime = ctx.currentTime + HAND_DISMISS_MS / 1000;
+    gainNode.gain.setTargetAtTime(0, endTime - 0.2, 0.1);
+    osc.stop(endTime + 0.3);
+    lfo.stop(endTime + 0.3);
+
+    chargingOscNode = osc;
+    chargingGainNode = gainNode;
+  }
+
+  function stopChargingSound() {
+    if (chargingOscNode) {
+      try { chargingOscNode.stop(); } catch (_) {}
+      chargingOscNode = null;
+      chargingGainNode = null;
+    }
+  }
+
   // Alarm sound picker
   const alarmSoundBtn = document.getElementById('alarm-sound-btn');
   const alarmSoundModal = document.getElementById('alarm-sound-modal');
@@ -562,7 +606,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     dismissBtn.style.display = '';
     playTone();
     if (!muted && !warnInterval) warnInterval = setInterval(playTone, 3000);
-    statusEl.textContent = 'WARNING — Stand up!';
+    statusEl.textContent = 'WARNING — Take a break!';
     statusEl.className = 'warn';
     timerEl.className = 'warn';
     // Start hand detection for dismissal
@@ -635,13 +679,14 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
         const palmY = (kp[0].y + kp[9].y) / 2;
         const vw = video.videoWidth || 320;
         const vh = video.videoHeight || 240;
-        handFxCx = palmX / vw;
+        handFxCx = 1 - (palmX / vw);  // mirror X to match flipped video display
         handFxCy = palmY / vh;
       }
 
       if (hasOpenHand) {
         if (!openHandStart) {
           openHandStart = Date.now();
+          playChargingSound();
           startHandFx();
         } else {
           const elapsed = Date.now() - openHandStart;
@@ -659,8 +704,9 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
         }
       } else {
         openHandStart = null;
+        stopChargingSound();
         if (isWarning) {
-          statusEl.textContent = 'WARNING — Stand up!';
+          statusEl.textContent = 'WARNING — Take a break!';
         }
       }
     } catch(e) { /* skip frame */ }
@@ -671,6 +717,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
   dismissBtn.addEventListener('click', () => dismissAlarm());
 
   function dismissAlarm() {
+    stopChargingSound();
     cancelAlarmAwayTimer();
     isWarning = false;
     sittingSec = 0;
@@ -679,7 +726,7 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
     dismissBtn.style.display = 'none';
     if (warnInterval) { clearInterval(warnInterval); warnInterval = null; }
     if (handDetectTimeout) { clearTimeout(handDetectTimeout); handDetectTimeout = null; }
-    statusEl.textContent = 'Sitting';
+    statusEl.textContent = 'At desk';
     statusEl.className = 'sitting';
     timerEl.className = 'sitting';
     timerEl.textContent = '00:00';
@@ -856,11 +903,11 @@ cameraContainer.style.aspectRatio = `${w} / ${h}`;
         if (!handDetectTimeout) detectHand();
       }
       if (isWarning) {
-        statusEl.textContent = 'WARNING — Stand up!';
+        statusEl.textContent = 'WARNING — Take a break!';
         statusEl.className = 'warn';
         timerEl.className = 'warn';
       } else {
-        statusEl.textContent = 'Sitting';
+        statusEl.textContent = 'At desk';
         statusEl.className = 'sitting';
         timerEl.className = 'sitting';
       }

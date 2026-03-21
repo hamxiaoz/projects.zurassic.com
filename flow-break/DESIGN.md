@@ -11,6 +11,22 @@ Detection is driven entirely by the camera's person-detection model (COCO-SSD). 
 
 A 5-second grace period (`GRACE_MS = 5000`) prevents brief look-aways from splitting a sitting session. `personPresent` only flips to `false` after the person has been absent for more than 5 seconds continuously.
 
+### Detection Constants
+
+| Constant | Value | Source | Purpose |
+|---|---|---|---|
+| Person confidence (present) | `> 0.5` | `app.js` | Confirms person is present (`personPresent = true`) |
+| Person confidence (tracking) | `> 0.2` | `app.js` | Lower threshold for bbox tracking only |
+| Detection interval | 1000 ms | `app.js` | How often COCO-SSD runs |
+| `GRACE_MS` | 5000 ms (5 s) | `app.js:25` | Absence before `onPresenceLost()` fires |
+| `thresholdSec` | 1200 s (20 min) | `app.js:21` | Sitting duration before alarm (user-configurable) |
+| `ALARM_AWAY_MS` | 15000 ms (15 s) | `stats.js:6` | Absence during warning before auto-dismiss |
+| `HAND_DISMISS_MS` | 3000 ms (3 s) | `app.js:41` | Hold open hand this long to dismiss alarm |
+| Hand detection interval | 200 ms | `app.js` | How often hand model runs during warning |
+| Open hand threshold | ≥ 3 fingers at 1.05× extension | `app.js` | What counts as an open palm |
+| Alarm repeat interval | 3000 ms (3 s) | `app.js` | How often the warning tone replays |
+| `MERGE_GAP_MS` | 180000 ms (3 min) | `stats.js:39` | Gaps < 3 min merged in stats display |
+
 ### Alarm Dismissal Logic
 
 The alarm (`isWarning = true`) fires when `sittingSec >= thresholdSec`. It can be cleared in three ways:
