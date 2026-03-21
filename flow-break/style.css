@@ -819,18 +819,19 @@
   #landing-cta {
     display: inline-block;
     text-decoration: none;
-    background: #16213e;
+    background: #4caf50;
     border: 1px solid #4caf50;
-    color: #4caf50;
+    color: #1a1a2e;
     padding: 13px 44px;
     border-radius: 8px;
     font-size: 0.95rem;
     cursor: pointer;
     letter-spacing: 0.05em;
-    transition: background 0.2s, color 0.2s;
+    font-weight: 500;
+    transition: background 0.2s, border-color 0.2s;
     margin-bottom: 12px;
   }
-  #landing-cta:hover { background: #4caf50; color: #1a1a2e; }
+  #landing-cta:hover { background: #43a047; border-color: #43a047; }
   .back-app {
     color: #555;
     text-decoration: none;
