@@ -1047,8 +1047,52 @@
     .landing-headline { font-size: 1.8rem; }
     .landing-inner { padding: 48px 20px 60px; }
     .landing-showcase { grid-template-columns: 1fr; }
-    .video-fx-grid { grid-template-columns: repeat(3, 1fr); }
+    .video-fx-grid { grid-template-columns: repeat(2, 1fr); }
     .gesture-fx-grid { grid-template-columns: repeat(3, 1fr); }
+    .showcase-stats-row .showcase-side-frame {
+      height: auto;
+    }
+    .showcase-stats-row .showcase-side-frame .showcase-img {
+      position: relative;
+      height: auto;
+      object-fit: contain;
+    }
+
+    /* App responsive */
+    #app-wrapper {
+      width: 100%;
+      min-width: 0;
+    }
+    #main-row {
+      flex-direction: column;
+    }
+    #camera-col {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      padding: 8px 12px 6px;
+    }
+    #timer-col {
+      width: 100%;
+      flex: none;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px 10px;
+      gap: 16px;
+    }
+    #timer-section {
+      flex: 1;
+      text-align: left;
+    }
+    #timer {
+      font-size: 1.8rem;
+    }
+    #start-btn, #dismiss-btn {
+      width: auto;
+      flex-shrink: 0;
+      padding: 10px 20px;
+    }
   }
 
   #loading {
