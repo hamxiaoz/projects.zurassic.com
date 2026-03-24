@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-HK044STX6K"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-HK044STX6K');
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voice Pacer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="back-link">← projects.zurassic.com</a>
+    <h1>Voice Pacer</h1>
+    <p class="subtitle">Real-time speaking speed monitor for meetings</p>
+  </header>
+
+  <main>
+
+    <!-- Enroll Panel -->
+    <section class="card" id="enroll-card">
+      <div class="card-header">
+        <span class="card-icon">🎙</span>
+        <div>
+          <h2>Voice Enrollment <span class="badge" id="enroll-badge">Optional</span></h2>
+          <p class="card-desc">For in-person meetings with multiple speakers, enroll your voice so the app only tracks <em>your</em> speed. Skip this for online meetings — your mic already captures mainly you.</p>
+        </div>
+      </div>
+      <div class="enroll-controls">
+        <button id="enroll-btn" class="btn btn-secondary">Enroll My Voice (10s)</button>
+        <div id="enroll-status" class="enroll-status hidden">
+          <div id="enroll-timer" class="enroll-timer">10</div>
+          <div class="enroll-bar-wrap"><div id="enroll-bar" class="enroll-bar"></div></div>
+        </div>
+        <div id="enrolled-indicator" class="enrolled-indicator hidden">
+          <span class="check">✓</span> Voice enrolled
+          <button id="clear-enroll-btn" class="btn-link">Clear</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Speed Display -->
+    <section class="card speed-card">
+      <div class="wpm-display">
+        <div id="wpm-number" class="wpm-number">—</div>
+        <div class="wpm-label">words / min</div>
+      </div>
+
+      <div class="speed-meter">
+        <div class="speed-bar-wrap">
+          <div id="speed-bar" class="speed-bar"></div>
+          <div class="speed-marker" id="threshold-marker"></div>
+        </div>
+        <div class="speed-labels">
+          <span>Slow</span>
+          <span>Normal</span>
+          <span>Fast</span>
+          <span>Very Fast</span>
+        </div>
+      </div>
+
+      <div id="speed-tier" class="speed-tier">—</div>
+
+      <div id="alert-banner" class="alert-banner hidden">
+        ⚠ Slow down!
+      </div>
+    </section>
+
+    <!-- Transcript -->
+    <section class="card transcript-card">
+      <h2>Live Transcript</h2>
+      <div id="transcript" class="transcript">Waiting for speech…</div>
+    </section>
+
+    <!-- Controls -->
+    <div class="controls-row">
+      <button id="monitor-btn" class="btn btn-primary btn-lg">Start Monitoring</button>
+      <div id="mic-indicator" class="mic-indicator hidden">
+        <span class="mic-dot"></span> Listening
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <section class="card settings-card">
+      <h2>Settings</h2>
+
+      <div class="setting-row">
+        <label for="threshold-slider">Alert threshold</label>
+        <div class="slider-wrap">
+          <input type="range" id="threshold-slider" min="100" max="280" step="5" value="160">
+          <span id="threshold-value" class="slider-value">160 WPM</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>Alert style</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" name="alert-mode" value="both" checked> Both
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="alert-mode" value="visual"> Visual only
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="alert-mode" value="audio"> Audio only
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label for="window-slider">Averaging window</label>
+        <div class="slider-wrap">
+          <input type="range" id="window-slider" min="10" max="60" step="5" value="20">
+          <span id="window-value" class="slider-value">20 s</span>
+        </div>
+      </div>
+
+      <div class="setting-row">
+        <label>
+          <input type="checkbox" id="speaker-id-toggle">
+          Use voice enrollment for speaker identification
+        </label>
+      </div>
+    </section>
+
+    <section class="how-it-works">
+      <h2>How It Works</h2>
+      <ul>
+        <li><strong>Online meetings</strong> — Just click Start. Your mic captures primarily your voice. The app transcribes speech in real time and calculates words per minute over a rolling window.</li>
+        <li><strong>In-person meetings</strong> — Click "Enroll My Voice" first. The app learns your pitch profile and only counts words when your voice is detected, ignoring other speakers.</li>
+        <li><strong>Alerts</strong> — A visual banner and/or a soft chime plays when you exceed the threshold. The alert resets after 10 seconds of normal-paced speech.</li>
+        <li><strong>Browser support</strong> — Requires Chrome or Edge for real-time speech recognition. Safari has limited support.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <a href="/">← all projects</a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
